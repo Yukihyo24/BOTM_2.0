@@ -1,4 +1,95 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"><title>Booster</title></head>
-<body><h1>Fichier d'exemple</h1></body></html>
+<head>
+  <meta charset="UTF-8">
+  <title>Ouverture de Booster</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; background-color: #222; color: #fff; padding: 20px; }
+    .univers-button { margin: 10px; padding: 15px 30px; font-size: 1.2em; cursor: pointer; border: none; border-radius: 8px; background-color: #444; color: white; }
+    .univers-button:hover { background-color: #666; }
+    #booster { margin: 30px auto; padding: 20px; border: 2px dashed #ccc; width: 300px; cursor: pointer; background-color: #333; }
+    #booster:hover { background-color: #444; }
+    #cartes img { width: 200px; margin: 10px; border-radius: 12px; box-shadow: 0 0 10px #fff; }
+    .img-reveal { animation: pop 0.5s ease-out; }
+    @keyframes pop { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  </style>
+</head>
+<body>
+  <h1>🎴 Ouvre ton booster</h1>
+  <div id="choix-univers"></div>
+  <div id="booster" style="display:none;" onclick="ouvrirBooster()">
+    <h2>🃏 Cliquer pour ouvrir un booster</h2>
+  </div>
+  <div id="cartes"></div>
+  <audio id="audio" src="booster.mp3" preload="auto"></audio>
+
+  <script>
+    const universDisponibles = ["pokémon", "dbz"];
+    const raretes = {
+      commune: 70,
+      rare: 20,
+      super_rare: 8,
+      ultra_rare: 2
+    };
+
+    let universActif = null;
+    let cartesParRareté = {};
+
+    const choixUnivers = document.getElementById("choix-univers");
+    universDisponibles.forEach(univ => {
+      const btn = document.createElement("button");
+      btn.textContent = univ.charAt(0).toUpperCase() + univ.slice(1);
+      btn.className = "univers-button";
+      btn.onclick = () => selectionnerUnivers(univ);
+      choixUnivers.appendChild(btn);
+    });
+
+    async function selectionnerUnivers(univ) {
+      universActif = univ;
+      document.getElementById("cartes").innerHTML = "";
+      document.getElementById("booster").style.display = "block";
+      cartesParRareté = {};
+
+      for (const rarete of Object.keys(raretes)) {
+        try {
+          const res = await fetch(`univers/${universActif}/${rarete}/index.json`);
+          cartesParRareté[rarete] = await res.json();
+        } catch {
+          cartesParRareté[rarete] = [];
+        }
+      }
+    }
+
+    function tirerRareté() {
+      const rand = Math.random() * 100;
+      let cumul = 0;
+      for (const [rarete, taux] of Object.entries(raretes)) {
+        cumul += taux;
+        if (rand <= cumul) return rarete;
+      }
+      return "commune";
+    }
+
+    function ouvrirBooster() {
+      const audio = document.getElementById("audio");
+      audio.currentTime = 0;
+      audio.play();
+
+      const cartes = document.getElementById("cartes");
+      cartes.innerHTML = "";
+
+      for (let i = 0; i < 4; i++) {
+        const rarete = tirerRareté();
+        const liste = cartesParRareté[rarete];
+        if (liste && liste.length > 0) {
+          const image = liste[Math.floor(Math.random() * liste.length)];
+          const img = document.createElement("img");
+          img.src = `univers/${universActif}/${rarete}/${image}`;
+          img.className = "img-reveal";
+          cartes.appendChild(img);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
