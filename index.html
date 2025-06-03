@@ -47,7 +47,7 @@
       position: relative;
       display: inline-block;
     }
-    .carte-container img {
+    .carte-container img.carte-img {
       width: 200px;
       margin: 10px;
       border-radius: 12px;
@@ -55,10 +55,11 @@
     }
     .badge-rarete {
       position: absolute;
-      bottom: 5px;
-      right: 5px;
+      bottom: 12px;
+      right: 15px;
       width: 40px;
       height: 40px;
+      object-fit: contain;
     }
     .img-reveal {
       animation: pop 0.5s ease-out;
@@ -95,7 +96,7 @@
     const choixUnivers = document.getElementById("choix-univers");
     universDisponibles.forEach((univ, index) => {
       const img = document.createElement("img");
-      img.src = `assets/univers/${univ}.jpg`; // ex: assets/univers/DBZ.jpg
+      img.src = `assets/univers/${univ}.jpg`;
       img.alt = univ;
       img.className = "univers-img";
       img.onclick = () => selectionnerUnivers(univ);
@@ -147,6 +148,7 @@
 
           const img = document.createElement("img");
           img.src = `univers/${universActif}/${rarete}/${image}`;
+          img.className = "carte-img";
 
           const badge = document.createElement("img");
           badge.src = `assets/raretes/${rarete}.png`;
