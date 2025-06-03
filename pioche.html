@@ -41,17 +41,39 @@
       border-color: #00ffff;
       box-shadow: 0 0 10px #00ffff;
     }
+    .carte-container {
+      position: relative;
+      display: inline-block;
+      margin: 20px;
+    }
     .carte {
       width: 200px;
-      margin: 20px;
       border-radius: 10px;
       box-shadow: 0 0 10px #fff;
-      transition: transform 0.3s;
       cursor: pointer;
     }
     .carte:hover {
       transform: scale(1.05);
       box-shadow: 0 0 20px gold;
+    }
+    .badge-rarete {
+      position: absolute;
+      bottom: 12px;
+      right: 15px;
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+    }
+    .badge-rarete[src*="ultra_rare"] {
+      filter: drop-shadow(0 0 6px #6fffff);
+    }
+    .badge-rarete[src*="tres_rare"],
+    .badge-rarete[src*="super_rare"] {
+      filter: drop-shadow(0 0 6px #ffff51);
+    }
+    .badge-rarete[src*="rare"],
+    .badge-rarete[src*="commune"] {
+      filter: drop-shadow(0 0 6px #4b69a0);
     }
   </style>
 </head>
@@ -101,17 +123,40 @@
         cartes.splice(i, 1);
       }
       tirage.forEach(carte => {
+        const container = document.createElement("div");
+        container.className = "carte-container";
+
         const img = document.createElement("img");
         img.src = `univers/${universActif}/${carte.rarete}/${carte.nom}`;
         img.className = "carte";
-        img.onclick = () => alerterChoix(carte);
-        cartesDiv.appendChild(img);
+        img.onclick = () => afficherCarteChoisie(carte);
+
+        const badge = document.createElement("img");
+        badge.src = `assets/raretes/${carte.rarete}.png`;
+        badge.className = "badge-rarete";
+
+        container.appendChild(img);
+        container.appendChild(badge);
+        cartesDiv.appendChild(container);
       });
     }
 
-    function alerterChoix(carte) {
-      alert(`Vous avez choisi une carte ${carte.rarete.toUpperCase()} !`);
-      cartesDiv.innerHTML = "<h2>Carte choisie !</h2>";
+    function afficherCarteChoisie(carte) {
+      cartesDiv.innerHTML = "";
+      const container = document.createElement("div");
+      container.className = "carte-container";
+
+      const img = document.createElement("img");
+      img.src = `univers/${universActif}/${carte.rarete}/${carte.nom}`;
+      img.className = "carte";
+
+      const badge = document.createElement("img");
+      badge.src = `assets/raretes/${carte.rarete}.png`;
+      badge.className = "badge-rarete";
+
+      container.appendChild(img);
+      container.appendChild(badge);
+      cartesDiv.appendChild(container);
     }
   </script>
 </body>
