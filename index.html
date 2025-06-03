@@ -43,11 +43,22 @@
     #booster:hover {
       background-color: rgba(50,50,50,0.8);
     }
-    #cartes img {
+    .carte-container {
+      position: relative;
+      display: inline-block;
+    }
+    .carte-container img {
       width: 200px;
       margin: 10px;
       border-radius: 12px;
       box-shadow: 0 0 10px #fff;
+    }
+    .badge-rarete {
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+      width: 40px;
+      height: 40px;
     }
     .img-reveal {
       animation: pop 0.5s ease-out;
@@ -130,10 +141,20 @@
         const liste = cartesParRareté[rarete];
         if (liste && liste.length > 0) {
           const image = liste[Math.floor(Math.random() * liste.length)];
+
+          const container = document.createElement("div");
+          container.className = "carte-container img-reveal";
+
           const img = document.createElement("img");
           img.src = `univers/${universActif}/${rarete}/${image}`;
-          img.className = "img-reveal";
-          cartes.appendChild(img);
+
+          const badge = document.createElement("img");
+          badge.src = `assets/raretes/${rarete}.png`;
+          badge.className = "badge-rarete";
+
+          container.appendChild(img);
+          container.appendChild(badge);
+          cartes.appendChild(container);
         }
       }
     }
