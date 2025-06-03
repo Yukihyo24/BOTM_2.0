@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Battle of the Multiverse</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: url('https://i83.servimg.com/u/f83/19/48/18/17/fond310.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      padding: 20px;
+      position: relative;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0.15));
+      backdrop-filter: blur(4px);
+      z-index: 0;
+    }
+    * {
+      position: relative;
+      z-index: 1;
+    }
+    #main-menu {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      margin-top: 50px;
+    }
+    .main-button {
+      padding: 15px 30px;
+      font-size: 1.5em;
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      transition: all 0.3s;
+      box-shadow: 0 0 10px #00ffff;
+    }
+    .main-button:hover {
+      background: rgba(0,0,0,0.8);
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png" alt="Logo BOTM" style="width: 150px; filter: drop-shadow(0 0 10px #00ffff);">
+
+  <div id="main-menu">
+    <button class="main-button" onclick="location.href='booster.html'">🃏 Ouverture de booster</button>
+    <button class="main-button" onclick="location.href='pioche.html'">✨ Pioche miracle</button>
+  </div>
+</body>
+</html>
