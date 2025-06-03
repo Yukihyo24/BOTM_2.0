@@ -11,6 +11,21 @@
       background-size: cover;
       color: #fff;
       padding: 20px;
+      position: relative;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(rgba(27,0,37,0.8), rgba(0,0,0,0.85));
+      z-index: 0;
+    }
+    * {
+      position: relative;
+      z-index: 1;
     }
     .univers-grid {
       display: grid;
@@ -26,11 +41,15 @@
       border-radius: 12px;
       border: 2px solid #fff;
       cursor: pointer;
-      transition: transform 0.2s;
+      transition: transform 0.2s, border-color 0.2s;
     }
     .univers-img:hover {
       transform: scale(1.1);
       border-color: gold;
+    }
+    .univers-img.selected {
+      border-color: #00ffff;
+      box-shadow: 0 0 10px #00ffff;
     }
     #booster {
       margin: 30px auto;
@@ -61,6 +80,17 @@
       height: 40px;
       object-fit: contain;
     }
+    .badge-rarete[src*="ultra_rare"] {
+      filter: drop-shadow(0 0 6px #6fffff);
+    }
+    .badge-rarete[src*="tres_rare"],
+    .badge-rarete[src*="super_rare"] {
+      filter: drop-shadow(0 0 6px #ffff51);
+    }
+    .badge-rarete[src*="rare"],
+    .badge-rarete[src*="commune"] {
+      filter: drop-shadow(0 0 6px #4b69a0);
+    }
     .img-reveal {
       animation: pop 0.5s ease-out;
     }
@@ -70,7 +100,7 @@
     }
   </style>
 </head>
-<img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png" alt="Logo BOTM" style="width: 150px;">
+<img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png" alt="Logo BOTM" style="width: 150px; filter: drop-shadow(10 10 20px #000000);">
 <body>
   <h1>Choisir l'univers</h1>
   <div id="choix-univers" class="univers-grid"></div>
@@ -99,23 +129,23 @@
       img.src = `assets/univers/${univ}.jpg`;
       img.alt = univ;
       img.className = "univers-img";
-      img.onclick = () => selectionnerUnivers(univ);
+      img.onclick = () => selectionnerUnivers(univ, img);
       choixUnivers.appendChild(img);
     });
 
-    async function selectionnerUnivers(univ) {
+    function selectionnerUnivers(univ, clickedImg) {
       universActif = univ;
       document.getElementById("cartes").innerHTML = "";
       document.getElementById("booster").style.display = "block";
       cartesParRareté = {};
 
+      document.querySelectorAll(".univers-img").forEach(img => img.classList.remove("selected"));
+      clickedImg.classList.add("selected");
+
       for (const rarete of Object.keys(raretes)) {
-        try {
-          const res = await fetch(`univers/${universActif}/${rarete}/index.json`);
-          cartesParRareté[rarete] = await res.json();
-        } catch {
-          cartesParRareté[rarete] = [];
-        }
+        fetch(`univers/${universActif}/${rarete}/index.json`).then(res => res.json())
+          .then(data => cartesParRareté[rarete] = data)
+          .catch(() => cartesParRareté[rarete] = []);
       }
     }
 
