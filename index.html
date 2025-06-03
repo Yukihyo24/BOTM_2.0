@@ -2,23 +2,68 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Ouverture de Booster</title>
+  <title>Battle of the Multiverse</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; background-color: #222; color: #fff; padding: 20px; }
-    .univers-button { margin: 10px; padding: 15px 30px; font-size: 1.2em; cursor: pointer; border: none; border-radius: 8px; background-color: #444; color: white; }
-    .univers-button:hover { background-color: #666; }
-    #booster { margin: 30px auto; padding: 20px; border: 2px dashed #ccc; width: 300px; cursor: pointer; background-color: #333; }
-    #booster:hover { background-color: #444; }
-    #cartes img { width: 200px; margin: 10px; border-radius: 12px; box-shadow: 0 0 10px #fff; }
-    .img-reveal { animation: pop 0.5s ease-out; }
-    @keyframes pop { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: url('https://i83.servimg.com/u/f83/19/48/18/17/fond310.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      padding: 20px;
+    }
+    .univers-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      justify-items: center;
+      margin-bottom: 30px;
+    }
+    .univers-img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 2px solid #fff;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .univers-img:hover {
+      transform: scale(1.1);
+      border-color: gold;
+    }
+    #booster {
+      margin: 30px auto;
+      padding: 20px;
+      border: 2px dashed #ccc;
+      width: 300px;
+      cursor: pointer;
+      background-color: rgba(0,0,0,0.6);
+    }
+    #booster:hover {
+      background-color: rgba(50,50,50,0.8);
+    }
+    #cartes img {
+      width: 200px;
+      margin: 10px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #fff;
+    }
+    .img-reveal {
+      animation: pop 0.5s ease-out;
+    }
+    @keyframes pop {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
   </style>
 </head>
+<img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png" alt="Logo BOTM" style="width: 200px;">
 <body>
-  <h1>🎴 Ouvre ton booster</h1>
-  <div id="choix-univers"></div>
+  <h1>Choisir l'universr</h1>
+  <div id="choix-univers" class="univers-grid"></div>
   <div id="booster" style="display:none;" onclick="ouvrirBooster()">
-    <h2>🃏 Cliquer pour ouvrir un booster</h2>
+    <h2>Ouvrir le booster</h2>
   </div>
   <div id="cartes"></div>
   <audio id="audio" src="booster.mp3" preload="auto"></audio>
@@ -33,16 +78,17 @@
       ultra_rare: 2
     };
 
-    let universActif = null;
-    let cartesParRareté = {};
+    var universActif = null;
+    var cartesParRareté = {};
 
     const choixUnivers = document.getElementById("choix-univers");
-    universDisponibles.forEach(univ => {
-      const btn = document.createElement("button");
-      btn.textContent = univ.charAt(0).toUpperCase() + univ.slice(1);
-      btn.className = "univers-button";
-      btn.onclick = () => selectionnerUnivers(univ);
-      choixUnivers.appendChild(btn);
+    universDisponibles.forEach((univ, index) => {
+      const img = document.createElement("img");
+      img.src = `assets/univers/${univ}.jpg`; // ex: assets/univers/DBZ.jpg
+      img.alt = univ;
+      img.className = "univers-img";
+      img.onclick = () => selectionnerUnivers(univ);
+      choixUnivers.appendChild(img);
     });
 
     async function selectionnerUnivers(univ) {
