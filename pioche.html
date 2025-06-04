@@ -20,8 +20,169 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0.15));
-      backdrop-filter: blur(4px);
+      <!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Pioche Miracle - BOTM</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: url('https://i83.servimg.com/u/f83/19/48/18/17/fond310.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      padding: 20px;
+      position: relative;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(rgba(27,0,37,0.8), rgba(0,0,0,0.85));
+      z-index: 0;
+    }
+    * {
+      position: relative;
+      z-index: 1;
+    }
+    .univers-img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin: 10px;
+      cursor: pointer;
+      border: 2px solid white;
+    }
+    .univers-img.selected {
+      border-color: #00ffff;
+      box-shadow: 0 0 10px #00ffff;
+    }
+    .carte-container {
+      position: relative;
+      display: inline-block;
+      margin: 20px;
+    }
+    .carte {
+      width: 200px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #fff;
+      cursor: pointer;
+    }
+    .carte:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px gold;
+    }
+    .badge-rarete {
+      position: absolute;
+      bottom: 12px;
+      right: 15px;
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+    }
+    .badge-rarete[src*="ultra_rare"] {
+      filter: drop-shadow(0 0 6px #6fffff);
+    }
+    .badge-rarete[src*="tres_rare"],
+    .badge-rarete[src*="super_rare"] {
+      filter: drop-shadow(0 0 6px #ffff51);
+    }
+    .badge-rarete[src*="rare"],
+    .badge-rarete[src*="commune"] {
+      filter: drop-shadow(0 0 6px #4b69a0);
+    }
+  </style>
+</head>
+<body>
+  <h1>✨ Pioche Miracle</h1>
+  <div id="univers"></div>
+  <div id="cartes"></div>
+
+  <script>
+    const universDisponibles = ["Catch","Sports","DBZ","Naruto","OP","Pokemon","S_Heros","Mythologie","Television","JV","Animes"];
+    const raretes = ["commune","rare","super_rare","tres_rare","ultra_rare"];
+
+    const universDiv = document.getElementById("univers");
+    const cartesDiv = document.getElementById("cartes");
+    let universActif = null;
+
+    universDisponibles.forEach(univ => {
+      const img = document.createElement("img");
+      img.src = `assets/univers/${univ}.jpg`;
+      img.className = "univers-img";
+      img.onclick = () => selectionnerUnivers(univ, img);
+      universDiv.appendChild(img);
+    });
+
+    async function selectionnerUnivers(univ, element) {
+      universActif = univ;
+      document.querySelectorAll(".univers-img").forEach(img => img.classList.remove("selected"));
+      element.classList.add("selected");
+
+      let toutesCartes = [];
+      for (const rarete of raretes) {
+        try {
+          const res = await fetch(`univers/${univ}/${rarete}/index.json`);
+          const cartes = await res.json();
+          cartes.forEach(c => toutesCartes.push({ rarete, nom: c }));
+        } catch {}
+      }
+      afficherCartesAleatoires(toutesCartes);
+    }
+
+    function afficherCartesAleatoires(cartes) {
+      cartesDiv.innerHTML = "";
+      const tirage = [];
+      while (tirage.length < 3 && cartes.length > 0) {
+        const i = Math.floor(Math.random() * cartes.length);
+        tirage.push(cartes[i]);
+        cartes.splice(i, 1);
+      }
+      tirage.forEach(carte => {
+        const container = document.createElement("div");
+        container.className = "carte-container";
+
+        const img = document.createElement("img");
+        img.src = `univers/${universActif}/${carte.rarete}/${carte.nom}`;
+        img.className = "carte";
+        img.onclick = () => afficherCarteChoisie(carte);
+
+        const badge = document.createElement("img");
+        badge.src = `assets/raretes/${carte.rarete}.png`;
+        badge.className = "badge-rarete";
+
+        container.appendChild(img);
+        container.appendChild(badge);
+        cartesDiv.appendChild(container);
+      });
+    }
+
+    function afficherCarteChoisie(carte) {
+      cartesDiv.innerHTML = "";
+      const container = document.createElement("div");
+      container.className = "carte-container";
+
+      const img = document.createElement("img");
+      img.src = `univers/${universActif}/${carte.rarete}/${carte.nom}`;
+      img.className = "carte";
+
+      const badge = document.createElement("img");
+      badge.src = `assets/raretes/${carte.rarete}.png`;
+      badge.className = "badge-rarete";
+
+      container.appendChild(img);
+      container.appendChild(badge);
+      cartesDiv.appendChild(container);
+    }
+  </script>
+</body>
+</html>
+
       z-index: 0;
     }
     * {
