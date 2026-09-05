@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Échanges - BOTM</title>
+  <link rel="stylesheet" href="/BOTM_2.0/styles.css">
+  <style>
+    .trade-layout{display:grid;grid-template-columns:minmax(280px,.9fr) minmax(0,2fr);gap:18px}
+    .trade-card{display:grid;grid-template-columns:110px 1fr;gap:14px;align-items:start;background:rgba(8,7,12,.92);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px;margin-bottom:14px}
+    .trade-card img{width:110px;aspect-ratio:3/4;object-fit:cover;border-radius:10px}
+    .trade-card h3{margin:0 0 4px}
+    .trade-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .trade-actions .btn{padding:9px 12px}
+    .offer-box{margin-top:12px;padding:12px;border:1px solid rgba(0,255,255,.18);border-radius:12px;background:rgba(255,255,255,.03)}
+    .offer-row{display:grid;grid-template-columns:75px 1fr;gap:10px;align-items:start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+    .offer-row:last-child{border-bottom:0}
+    .offer-row img{width:75px;aspect-ratio:3/4;object-fit:cover;border-radius:8px}
+    .status{font-size:.85rem;color:var(--gold);margin-top:4px}
+    .mini-select{width:100%;margin-top:8px}
+    .my-card-picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;max-height:510px;overflow:auto}
+    .pick-card{cursor:pointer;border:2px solid transparent;border-radius:12px;padding:6px;background:rgba(8,7,12,.9)}
+    .pick-card.selected{border-color:var(--accent);box-shadow:0 0 12px rgba(0,255,255,.45)}
+    .pick-card img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px}
+    .pick-card .muted{font-size:.72rem}
+    @media(max-width:850px){.trade-layout{grid-template-columns:1fr}.trade-card{grid-template-columns:90px 1fr}.trade-card img{width:90px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png">
+      <div><h1>🔄 Échanges</h1><div class="muted">Marché entre joueurs</div></div>
+    </div>
+    <div class="userbox">
+      <span class="badge">👤 <span data-user></span></span>
+      <span class="badge">🃏 <span data-cardcount></span></span>
+      <span class="badge">💠 <span data-points></span> pts</span>
+    </div>
+  </div>
+
+  <div class="nav">
+    <a class="btn" href="/BOTM_2.0/index.html">← Menu</a>
+    <a class="btn" href="/BOTM_2.0/collection.html">🃏 Collection</a>
+  </div>
+
+  <div id="msg" class="notice" style="display:none;margin-bottom:18px"></div>
+
+  <div class="trade-layout">
+    <div class="panel">
+      <h2 style="margin-top:0">Proposer une carte</h2>
+      <p class="muted">Choisis une carte de ta collection à mettre sur le marché. Un exemplaire est alors réservé pour cet échange.</p>
+      <div id="mycards" class="my-card-picker"></div>
+      <button id="create" class="btn gold" style="width:100%;margin-top:14px" disabled>Mettre cette carte à l'échange</button>
+    </div>
+
+    <div class="panel">
+      <div class="nav" style="justify-content:space-between">
+        <h2 style="margin:0">Offres disponibles</h2>
+        <button id="refresh" class="btn">↻ Actualiser</button>
+      </div>
+      <div id="market"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { BOTM, supabase } from "/BOTM_2.0/app.js";
+const session = await BOTM.requireAuth();
+const uid = session.user.id;
+
+let myCollection = [];
+let selectedListingCardId = null;
+
+const msg = document.getElementById("msg");
+function showMsg(text, error=false){
+  msg.style.display = "block";
+  msg.textContent = text;
+  msg.style.borderColor = error ? "rgba(255,92,122,.7)" : "";
+}
+function cardName(c){ return c.file_name.replace(/\.[^.]+$/,""); }
+function esc(s){ return String(s ?? "").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
+
+async function loadMyCards(){
+  myCollection = await BOTM.collection();
+  const wrap = document.getElementById("mycards");
+  wrap.innerHTML = "";
+
+  myCollection.forEach(row => {
+    const c = row.cards;
+    const d = document.createElement("div");
+    d.className = "pick-card";
+    d.dataset.id = c.id;
+    d.innerHTML = `
+      <img src="${BOTM.imagePath(c)}">
+      <b>${esc(cardName(c))}</b>
+      <div class="muted">${esc(BOTM.rarityLabel(c.rarity))} • ×${row.quantity}</div>
+    `;
+    d.onclick = () => {
+      selectedListingCardId = c.id;
+      document.querySelectorAll(".pick-card").forEach(x=>x.classList.remove("selected"));
+      d.classList.add("selected");
+      document.getElementById("create").disabled = false;
+    };
+    wrap.appendChild(d);
+  });
+
+  if(!myCollection.length) wrap.innerHTML = '<div class="muted">Aucune carte disponible.</div>';
+}
+
+document.getElementById("create").onclick = async () => {
+  if(!selectedListingCardId) return;
+  const { error } = await supabase.rpc("create_trade_listing", { p_card_id: selectedListingCardId });
+  if(error){ showMsg(error.message, true); return; }
+  showMsg("Carte mise à l'échange.");
+  selectedListingCardId = null;
+  document.getElementById("create").disabled = true;
+  await loadMyCards();
+  await loadMarket();
+};
+
+async function submitOffer(listingId, select){
+  const cardId = Number(select.value);
+  if(!cardId) return;
+  const { error } = await supabase.rpc("create_trade_offer", {
+    p_listing_id: listingId,
+    p_card_id: cardId
+  });
+  if(error){ showMsg(error.message, true); return; }
+  showMsg("Proposition envoyée. Tu dois encore la valider pour autoriser l'échange.");
+  await loadMarket();
+}
+
+async function confirmOffer(offerId){
+  const { data, error } = await supabase.rpc("confirm_trade_offer", { p_offer_id: offerId });
+  if(error){ showMsg(error.message, true); return; }
+  const done = data?.[0]?.completed;
+  showMsg(done ? "✅ Échange effectué ! Les deux collections ont été mises à jour." : "Validation enregistrée. En attente de l'autre joueur.");
+  await BOTM.refreshHeader();
+  await loadMyCards();
+  await loadMarket();
+}
+
+async function rejectOffer(offerId){
+  if(!confirm("Refuser cette proposition ?")) return;
+  const { error } = await supabase.rpc("reject_trade_offer", { p_offer_id: offerId });
+  if(error){ showMsg(error.message, true); return; }
+  showMsg("Proposition refusée.");
+  await loadMarket();
+}
+
+async function cancelOffer(offerId){
+  if(!confirm("Annuler ta proposition ?")) return;
+  const { error } = await supabase.rpc("cancel_trade_offer", { p_offer_id: offerId });
+  if(error){ showMsg(error.message, true); return; }
+  showMsg("Proposition annulée.");
+  await loadMarket();
+}
+
+async function cancelListing(listingId){
+  if(!confirm("Retirer cette carte du marché ? Les propositions en cours seront annulées.")) return;
+  const { error } = await supabase.rpc("cancel_trade_listing", { p_listing_id: listingId });
+  if(error){ showMsg(error.message, true); return; }
+  showMsg("Annonce retirée.");
+  await loadMarket();
+}
+
+async function loadOffers(listingId, holder){
+  holder.innerHTML = '<div class="muted">Chargement des propositions...</div>';
+  const { data, error } = await supabase.rpc("get_trade_listing_offers", { p_listing_id: listingId });
+  if(error){ holder.innerHTML = `<div class="muted">${esc(error.message)}</div>`; return; }
+
+  holder.innerHTML = "";
+  (data || []).forEach(o => {
+    const row = document.createElement("div");
+    row.className = "offer-row";
+    row.innerHTML = `
+      <img src="${BOTM.imagePath(o)}">
+      <div>
+        <b>${esc(o.proposer_username)}</b> propose <b>${esc(o.file_name.replace(/\.[^.]+$/,""))}</b>
+        <div class="rarity">${esc(o.universe)} • ${esc(BOTM.rarityLabel(o.rarity))}</div>
+        <div class="status">
+          Proposant : ${o.proposer_confirmed ? "✅ validé" : "⏳ à valider"}
+          &nbsp; • &nbsp;
+          Propriétaire : ${o.owner_confirmed ? "✅ validé" : "⏳ à valider"}
+        </div>
+        <div class="trade-actions"></div>
+      </div>
+    `;
+    const actions = row.querySelector(".trade-actions");
+
+    if(o.can_confirm){
+      const b = document.createElement("button");
+      b.className = "btn gold";
+      b.textContent = "✅ Valider l'échange";
+      b.onclick = () => confirmOffer(o.offer_id);
+      actions.appendChild(b);
+    }
+    if(o.can_reject){
+      const b = document.createElement("button");
+      b.className = "btn danger";
+      b.textContent = "Refuser";
+      b.onclick = () => rejectOffer(o.offer_id);
+      actions.appendChild(b);
+    }
+    if(o.can_cancel){
+      const b = document.createElement("button");
+      b.className = "btn";
+      b.textContent = "Annuler";
+      b.onclick = () => cancelOffer(o.offer_id);
+      actions.appendChild(b);
+    }
+
+    holder.appendChild(row);
+  });
+  if(!(data||[]).length) holder.innerHTML = '<div class="muted">Aucune proposition pour le moment.</div>';
+}
+
+async function loadMarket(){
+  const market = document.getElementById("market");
+  market.innerHTML = '<div class="muted">Chargement...</div>';
+
+  const { data, error } = await supabase.rpc("get_trade_market");
+  if(error){ market.innerHTML = `<div class="muted">${esc(error.message)}</div>`; return; }
+
+  market.innerHTML = "";
+
+  (data || []).forEach(l => {
+    const box = document.createElement("div");
+    box.className = "trade-card";
+    box.innerHTML = `
+      <img src="${BOTM.imagePath(l)}">
+      <div>
+        <h3>${esc(l.file_name.replace(/\.[^.]+$/,""))}</h3>
+        <div class="rarity">${esc(l.universe)} • ${esc(BOTM.rarityLabel(l.rarity))}</div>
+        <div class="muted">Proposée par <b>${esc(l.owner_username)}</b></div>
+        <div class="trade-actions"></div>
+        <div class="offer-box" style="display:none"></div>
+      </div>
+    `;
+
+    const actions = box.querySelector(".trade-actions");
+    const offersHolder = box.querySelector(".offer-box");
+
+    const view = document.createElement("button");
+    view.className = "btn";
+    view.textContent = "Voir les propositions";
+    view.onclick = async () => {
+      const open = offersHolder.style.display !== "none";
+      offersHolder.style.display = open ? "none" : "block";
+      if(!open) await loadOffers(l.listing_id, offersHolder);
+    };
+    actions.appendChild(view);
+
+    if(l.is_mine){
+      const cancel = document.createElement("button");
+      cancel.className = "btn danger";
+      cancel.textContent = "Retirer mon annonce";
+      cancel.onclick = () => cancelListing(l.listing_id);
+      actions.appendChild(cancel);
+    } else {
+      const select = document.createElement("select");
+      select.className = "btn mini-select";
+      select.innerHTML = '<option value="">Choisir une carte à proposer...</option>';
+      myCollection.forEach(r => {
+        const c = r.cards;
+        const opt = new Option(`${cardName(c)} — ${BOTM.rarityLabel(c.rarity)} (×${r.quantity})`, c.id);
+        select.add(opt);
+      });
+      actions.appendChild(select);
+
+      const propose = document.createElement("button");
+      propose.className = "btn gold";
+      propose.textContent = "Proposer cette carte";
+      propose.onclick = () => submitOffer(l.listing_id, select);
+      actions.appendChild(propose);
+    }
+
+    market.appendChild(box);
+  });
+
+  if(!(data||[]).length){
+    market.innerHTML = '<div class="muted">Aucune carte n’est actuellement proposée à l’échange.</div>';
+  }
+}
+
+document.getElementById("refresh").onclick = async () => {
+  await loadMyCards();
+  await loadMarket();
+};
+
+await BOTM.refreshHeader();
+await loadMyCards();
+await loadMarket();
+</script>
+</body>
+</html>
