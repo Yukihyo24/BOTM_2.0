@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Battle of the Multiverse</title>
+  <link rel="stylesheet" href="/BOTM_2.0/styles.css">
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png" alt="BOTM">
+      <div>
+        <h1>Battle of the Multiverse</h1>
+        <div class="muted">Collection en ligne</div>
+      </div>
+    </div>
+    <div class="userbox">
+      <span class="badge">👤 <span data-user></span></span>
+      <span class="badge">🃏 <span data-cardcount></span></span>
+      <span class="badge">💠 <span data-points></span> pts</span>
+      <span class="badge">🎁 <span data-boosters></span></span>
+      <span class="badge">✨ <span data-miracles></span></span>
+    </div>
+  </div>
+
+  <div id="welcome" class="panel" style="margin-bottom:18px"></div>
+
+  <div class="grid">
+    <a class="cardmenu" href="/BOTM_2.0/deck.html">
+      <div class="ico">⚔️</div><h2>Mon deck</h2>
+      <div class="muted">Construire un deck de 20 cartes</div>
+    </a>
+
+    <a class="cardmenu" href="/BOTM_2.0/collection.html">
+      <div class="ico">🃏</div><h2>Collection</h2>
+      <div class="muted">Toutes tes cartes synchronisées</div>
+    </a>
+
+    <a class="cardmenu" href="/BOTM_2.0/boutique.html">
+      <div class="ico">🛒</div><h2>Boutique</h2>
+      <div class="muted">Dépenser tes points</div>
+    </a>
+
+    <a class="cardmenu" href="/BOTM_2.0/booster.html">
+      <div class="ico">🎁</div><h2>Boosters</h2>
+      <div class="muted"><span data-boosters></span> disponible(s)</div>
+    </a>
+
+    <a class="cardmenu" href="/BOTM_2.0/pioche.html">
+      <div class="ico">✨</div><h2>Pioche Miracle</h2>
+      <div class="muted"><span data-miracles></span> disponible(s)</div>
+    </a>
+
+    <a class="cardmenu" id="admin-link" href="/BOTM_2.0/admin.html" style="display:none">
+      <div class="ico">🛠️</div><h2>Administration</h2>
+      <div class="muted">Cartes, récompenses et boutique</div>
+    </a>
+  </div>
+
+  <div class="panel" style="margin-top:18px">
+    <button class="btn danger" id="logout">Déconnexion</button>
+  </div>
+</div>
+
+<script type="module">
+import { BOTM } from "/BOTM_2.0/app.js";
+
+const session = await BOTM.requireAuth();
+
+if (session) {
+  const p = await BOTM.profile();
+
+  if (!p.starter_claimed) {
+    location.href = "/BOTM_2.0/starter.html";
+  }
+
+  document.getElementById("welcome").innerHTML = `
+    <h2 style="margin-top:0">Bienvenue, ${p.username}</h2>
+    <p class="muted">
+      Tu disposes actuellement de
+      <b>${Number(p.points || 0).toLocaleString("fr-FR")} points</b>.
+    </p>`;
+
+  if (p.role === "admin") {
+    document.getElementById("admin-link").style.display = "";
+  }
+}
+
+document.getElementById("logout").onclick = () => BOTM.signOut();
+</script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Boutique - BOTM</title>
+  <link rel="stylesheet" href="/BOTM_2.0/styles.css">
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png" alt="BOTM">
+      <div>
+        <h1>🛒 Boutique</h1>
+        <div class="muted">Battle of the Multiverse</div>
+      </div>
+    </div>
+    <div class="userbox">
+      <span class="badge">💠 <span data-points></span> pts</span>
+      <span class="badge">🎁 <span data-boosters></span></span>
+      <span class="badge">✨ <span data-miracles></span></span>
+    </div>
+  </div>
+
+  <div class="nav">
+    <a class="btn" href="/BOTM_2.0/index.html">← Menu</a>
+  </div>
+
+  <div id="msg" class="notice" style="display:none"></div>
+
+  <div class="panel" style="margin-bottom:18px">
+    <h2 class="section-title">Objets permanents</h2>
+    <p class="muted">
+      Le booster coûte 2 000 points et son stock est illimité.
+      La Pioche Miracle coûte 1 000 points et son stock est géré par l'administrateur.
+    </p>
+    <div id="specials" class="shop-grid"></div>
+  </div>
+
+  <div class="panel">
+    <h2 class="section-title">Cartes à l'unité</h2>
+    <p class="muted">
+      Le stock affiché est global à tous les joueurs. Une fois épuisé, personne ne peut acheter la carte.
+    </p>
+    <div id="cards" class="shop-grid"></div>
+  </div>
+</div>
+
+<script type="module">
+import { BOTM, supabase } from "/BOTM_2.0/app.js";
+
+await BOTM.requireAuth();
+
+let profile = await BOTM.profile();
+let busy = false;
+
+const msg = document.getElementById("msg");
+
+function fmt(n) {
+  return Number(n || 0).toLocaleString("fr-FR");
+}
+
+function showMsg(text, ok = true) {
+  msg.style.display = "block";
+  msg.textContent = text;
+  msg.classList.toggle("shop-error", !ok);
+}
+
+function itemCard(item) {
+  const d = document.createElement("div");
+  d.className = "shop-item";
+
+  let visual = "";
+  let title = item.title || "";
+  let subtitle = "";
+  let stockText = "";
+
+  if (item.item_type === "booster") {
+    visual = `<div class="shop-big-icon">🎁</div>`;
+    title = "Booster";
+    subtitle = "4 cartes aléatoires";
+    stockText = "Stock illimité";
+  } else if (item.item_type === "miracle") {
+    visual = `<div class="shop-big-icon">✨</div>`;
+    title = "Pioche Miracle";
+    subtitle = "3 cartes proposées, 1 conservée";
+    stockText = `${item.stock ?? 0} disponible(s)`;
+  } else {
+    const c = item.cards;
+    visual = `<img class="card-img" src="${BOTM.imagePath(c)}" alt="">`;
+    title = c?.file_name?.replace(/\.[^.]+$/, "") || "Carte";
+    subtitle = `${c?.universe || ""} • ${BOTM.rarityLabel(c?.rarity || "")}`;
+    stockText = `${item.stock ?? 0} exemplaire(s) restant(s)`;
+  }
+
+  const soldOut = item.item_type !== "booster" && Number(item.stock || 0) <= 0;
+  const tooPoor = Number(profile.points || 0) < Number(item.price || 0);
+
+  d.innerHTML = `
+    ${visual}
+    <div class="shop-body">
+      <h3>${title}</h3>
+      <div class="muted small">${subtitle}</div>
+      <div class="shop-price">💠 ${fmt(item.price)} points</div>
+      <div class="shop-stock">${soldOut ? "Épuisé" : stockText}</div>
+    </div>`;
+
+  const b = document.createElement("button");
+  b.className = "btn gold";
+  b.textContent = soldOut ? "Épuisé" : (tooPoor ? "Points insuffisants" : "Acheter");
+  b.disabled = busy || soldOut || tooPoor;
+  b.onclick = () => buy(item);
+  d.appendChild(b);
+
+  return d;
+}
+
+async function loadShop() {
+  profile = await BOTM.profile();
+
+  const { data, error } = await supabase
+    .from("shop_items")
+    .select(`
+      id,
+      item_type,
+      title,
+      price,
+      stock,
+      active,
+      card_id,
+      cards(
+        id,
+        universe,
+        rarity,
+        file_name,
+        image_path
+      )
+    `)
+    .eq("active", true)
+    .order("item_type")
+    .order("id");
+
+  if (error) {
+    showMsg(error.message, false);
+    return;
+  }
+
+  const specials = document.getElementById("specials");
+  const cards = document.getElementById("cards");
+  specials.innerHTML = "";
+  cards.innerHTML = "";
+
+  (data || []).forEach(item => {
+    if (item.item_type === "card") {
+      cards.appendChild(itemCard(item));
+    } else {
+      specials.appendChild(itemCard(item));
+    }
+  });
+
+  if (!cards.children.length) {
+    cards.innerHTML = `<div class="muted">Aucune carte n'est actuellement proposée.</div>`;
+  }
+
+  await BOTM.refreshHeader();
+}
+
+async function buy(item) {
+  if (busy) return;
+
+  const name =
+    item.item_type === "booster" ? "un booster" :
+    item.item_type === "miracle" ? "une Pioche Miracle" :
+    `la carte ${item.cards?.file_name?.replace(/\.[^.]+$/, "") || ""}`;
+
+  if (!confirm(`Acheter ${name} pour ${fmt(item.price)} points ?`)) return;
+
+  busy = true;
+  document.querySelectorAll(".shop-item button").forEach(b => b.disabled = true);
+
+  const { data, error } = await supabase.rpc("purchase_shop_item", {
+    p_item_id: item.id
+  });
+
+  if (error) {
+    showMsg(error.message, false);
+    busy = false;
+    await loadShop();
+    return;
+  }
+
+  const result = data?.[0];
+  showMsg(
+    `Achat effectué ! Il te reste ${fmt(result?.points_remaining ?? 0)} points.`,
+    true
+  );
+
+  busy = false;
+  await loadShop();
+}
+
+await loadShop();
+</script>
+</body>
+</html>

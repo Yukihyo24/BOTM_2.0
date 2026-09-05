@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pioche Miracle - BOTM</title>
+  <link rel="stylesheet" href="/BOTM_2.0/styles.css">
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png" alt="BOTM">
+      <div><h1>✨ Pioche Miracle</h1></div>
+    </div>
+    <span class="badge">✨ <span data-miracles></span></span>
+  </div>
+
+  <div class="nav"><a class="btn" href="/BOTM_2.0/index.html">← Menu</a></div>
+
+  <div class="panel">
+    <p>1 Pioche Miracle = 3 cartes proposées, mais une seule carte peut être conservée. Elle est ajoutée à ta collection après ton choix.</p>
+    <div id="status" class="notice" style="display:none"></div>
+    <div id="univers" class="univers-grid"></div>
+    <div id="msg" class="notice" style="display:none"></div>
+    <div id="cards" class="reveal-wrap"></div>
+  </div>
+</div>
+
+<script type="module">
+import { BOTM, supabase } from "/BOTM_2.0/app.js";
+
+await BOTM.requireAuth();
+
+let sessionId = null;
+let miracleCount = 0;
+let busy = false;
+let hasOpenChoice = false;
+
+const universWrap = document.getElementById("univers");
+const msg = document.getElementById("msg");
+const status = document.getElementById("status");
+
+async function refreshAvailability() {
+  const p = await BOTM.profile();
+  miracleCount = Number(p.miracle_draws || 0);
+  await BOTM.refreshHeader();
+
+  const blocked = miracleCount <= 0 && !hasOpenChoice;
+
+  status.style.display = blocked ? "block" : "none";
+  status.textContent = blocked
+    ? "Tu n'as aucune Pioche Miracle disponible. Un administrateur doit t'en créditer."
+    : `Il te reste ${miracleCount} Pioche(s) Miracle.`;
+
+  document.querySelectorAll(".univers-img").forEach(img => {
+    const disable = blocked || busy || hasOpenChoice;
+    img.style.opacity = disable ? ".45" : "1";
+    img.style.pointerEvents = disable ? "none" : "auto";
+  });
+}
+
+BOTM.universes.forEach(name => {
+  const img = document.createElement("img");
+  img.src = `/BOTM_2.0/assets/univers/${name}.jpg`;
+  img.className = "univers-img";
+  img.title = name;
+  img.onclick = () => start(name, img);
+  universWrap.appendChild(img);
+});
+
+async function start(name, img) {
+  if (busy || hasOpenChoice) return;
+
+  const p = await BOTM.profile();
+  miracleCount = Number(p.miracle_draws || 0);
+
+  // Le serveur peut aussi restituer une session non résolue sans consommer
+  // de nouveau jeton, mais sans jeton ni session on bloque ici.
+  if (miracleCount <= 0) {
+    await refreshAvailability();
+    return;
+  }
+
+  busy = true;
+  document.querySelectorAll(".univers-img").forEach(x => x.classList.remove("selected"));
+  img.classList.add("selected");
+
+  msg.style.display = "block";
+  msg.textContent = "Tirage...";
+
+  const { data, error } = await supabase.rpc("start_miracle_draw", {
+    p_universe: name
+  });
+
+  if (error) {
+    msg.textContent = error.message;
+    busy = false;
+    await refreshAvailability();
+    return;
+  }
+
+  sessionId = data?.[0]?.session_id || null;
+  hasOpenChoice = !!sessionId;
+  render(data || []);
+  msg.textContent = "Choisis une carte : ce choix est définitif.";
+
+  busy = false;
+  await refreshAvailability();
+}
+
+function render(rows) {
+  const wrap = document.getElementById("cards");
+  wrap.innerHTML = "";
+
+  rows.forEach(c => {
+    const d = document.createElement("div");
+    d.className = "card-item reveal";
+    d.innerHTML = `
+      <img class="card-img" src="${BOTM.imagePath(c)}">
+      <div class="meta">
+        <b>${c.file_name.replace(/\.[^.]+$/, "")}</b>
+        <div class="rarity">${BOTM.rarityLabel(c.rarity)}</div>
+      </div>`;
+
+    const b = document.createElement("button");
+    b.className = "btn gold";
+    b.textContent = "Choisir";
+    b.onclick = () => choose(c.card_id, b);
+    d.appendChild(b);
+    wrap.appendChild(d);
+  });
+}
+
+async function choose(cardId, button) {
+  if (busy || !sessionId) return;
+
+  busy = true;
+  document.querySelectorAll("#cards button").forEach(b => b.disabled = true);
+
+  const { data, error } = await supabase.rpc("choose_miracle_card", {
+    p_session_id: sessionId,
+    p_card_id: cardId
+  });
+
+  if (error) {
+    msg.textContent = error.message;
+    document.querySelectorAll("#cards button").forEach(b => b.disabled = false);
+    busy = false;
+    return;
+  }
+
+  render(data || []);
+  document.querySelectorAll("#cards button").forEach(b => b.remove());
+
+  hasOpenChoice = false;
+  sessionId = null;
+  msg.textContent = "Carte ajoutée à ta collection !";
+
+  busy = false;
+  await refreshAvailability();
+}
+
+await refreshAvailability();
+</script>
+</body>
+</html>

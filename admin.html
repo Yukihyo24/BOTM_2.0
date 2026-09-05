@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin - BOTM</title>
+  <link rel="stylesheet" href="/BOTM_2.0/styles.css">
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png" alt="BOTM">
+      <div><h1>Administration BOTM</h1></div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <a class="btn" href="/BOTM_2.0/index.html">← Menu</a>
+    <a class="btn" href="/BOTM_2.0/boutique.html">Voir la boutique</a>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Créditer un joueur</h2>
+      <input id="player" placeholder="E-mail du joueur">
+      <input id="points" type="number" min="0" value="0" placeholder="Points">
+      <input id="boosters" type="number" min="0" value="0" placeholder="Boosters">
+      <input id="miracles" type="number" min="0" value="0" placeholder="Pioches Miracle">
+      <button class="btn gold" id="grant">Créditer</button>
+      <div id="grantmsg" class="notice" style="display:none"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Ajouter une carte au catalogue</h2>
+      <select id="u" class="btn"></select>
+      <select id="r" class="btn">
+        <option value="commune">Commune</option>
+        <option value="rare">Rare</option>
+        <option value="super_rare">Super Rare</option>
+        <option value="tres_rare">Très Rare</option>
+        <option value="ultra_rare">Ultra Rare</option>
+      </select>
+      <input id="file" placeholder="nom-image.jpg">
+      <input id="path" placeholder="univers/Naruto/rare/nom-image.jpg">
+      <button class="btn gold" id="add">Ajouter au catalogue</button>
+      <div id="addmsg" class="notice" style="display:none"></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:18px">
+    <h2>Ajouter une carte à la boutique</h2>
+    <div class="shop-admin-line">
+      <input id="search-card" placeholder="Rechercher une carte par nom...">
+      <input id="shop-price" type="number" min="1" value="1000" placeholder="Prix">
+      <input id="shop-stock" type="number" min="1" value="1" placeholder="Stock global">
+      <button class="btn" id="search-btn">Rechercher</button>
+    </div>
+    <div id="search-results" class="shop-grid" style="margin-top:16px"></div>
+    <div id="shopmsg" class="notice" style="display:none"></div>
+  </div>
+
+  <div class="panel" style="margin-top:18px">
+    <h2>Contenu actuel de la boutique</h2>
+    <p class="muted">
+      Le stock du booster est toujours illimité. La Pioche Miracle et les cartes utilisent un stock global.
+    </p>
+    <div id="shop-items" class="admin-shop-list"></div>
+  </div>
+</div>
+
+<script type="module">
+import { BOTM, supabase } from "/BOTM_2.0/app.js";
+
+await BOTM.requireAuth();
+const p = await BOTM.profile();
+
+if (p.role !== "admin") {
+  location.href = "/BOTM_2.0/index.html";
+}
+
+const grantMsg = document.getElementById("grantmsg");
+const shopMsg = document.getElementById("shopmsg");
+
+function show(el, text) {
+  el.style.display = "block";
+  el.textContent = text;
+}
+
+BOTM.universes.forEach(x => document.getElementById("u").add(new Option(x, x)));
+
+function updatePath() {
+  const u = document.getElementById("u").value;
+  const r = document.getElementById("r").value;
+  const f = document.getElementById("file").value;
+  document.getElementById("path").value = `univers/${u}/${r}/${f}`;
+}
+
+document.getElementById("u").onchange = updatePath;
+document.getElementById("r").onchange = updatePath;
+document.getElementById("file").oninput = updatePath;
+
+document.getElementById("add").onclick = async () => {
+  const row = {
+    universe: document.getElementById("u").value,
+    rarity: document.getElementById("r").value,
+    file_name: document.getElementById("file").value.trim(),
+    image_path: document.getElementById("path").value.trim()
+  };
+
+  const { error } = await supabase.from("cards").insert(row);
+  const m = document.getElementById("addmsg");
+  show(m, error ? error.message : "Carte ajoutée au catalogue.");
+};
+
+document.getElementById("grant").onclick = async () => {
+  const email = document.getElementById("player").value.trim();
+  const points = Number(document.getElementById("points").value || 0);
+  const boosters = Number(document.getElementById("boosters").value || 0);
+  const miracles = Number(document.getElementById("miracles").value || 0);
+
+  const { error: rewardError } = await supabase.rpc("admin_grant_rewards", {
+    p_email: email,
+    p_boosters: boosters,
+    p_miracles: miracles
+  });
+
+  if (rewardError) {
+    show(grantMsg, rewardError.message);
+    return;
+  }
+
+  const { error: pointError } = await supabase.rpc("admin_grant_points", {
+    p_email: email,
+    p_points: points
+  });
+
+  show(
+    grantMsg,
+    pointError ? pointError.message : "Récompenses et points crédités."
+  );
+};
+
+async function searchCards() {
+  const q = document.getElementById("search-card").value.trim();
+  const wrap = document.getElementById("search-results");
+  wrap.innerHTML = "";
+
+  if (q.length < 2) {
+    wrap.innerHTML = `<div class="muted">Entre au moins 2 caractères.</div>`;
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("cards")
+    .select("id,universe,rarity,file_name,image_path")
+    .eq("active", true)
+    .ilike("file_name", `%${q}%`)
+    .limit(30);
+
+  if (error) {
+    wrap.innerHTML = `<div class="muted">${error.message}</div>`;
+    return;
+  }
+
+  (data || []).forEach(c => {
+    const d = document.createElement("div");
+    d.className = "shop-item";
+    d.innerHTML = `
+      <img class="card-img" src="${BOTM.imagePath(c)}">
+      <div class="shop-body">
+        <h3>${c.file_name.replace(/\.[^.]+$/, "")}</h3>
+        <div class="muted small">${c.universe} • ${BOTM.rarityLabel(c.rarity)}</div>
+      </div>`;
+
+    const b = document.createElement("button");
+    b.className = "btn gold";
+    b.textContent = "Ajouter à la boutique";
+    b.onclick = () => addCardToShop(c);
+    d.appendChild(b);
+    wrap.appendChild(d);
+  });
+
+  if (!wrap.children.length) {
+    wrap.innerHTML = `<div class="muted">Aucune carte trouvée.</div>`;
+  }
+}
+
+async function addCardToShop(c) {
+  const price = Number(document.getElementById("shop-price").value || 0);
+  const stock = Number(document.getElementById("shop-stock").value || 0);
+
+  if (price <= 0 || stock <= 0) {
+    show(shopMsg, "Prix et stock doivent être supérieurs à 0.");
+    return;
+  }
+
+  const { error } = await supabase.rpc("admin_shop_upsert_card", {
+    p_card_id: c.id,
+    p_price: price,
+    p_stock: stock
+  });
+
+  show(
+    shopMsg,
+    error ? error.message : `${c.file_name.replace(/\.[^.]+$/, "")} ajoutée à la boutique.`
+  );
+
+  if (!error) await loadShopItems();
+}
+
+document.getElementById("search-btn").onclick = searchCards;
+document.getElementById("search-card").addEventListener("keydown", e => {
+  if (e.key === "Enter") searchCards();
+});
+
+async function loadShopItems() {
+  const wrap = document.getElementById("shop-items");
+  wrap.innerHTML = "Chargement...";
+
+  const { data, error } = await supabase
+    .from("shop_items")
+    .select(`
+      id,item_type,title,price,stock,active,card_id,
+      cards(id,universe,rarity,file_name,image_path)
+    `)
+    .order("item_type")
+    .order("id");
+
+  if (error) {
+    wrap.textContent = error.message;
+    return;
+  }
+
+  wrap.innerHTML = "";
+
+  (data || []).forEach(item => {
+    const row = document.createElement("div");
+    row.className = "admin-shop-row";
+
+    const name =
+      item.item_type === "booster" ? "🎁 Booster" :
+      item.item_type === "miracle" ? "✨ Pioche Miracle" :
+      `🃏 ${item.cards?.file_name?.replace(/\.[^.]+$/, "") || "Carte"}`;
+
+    row.innerHTML = `
+      <div class="admin-shop-name">
+        <b>${name}</b>
+        ${item.cards ? `<span class="muted small">${item.cards.universe} • ${BOTM.rarityLabel(item.cards.rarity)}</span>` : ""}
+      </div>
+
+      <label>Prix
+        <input class="edit-price" type="number" min="1" value="${item.price}">
+      </label>
+
+      <label>Stock
+        <input class="edit-stock" type="number" min="0"
+          ${item.item_type === "booster" ? 'value="" disabled placeholder="Illimité"' : `value="${item.stock ?? 0}"`}>
+      </label>
+
+      <label class="checkline">
+        <input class="edit-active" type="checkbox" ${item.active ? "checked" : ""}>
+        Actif
+      </label>
+
+      <button class="btn save-shop">Enregistrer</button>
+    `;
+
+    row.querySelector(".save-shop").onclick = async () => {
+      const price = Number(row.querySelector(".edit-price").value || 0);
+      const stock = item.item_type === "booster"
+        ? null
+        : Number(row.querySelector(".edit-stock").value || 0);
+      const active = row.querySelector(".edit-active").checked;
+
+      const { error } = await supabase.rpc("admin_shop_update_item", {
+        p_item_id: item.id,
+        p_price: price,
+        p_stock: stock,
+        p_active: active
+      });
+
+      show(shopMsg, error ? error.message : "Boutique mise à jour.");
+      if (!error) await loadShopItems();
+    };
+
+    wrap.appendChild(row);
+  });
+}
+
+await loadShopItems();
+</script>
+</body>
+</html>

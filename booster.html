@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Boosters - BOTM</title>
+  <link rel="stylesheet" href="/BOTM_2.0/styles.css">
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png" alt="BOTM">
+      <div><h1>Ouverture de booster</h1></div>
+    </div>
+    <span class="badge">🎁 <span data-boosters></span> booster(s)</span>
+  </div>
+
+  <div class="nav"><a class="btn" href="/BOTM_2.0/index.html">← Menu</a></div>
+
+  <div class="panel">
+    <h2>Choisir l'univers</h2>
+    <p class="muted">1 booster = 4 cartes. Les 4 cartes sont ajoutées automatiquement à ta collection.</p>
+    <div id="status" class="notice" style="display:none"></div>
+    <div id="univers" class="univers-grid"></div>
+    <button id="open" class="btn gold" disabled>Ouvrir</button>
+    <div id="msg" class="notice" style="display:none"></div>
+    <div id="cards" class="reveal-wrap"></div>
+    <audio id="audio" src="/BOTM_2.0/booster.mp3" preload="auto"></audio>
+  </div>
+</div>
+
+<script type="module">
+import { BOTM, supabase } from "/BOTM_2.0/app.js";
+
+await BOTM.requireAuth();
+
+let selected = null;
+let boosterCount = 0;
+let busy = false;
+
+const universWrap = document.getElementById("univers");
+const openBtn = document.getElementById("open");
+const msg = document.getElementById("msg");
+const status = document.getElementById("status");
+
+async function refreshAvailability() {
+  const p = await BOTM.profile();
+  boosterCount = Number(p.boosters || 0);
+  await BOTM.refreshHeader();
+
+  const noBooster = boosterCount <= 0;
+  status.style.display = noBooster ? "block" : "none";
+  status.textContent = noBooster
+    ? "Tu n'as aucun booster disponible. Un administrateur doit t'en créditer."
+    : `Il te reste ${boosterCount} booster(s).`;
+
+  document.querySelectorAll(".univers-img").forEach(img => {
+    img.style.opacity = noBooster ? ".45" : "1";
+    img.style.pointerEvents = noBooster ? "none" : "auto";
+  });
+
+  openBtn.disabled = busy || noBooster || !selected;
+}
+
+BOTM.universes.forEach(name => {
+  const img = document.createElement("img");
+  img.src = `/BOTM_2.0/assets/univers/${name}.jpg`;
+  img.className = "univers-img";
+  img.title = name;
+  img.onclick = () => {
+    if (boosterCount <= 0 || busy) return;
+    selected = name;
+    document.querySelectorAll(".univers-img").forEach(x => x.classList.remove("selected"));
+    img.classList.add("selected");
+    openBtn.disabled = false;
+  };
+  universWrap.appendChild(img);
+});
+
+openBtn.onclick = async () => {
+  if (busy || !selected) return;
+
+  // Relecture serveur juste avant le tirage.
+  const p = await BOTM.profile();
+  boosterCount = Number(p.boosters || 0);
+  if (boosterCount <= 0) {
+    await refreshAvailability();
+    return;
+  }
+
+  busy = true;
+  openBtn.disabled = true;
+  msg.style.display = "block";
+  msg.textContent = "Ouverture...";
+
+  try {
+    const a = document.getElementById("audio");
+    a.currentTime = 0;
+    a.play().catch(() => {});
+  } catch {}
+
+  const { data, error } = await supabase.rpc("open_booster", {
+    p_universe: selected
+  });
+
+  if (error) {
+    msg.textContent = error.message;
+    busy = false;
+    await refreshAvailability();
+    return;
+  }
+
+  const wrap = document.getElementById("cards");
+  wrap.innerHTML = "";
+
+  (data || []).forEach((c, i) => {
+    setTimeout(() => {
+      const d = document.createElement("div");
+      d.className = "card-item reveal";
+      d.innerHTML = `
+        <img class="card-img" src="${BOTM.imagePath(c)}">
+        <div class="meta">
+          <b>${c.file_name.replace(/\.[^.]+$/, "")}</b>
+          <div class="rarity">${BOTM.rarityLabel(c.rarity)}</div>
+        </div>`;
+      wrap.appendChild(d);
+    }, i * 140);
+  });
+
+  msg.textContent = "4 cartes ajoutées à ta collection.";
+  busy = false;
+  await refreshAvailability();
+};
+
+await refreshAvailability();
+</script>
+</body>
+</html>
