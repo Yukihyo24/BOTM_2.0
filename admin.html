@@ -63,7 +63,7 @@
   <div class="panel" style="margin-top:18px">
     <h2>Contenu actuel de la boutique</h2>
     <p class="muted">
-      Le stock du booster est toujours illimité. La Pioche Miracle et les cartes utilisent un stock global.
+      Le stock des boosters et des Pioches Miracle est toujours illimité. Seules les cartes utilisent un stock global.
     </p>
     <div id="shop-items" class="admin-shop-list"></div>
   </div>
@@ -255,7 +255,7 @@ async function loadShopItems() {
 
       <label>Stock
         <input class="edit-stock" type="number" min="0"
-          ${item.item_type === "booster" ? 'value="" disabled placeholder="Illimité"' : `value="${item.stock ?? 0}"`}>
+          ${item.item_type !== "card" ? 'value="" disabled placeholder="Illimité"' : `value="${item.stock ?? 0}"`}>
       </label>
 
       <label class="checkline">
@@ -268,7 +268,7 @@ async function loadShopItems() {
 
     row.querySelector(".save-shop").onclick = async () => {
       const price = Number(row.querySelector(".edit-price").value || 0);
-      const stock = item.item_type === "booster"
+      const stock = item.item_type !== "card"
         ? null
         : Number(row.querySelector(".edit-stock").value || 0);
       const active = row.querySelector(".edit-active").checked;
