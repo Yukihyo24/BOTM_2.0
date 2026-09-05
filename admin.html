@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin - BOTM</title><link rel="stylesheet" href="styles.css"></head><body><div class="app">
+<div class="topbar"><div class="brand"><img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png"><div><h1>Administration BOTM</h1></div></div></div><div class="nav"><a class="btn" href="index.html">← Menu</a></div>
+<div class="grid">
+<div class="panel"><h2>Ajouter une carte</h2><select id="u" class="btn"></select><select id="r" class="btn"><option value="commune">Commune</option><option value="rare">Rare</option><option value="super_rare">Super Rare</option><option value="tres_rare">Très Rare</option><option value="ultra_rare">Ultra Rare</option></select><input id="file" placeholder="nom-image.jpg"><input id="path" placeholder="univers/Naruto/rare/nom-image.jpg"><button class="btn gold" id="add">Ajouter au catalogue</button><div id="addmsg" class="notice" style="display:none"></div></div>
+<div class="panel"><h2>Créditer un joueur</h2><input id="player" placeholder="E-mail du joueur"><input id="boosters" type="number" min="0" value="1" placeholder="Boosters"><input id="miracles" type="number" min="0" value="0" placeholder="Pioches Miracle"><button class="btn gold" id="grant">Créditer</button><div id="grantmsg" class="notice" style="display:none"></div></div>
+</div></div>
+<script type="module">
+import { BOTM, supabase } from "./app.js";await BOTM.requireAuth();const p=await BOTM.profile();if(p.role!=="admin")location.href="index.html";
+BOTM.universes.forEach(x=>document.getElementById("u").add(new Option(x,x)));
+document.getElementById("u").onchange=()=>{const u=document.getElementById("u").value,r=document.getElementById("r").value,f=document.getElementById("file").value;document.getElementById("path").value=`univers/${u}/${r}/${f}`};
+document.getElementById("r").onchange=document.getElementById("u").onchange;document.getElementById("file").oninput=document.getElementById("u").onchange;
+document.getElementById("add").onclick=async()=>{const row={universe:document.getElementById("u").value,rarity:document.getElementById("r").value,file_name:document.getElementById("file").value.trim(),image_path:document.getElementById("path").value.trim()};const {error}=await supabase.from("cards").insert(row);const m=document.getElementById("addmsg");m.style.display="block";m.textContent=error?error.message:"Carte ajoutée au catalogue.";};
+document.getElementById("grant").onclick=async()=>{const {error}=await supabase.rpc("admin_grant_rewards",{p_email:document.getElementById("player").value.trim(),p_boosters:Number(document.getElementById("boosters").value),p_miracles:Number(document.getElementById("miracles").value)});const m=document.getElementById("grantmsg");m.style.display="block";m.textContent=error?error.message:"Récompenses créditées.";};
+</script></body></html>

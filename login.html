@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Connexion - BOTM</title><link rel="stylesheet" href="styles.css"></head>
+<body><div class="app"><div class="form panel">
+<div class="brand"><img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png" alt="BOTM"><div><h1>Battle of the Multiverse</h1><div class="muted">Compte joueur</div></div></div>
+<hr>
+<div class="nav"><button class="btn" id="mode-login">Connexion</button><button class="btn" id="mode-signup">Créer un compte</button></div>
+<div id="username-wrap" style="display:none"><input id="username" maxlength="24" placeholder="Pseudo"></div>
+<input id="email" type="email" placeholder="Adresse e-mail">
+<input id="password" type="password" minlength="6" placeholder="Mot de passe">
+<button class="btn gold" id="submit">Se connecter</button>
+<div id="msg" class="notice" style="display:none"></div>
+</div></div>
+<script type="module">
+import { supabase } from "./app.js";
+let mode="login";
+const msg=document.getElementById("msg");
+function setMode(m){
+ mode=m;
+ document.getElementById("username-wrap").style.display=m==="signup"?"block":"none";
+ document.getElementById("submit").textContent=m==="signup"?"Créer mon compte":"Se connecter";
+}
+document.getElementById("mode-login").onclick=()=>setMode("login");
+document.getElementById("mode-signup").onclick=()=>setMode("signup");
+document.getElementById("submit").onclick=async()=>{
+ const email=document.getElementById("email").value.trim();
+ const password=document.getElementById("password").value;
+ msg.style.display="block"; msg.textContent="...";
+ if(mode==="signup"){
+   const username=document.getElementById("username").value.trim();
+   if(username.length<2){msg.textContent="Choisis un pseudo d'au moins 2 caractères.";return;}
+   const {data,error}=await supabase.auth.signUp({
+     email,password,options:{data:{username},emailRedirectTo:new URL("index.html",location.href).href}
+   });
+   if(error){msg.textContent=error.message;return;}
+   if(data.session) location.href="starter.html";
+   else msg.textContent="Compte créé. Confirme ton e-mail si la confirmation est activée dans Supabase, puis connecte-toi.";
+ } else {
+   const {error}=await supabase.auth.signInWithPassword({email,password});
+   if(error){msg.textContent=error.message;return;}
+   location.href="index.html";
+ }
+};
+const {data}=await supabase.auth.getSession();
+if(data.session) location.href="index.html";
+</script></body></html>
