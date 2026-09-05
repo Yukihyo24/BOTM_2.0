@@ -72,6 +72,27 @@
       max-width:164px;
     }
   }
+
+  /* Une fois le choix validé, on quitte la grille :
+     la carte conservée est centrée avec flex. */
+  #cards.chosen-card{
+    display:flex !important;
+    justify-content:center !important;
+    align-items:flex-start;
+    width:100%;
+  }
+
+  #cards.chosen-card .card-item{
+    flex:0 0 200px;
+    width:200px;
+    max-width:200px;
+    margin:0 auto;
+  }
+
+  #cards.chosen-card .card-item img.card-img{
+    width:184px;
+    max-width:184px;
+  }
 </style>
 </head><body><div class="app">
 <div class="topbar"><div class="brand"><img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png"><div><h1>✨ Pioche Miracle</h1></div></div><span class="badge">✨ <span data-miracles></span></span></div>
@@ -82,6 +103,6 @@ import { BOTM, supabase } from "./app.js";await BOTM.requireAuth();let sessionId
 const u=document.getElementById("univers");BOTM.universes.forEach(name=>{const img=document.createElement("img");img.src=`assets/univers/${name}.jpg`;img.className="univers-img";img.title=name;img.onclick=()=>start(name,img);u.appendChild(img)});
 async function start(name,img){document.querySelectorAll(".univers-img").forEach(x=>x.classList.remove("selected"));img.classList.add("selected");const m=document.getElementById("msg");m.style.display="block";m.textContent="Tirage...";
 const {data,error}=await supabase.rpc("start_miracle_draw",{p_universe:name});if(error){m.textContent=error.message;return;}sessionId=data[0]?.session_id;render(data);m.textContent="Choisis une carte : ce choix est définitif.";}
-function render(rows){const w=document.getElementById("cards");w.innerHTML="";rows.forEach(c=>{const d=document.createElement("div");d.className="card-item reveal";d.innerHTML=`<img class="card-img" src="${BOTM.imagePath(c)}"><div class="meta"><b>${c.file_name.replace(/\.[^.]+$/,"")}</b><div class="rarity">${BOTM.rarityLabel(c.rarity)}</div></div>`;const b=document.createElement("button");b.className="btn gold";b.textContent="Choisir";b.onclick=()=>choose(c.card_id);d.appendChild(b);w.appendChild(d)});}
+function render(rows){const w=document.getElementById("cards");w.innerHTML="";w.classList.toggle("chosen-card",(rows||[]).length===1);rows.forEach(c=>{const d=document.createElement("div");d.className="card-item reveal";d.innerHTML=`<img class="card-img" src="${BOTM.imagePath(c)}"><div class="meta"><b>${c.file_name.replace(/\.[^.]+$/,"")}</b><div class="rarity">${BOTM.rarityLabel(c.rarity)}</div></div>`;const b=document.createElement("button");b.className="btn gold";b.textContent="Choisir";b.onclick=()=>choose(c.card_id);d.appendChild(b);w.appendChild(d)});}
 async function choose(cardId){const {data,error}=await supabase.rpc("choose_miracle_card",{p_session_id:sessionId,p_card_id:cardId});const m=document.getElementById("msg");if(error){m.textContent=error.message;return;}render(data);document.querySelectorAll("#cards button").forEach(b=>b.remove());m.textContent="Carte ajoutée à ta collection !";await BOTM.refreshHeader();}
 </script></body></html>
