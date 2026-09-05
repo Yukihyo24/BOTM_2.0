@@ -1,18 +1,156 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Collection - BOTM</title><link rel="stylesheet" href="/BOTM_2.0/styles.css"></head><body><div class="app">
-<div class="topbar"><div class="brand"><img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png"><div><h1>Ma collection</h1></div></div><div class="userbox"><span class="badge">👤 <span data-user></span></span><span class="badge">🃏 <span data-cardcount></span></span></div></div>
-<div class="nav"><a class="btn" href="/BOTM_2.0/index.html">← Menu</a></div>
-<div class="panel"><div class="nav"><select id="universe" class="btn"><option value="">Tous les univers</option></select><select id="rarity" class="btn"><option value="">Toutes les raretés</option><option value="commune">Commune</option><option value="rare">Rare</option><option value="super_rare">Super Rare</option><option value="tres_rare">Très Rare</option><option value="ultra_rare">Ultra Rare</option></select></div><div id="cards" class="cards"></div></div>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Collection - BOTM</title>
+  <link rel="stylesheet" href="/BOTM_2.0/styles.css">
+  <style>
+    .sell-info{margin:0 0 16px;line-height:1.7}
+    .sell-value{font-weight:700;color:var(--gold)}
+    .card-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .card-actions .btn{flex:1;min-width:105px}
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png">
+      <div><h1>Ma collection</h1></div>
+    </div>
+    <div class="userbox">
+      <span class="badge">👤 <span data-user></span></span>
+      <span class="badge">🃏 <span data-cardcount></span></span>
+      <span class="badge">💠 <span data-points></span> pts</span>
+    </div>
+  </div>
+
+  <div class="nav">
+    <a class="btn" href="/BOTM_2.0/index.html">← Menu</a>
+    <a class="btn" href="/BOTM_2.0/echanges.html">🔄 Échanges</a>
+  </div>
+
+  <div class="panel">
+    <p class="sell-info muted">
+      Tu peux revendre une carte contre des points :
+      Commune <b>50</b> • Rare <b>100</b> • Très Rare <b>250</b> •
+      Super Rare <b>2 000</b> • Ultra Rare <b>10 000</b>.
+      Une carte déjà engagée dans un échange ne peut pas être vendue.
+    </p>
+
+    <div class="nav">
+      <select id="universe" class="btn"><option value="">Tous les univers</option></select>
+      <select id="rarity" class="btn">
+        <option value="">Toutes les raretés</option>
+        <option value="commune">Commune</option>
+        <option value="rare">Rare</option>
+        <option value="super_rare">Super Rare</option>
+        <option value="tres_rare">Très Rare</option>
+        <option value="ultra_rare">Ultra Rare</option>
+      </select>
+    </div>
+
+    <div id="msg" class="notice" style="display:none"></div>
+    <div id="cards" class="cards"></div>
+  </div>
 </div>
+
 <script type="module">
-import { BOTM } from "/BOTM_2.0/app.js";
+import { BOTM, supabase } from "/BOTM_2.0/app.js";
 await BOTM.requireAuth();
-const u=document.getElementById("universe");BOTM.universes.forEach(x=>u.add(new Option(x,x)));
-async function render(){
- const uf=u.value,rf=document.getElementById("rarity").value;const rows=await BOTM.collection();const wrap=document.getElementById("cards");wrap.innerHTML="";
- const filtered=rows.filter(r=>(!uf||r.cards.universe===uf)&&(!rf||r.cards.rarity===rf));
- filtered.forEach(r=>{const c=r.cards;const d=document.createElement("div");d.className="card-item";d.innerHTML=`<span class="qty">×${r.quantity}</span><img class="card-img" src="${BOTM.imagePath(c)}"><div class="meta"><b>${c.file_name.replace(/\.[^.]+$/,"")}</b><div class="rarity">${c.universe} • ${BOTM.rarityLabel(c.rarity)}</div></div>`;wrap.appendChild(d)});
- if(!filtered.length)wrap.innerHTML='<div class="muted">Aucune carte.</div>';
+
+const sellValues = {
+  commune: 50,
+  rare: 100,
+  tres_rare: 250,
+  super_rare: 2000,
+  ultra_rare: 10000
+};
+
+const u = document.getElementById("universe");
+BOTM.universes.forEach(x => u.add(new Option(x,x)));
+
+const msg = document.getElementById("msg");
+
+function showMsg(text, error=false){
+  msg.style.display = "block";
+  msg.textContent = text;
+  msg.style.borderColor = error ? "rgba(255,92,122,.7)" : "";
 }
-u.onchange=render;document.getElementById("rarity").onchange=render;await render();
-</script></body></html>
+
+async function sell(card){
+  const value = sellValues[card.rarity] || 0;
+  const name = card.file_name.replace(/\.[^.]+$/,"");
+
+  if(!confirm(`Vendre 1 exemplaire de "${name}" pour ${value.toLocaleString("fr-FR")} points ?`)){
+    return;
+  }
+
+  const { data, error } = await supabase.rpc("sell_card", {
+    p_card_id: card.id
+  });
+
+  if(error){
+    showMsg(error.message, true);
+    return;
+  }
+
+  const result = data?.[0];
+  showMsg(`Carte vendue : +${Number(result?.points_awarded || value).toLocaleString("fr-FR")} points.`);
+  await BOTM.refreshHeader();
+  await render();
+}
+
+async function render(){
+  const uf = u.value;
+  const rf = document.getElementById("rarity").value;
+  const rows = await BOTM.collection();
+  const wrap = document.getElementById("cards");
+  wrap.innerHTML = "";
+
+  const filtered = rows.filter(r =>
+    (!uf || r.cards.universe === uf) &&
+    (!rf || r.cards.rarity === rf)
+  );
+
+  filtered.forEach(r => {
+    const c = r.cards;
+    const value = sellValues[c.rarity] || 0;
+    const d = document.createElement("div");
+    d.className = "card-item";
+    d.innerHTML = `
+      <span class="qty">×${r.quantity}</span>
+      <img class="card-img" src="${BOTM.imagePath(c)}">
+      <div class="meta">
+        <b>${c.file_name.replace(/\.[^.]+$/,"")}</b>
+        <div class="rarity">${c.universe} • ${BOTM.rarityLabel(c.rarity)}</div>
+        <div class="sell-value">Revente : ${value.toLocaleString("fr-FR")} pts</div>
+      </div>
+    `;
+
+    const actions = document.createElement("div");
+    actions.className = "card-actions";
+
+    const sellBtn = document.createElement("button");
+    sellBtn.className = "btn gold";
+    sellBtn.textContent = "💠 Vendre 1";
+    sellBtn.onclick = () => sell(c);
+    actions.appendChild(sellBtn);
+
+    d.appendChild(actions);
+    wrap.appendChild(d);
+  });
+
+  if(!filtered.length){
+    wrap.innerHTML = '<div class="muted">Aucune carte.</div>';
+  }
+}
+
+u.onchange = render;
+document.getElementById("rarity").onchange = render;
+await BOTM.refreshHeader();
+await render();
+</script>
+</body>
+</html>
