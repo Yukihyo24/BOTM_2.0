@@ -1,62 +1,29 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Battle of the Multiverse</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: url('https://i83.servimg.com/u/f83/19/48/18/17/fond310.jpg') no-repeat center center fixed;
-      background-size: cover;
-      color: #fff;
-      padding: 20px;
-      position: relative;
-    }
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(rgba(27,0,37,0.8), rgba(0,0,0,0.85));
-      z-index: 0;
-    }
-    * {
-      position: relative;
-      z-index: 1;
-    }
-    #main-menu {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-      margin-top: 50px;
-    }
-    .main-button {
-      padding: 15px 30px;
-      font-size: 1.5em;
-      cursor: pointer;
-      border: none;
-      border-radius: 10px;
-      background: rgba(0,0,0,0.6);
-      color: white;
-      transition: all 0.3s;
-      box-shadow: 0 0 10px #00ffff;
-    }
-    .main-button:hover {
-      background: rgba(0,0,0,0.8);
-      transform: scale(1.05);
-    }
-  </style>
-</head>
-<body>
-  <img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png" alt="Logo BOTM" style="width: 150px; filter: drop-shadow(0 0 10px #000000);">
-
-  <div id="main-menu">
-    <button class="main-button" onclick="location.href='booster.html'">🃏 Ouverture de booster</button>
-    <button class="main-button" onclick="location.href='pioche.html'">✨ Pioche miracle</button>
-  </div>
-</body>
-</html>
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Battle of the Multiverse</title><link rel="stylesheet" href="styles.css"></head>
+<body><div class="app">
+<div class="topbar">
+<div class="brand"><img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png" alt="BOTM"><div><h1>Battle of the Multiverse</h1><div class="muted">Collection en ligne</div></div></div>
+<div class="userbox"><span class="badge">👤 <span data-user></span></span><span class="badge">🃏 <span data-cardcount></span></span><span class="badge">🎁 <span data-boosters></span></span></div>
+</div>
+<div id="welcome" class="panel" style="margin-bottom:18px"></div>
+<div class="grid">
+<a class="cardmenu" href="/BOTM_2.0/deck.html"><div class="ico">⚔️</div><h2>Mon deck</h2><div class="muted">Construire un deck de 20 cartes</div></a>
+<a class="cardmenu" href="/BOTM_2.0/collection.html"><div class="ico">🃏</div><h2>Collection</h2><div class="muted">Toutes tes cartes synchronisées</div></a>
+<a class="cardmenu" href="/BOTM_2.0/booster.html"><div class="ico">🎁</div><h2>Boosters</h2><div class="muted"><span data-boosters></span> disponible(s)</div></a>
+<a class="cardmenu" href="/BOTM_2.0/pioche.html"><div class="ico">✨</div><h2>Pioche Miracle</h2><div class="muted"><span data-miracles></span> disponible(s)</div></a>
+<a class="cardmenu" id="admin-link" href="/BOTM_2.0/admin.html" style="display:none"><div class="ico">🛠️</div><h2>Administration</h2><div class="muted">Cartes et récompenses</div></a>
+</div>
+<div class="panel" style="margin-top:18px"><button class="btn danger" id="logout">Déconnexion</button></div>
+</div>
+<script type="module">
+import { BOTM } from "/BOTM_2.0/app.js";
+const session=await BOTM.requireAuth();
+if(session){
+ const p=await BOTM.profile();
+ if(!p.starter_claimed) location.href="/BOTM_2.0/starter.html";
+ document.getElementById("welcome").innerHTML=`<h2 style="margin-top:0">Bienvenue, ${p.username}</h2><p class="muted">Ta collection est liée à ton compte Supabase et te suit d'un appareil à l'autre.</p>`;
+ if(p.role==="admin") document.getElementById("admin-link").style.display="";
+}
+document.getElementById("logout").onclick=()=>BOTM.signOut();
+</script></body></html>
