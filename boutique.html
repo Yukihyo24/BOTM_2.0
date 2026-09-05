@@ -32,8 +32,8 @@
   <div class="panel" style="margin-bottom:18px">
     <h2 class="section-title">Objets permanents</h2>
     <p class="muted">
-      Le booster coûte 2 000 points et son stock est illimité.
-      La Pioche Miracle coûte 1 000 points et son stock est géré par l'administrateur.
+      Le booster coûte 2 000 points et la Pioche Miracle 1 000 points.
+      Ces deux objets ont un stock illimité.
     </p>
     <div id="specials" class="shop-grid"></div>
   </div>
@@ -85,7 +85,7 @@ function itemCard(item) {
     visual = `<div class="shop-big-icon">✨</div>`;
     title = "Pioche Miracle";
     subtitle = "3 cartes proposées, 1 conservée";
-    stockText = `${item.stock ?? 0} disponible(s)`;
+    stockText = "Stock illimité";
   } else {
     const c = item.cards;
     visual = `<img class="card-img" src="${BOTM.imagePath(c)}" alt="">`;
@@ -94,7 +94,7 @@ function itemCard(item) {
     stockText = `${item.stock ?? 0} exemplaire(s) restant(s)`;
   }
 
-  const soldOut = item.item_type !== "booster" && Number(item.stock || 0) <= 0;
+  const soldOut = item.item_type === "card" && Number(item.stock || 0) <= 0;
   const tooPoor = Number(profile.points || 0) < Number(item.price || 0);
 
   d.innerHTML = `
