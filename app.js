@@ -221,39 +221,6 @@ export const BOTM = {
   },
 
 
-  /* =======================================================
-     DECK
-     ======================================================= */
-
-  async deck() {
-
-    const { data, error } = await supabase
-      .from("deck_entries")
-      .select(`
-        slot,
-        card_id,
-        cards(
-          id,
-          universe,
-          rarity,
-          file_name,
-          image_path
-        )
-      `)
-      .order("slot");
-
-    if (error) {
-
-      console.error(
-        "Erreur récupération deck :",
-        error
-      );
-
-      throw error;
-    }
-
-    return data || [];
-  },
 
 
   /* =======================================================
