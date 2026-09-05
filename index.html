@@ -16,6 +16,7 @@
         <div class="muted">Collection en ligne</div>
       </div>
     </div>
+
     <div class="userbox">
       <span class="badge">👤 <span data-user></span></span>
       <span class="badge">🃏 <span data-cardcount></span></span>
@@ -25,70 +26,188 @@
     </div>
   </div>
 
+  <div id="reward" class="panel" style="display:none;margin-bottom:18px"></div>
+
   <div id="welcome" class="panel" style="margin-bottom:18px"></div>
 
   <div class="grid">
+
     <a class="cardmenu" href="/BOTM_2.0/deck.html">
-      <div class="ico">⚔️</div><h2>Mon deck</h2>
+      <div class="ico">⚔️</div>
+      <h2>Mon deck</h2>
       <div class="muted">Construire un deck de 20 cartes</div>
     </a>
 
     <a class="cardmenu" href="/BOTM_2.0/collection.html">
-      <div class="ico">🃏</div><h2>Collection</h2>
+      <div class="ico">🃏</div>
+      <h2>Collection</h2>
       <div class="muted">Toutes tes cartes synchronisées</div>
     </a>
 
     <a class="cardmenu" href="/BOTM_2.0/boutique.html">
-      <div class="ico">🛒</div><h2>Boutique</h2>
+      <div class="ico">🛒</div>
+      <h2>Boutique</h2>
       <div class="muted">Dépenser tes points</div>
     </a>
 
     <a class="cardmenu" href="/BOTM_2.0/booster.html">
-      <div class="ico">🎁</div><h2>Boosters</h2>
+      <div class="ico">🎁</div>
+      <h2>Boosters</h2>
       <div class="muted"><span data-boosters></span> disponible(s)</div>
     </a>
 
     <a class="cardmenu" href="/BOTM_2.0/pioche.html">
-      <div class="ico">✨</div><h2>Pioche Miracle</h2>
+      <div class="ico">✨</div>
+      <h2>Pioche Miracle</h2>
       <div class="muted"><span data-miracles></span> disponible(s)</div>
     </a>
 
-    <a class="cardmenu" id="admin-link" href="/BOTM_2.0/admin.html" style="display:none">
-      <div class="ico">🛠️</div><h2>Administration</h2>
+    <a
+      class="cardmenu"
+      id="admin-link"
+      href="/BOTM_2.0/admin.html"
+      style="display:none"
+    >
+      <div class="ico">🛠️</div>
+      <h2>Administration</h2>
       <div class="muted">Cartes, récompenses et boutique</div>
     </a>
+
   </div>
 
   <div class="panel" style="margin-top:18px">
-    <button class="btn danger" id="logout">Déconnexion</button>
+    <button class="btn danger" id="logout">
+      Déconnexion
+    </button>
   </div>
 </div>
 
 <script type="module">
-import { BOTM } from "/BOTM_2.0/app.js";
+
+import {
+  BOTM,
+  supabase
+} from "/BOTM_2.0/app.js";
+
 
 const session = await BOTM.requireAuth();
 
+
 if (session) {
+
+  /*
+   * Réclame automatiquement les récompenses disponibles.
+   * Toute la sécurité est gérée par Supabase.
+   */
+  const { data: rewards, error: rewardError } =
+    await supabase.rpc("claim_login_rewards");
+
+
+  if (rewardError) {
+
+    console.error(
+      "Erreur bonus de connexion :",
+      rewardError
+    );
+
+  } else {
+
+    const reward = rewards?.[0];
+
+    if (
+      reward?.daily_claimed ||
+      reward?.weekly_claimed
+    ) {
+
+      const parts = [];
+
+      if (reward.daily_claimed) {
+        parts.push("💠 +250 points");
+      }
+
+      if (reward.weekly_claimed) {
+        parts.push("🎁 +1 booster");
+        parts.push("✨ +2 Pioches Miracle");
+      }
+
+      const rewardBox =
+        document.getElementById("reward");
+
+      rewardBox.style.display = "block";
+
+      rewardBox.innerHTML = `
+        <h2 style="margin-top:0">
+          🎉 Bonus de connexion !
+        </h2>
+
+        <p>
+          ${parts.join(" &nbsp; • &nbsp; ")}
+        </p>
+      `;
+    }
+
+  }
+
+
+  /*
+   * On recharge le profil APRÈS les récompenses
+   * afin d'afficher les nouveaux compteurs.
+   */
   const p = await BOTM.profile();
 
+
   if (!p.starter_claimed) {
-    location.href = "/BOTM_2.0/starter.html";
+
+    location.href =
+      "/BOTM_2.0/starter.html";
+
   }
+
 
   document.getElementById("welcome").innerHTML = `
-    <h2 style="margin-top:0">Bienvenue, ${p.username}</h2>
+    <h2 style="margin-top:0">
+      Bienvenue, ${p.username}
+    </h2>
+
     <p class="muted">
       Tu disposes actuellement de
-      <b>${Number(p.points || 0).toLocaleString("fr-FR")} points</b>.
-    </p>`;
+      <b>
+        ${Number(p.points || 0).toLocaleString("fr-FR")}
+        points
+      </b>.
+    </p>
+
+    <p class="muted">
+      Bonus quotidien :
+      <b>250 points</b>
+      &nbsp; • &nbsp;
+      Bonus hebdomadaire :
+      <b>1 booster + 2 Pioches Miracle</b>
+    </p>
+  `;
+
 
   if (p.role === "admin") {
-    document.getElementById("admin-link").style.display = "";
+
+    document
+      .getElementById("admin-link")
+      .style.display = "";
+
   }
+
+
+  /*
+   * Actualise les compteurs affichés en haut.
+   */
+  await BOTM.refreshHeader();
+
 }
 
-document.getElementById("logout").onclick = () => BOTM.signOut();
+
+document
+  .getElementById("logout")
+  .onclick = () => BOTM.signOut();
+
 </script>
 </body>
 </html>
