@@ -3,210 +3,205 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#070b1d">
   <title>Battle of the Multiverse</title>
   <link rel="stylesheet" href="/BOTM_2.0/styles.css">
 </head>
-<body>
-<div class="app">
-  <div class="topbar">
-    <div class="brand">
-      <img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png" alt="BOTM">
+
+<body class="home-page">
+<div class="shell">
+
+  <aside class="sidebar">
+    <a class="side-brand" href="/BOTM_2.0/index.html">
+      <img src="/BOTM_2.0/assets/botm-logo-mark.png" alt="BOTM">
       <div>
-        <h1>Battle of the Multiverse</h1>
-        <div class="muted">Collection en ligne</div>
+        <strong>BOTM</strong>
+        <span>Battle of the Multiverse</span>
       </div>
+    </a>
+
+    <nav class="side-nav">
+      <a class="active" href="/BOTM_2.0/index.html"><span>⌂</span> Accueil</a>
+      <a href="/BOTM_2.0/collection.html"><span>▱</span> Collection</a>
+      <a href="/BOTM_2.0/boutique.html"><span>◆</span> Boutique</a>
+      <a href="/BOTM_2.0/booster.html"><span>✦</span> Boosters</a>
+      <a href="/BOTM_2.0/pioche.html"><span>★</span> Pioche Miracle</a>
+      <a href="/BOTM_2.0/echanges.html"><span>⇄</span> Échanges</a>
+
+      <a id="admin-link" href="/BOTM_2.0/admin.html" style="display:none">
+        <span>⚙</span> Administration
+      </a>
+    </nav>
+
+    <div class="side-quote">
+      <span></span>
+      <p>Des univers infinis.<br>Une seule collection.</p>
     </div>
 
-    <div class="userbox">
-      <span class="badge">👤 <span data-user></span></span>
-      <span class="badge">🃏 <span data-cardcount></span></span>
-      <span class="badge">💠 <span data-points></span> pts</span>
-      <span class="badge">🎁 <span data-boosters></span></span>
-      <span class="badge">✨ <span data-miracles></span></span>
-    </div>
-  </div>
+    <button class="side-logout" id="logout">Déconnexion</button>
+  </aside>
 
-  <div id="reward" class="panel" style="display:none;margin-bottom:18px"></div>
+  <main class="home-main">
 
-  <div id="welcome" class="panel" style="margin-bottom:18px"></div>
+    <header class="home-topbar">
+      <div>
+        <div class="eyebrow">Battle of the Multiverse</div>
+        <h1>Bienvenue, <span data-user>Joueur</span></h1>
+      </div>
 
-  <div class="grid">
-<a class="cardmenu" href="/BOTM_2.0/collection.html">
-      <div class="ico">🃏</div>
-      <h2>Collection</h2>
-      <div class="muted">Toutes tes cartes synchronisées</div>
-    </a>
+      <div class="top-stats">
+        <div class="stat-pill"><span class="stat-icon">💠</span><div><b data-points>0</b><small>points</small></div></div>
+        <div class="stat-pill"><span class="stat-icon">🃏</span><div><b data-cardcount>0</b><small>cartes</small></div></div>
+        <div class="stat-pill"><span class="stat-icon">🎁</span><div><b data-boosters>0</b><small>boosters</small></div></div>
+        <div class="stat-pill"><span class="stat-icon">✨</span><div><b data-miracles>0</b><small>pioches</small></div></div>
+      </div>
+    </header>
 
-    <a class="cardmenu" href="/BOTM_2.0/echanges.html">
-      <div class="ico">🔄</div>
-      <h2>Échanges</h2>
-      <div class="muted">Proposer et échanger des cartes avec les autres joueurs</div>
-    </a>
+    <div id="reward" class="reward-banner" style="display:none"></div>
 
-    <a class="cardmenu" href="/BOTM_2.0/boutique.html">
-      <div class="ico">🛒</div>
-      <h2>Boutique</h2>
-      <div class="muted">Dépenser tes points</div>
-    </a>
+    <section class="hero-panel">
+      <div class="hero-copy">
+        <div class="eyebrow">Le multivers t'attend</div>
+        <h2>Collectionne.<br><span>Échange.</span><br>Joue.</h2>
+        <p>Construis ta collection à travers tous tes univers et prépare-toi aux futurs modes de jeu BOTM.</p>
+        <a class="primary-cta" href="/BOTM_2.0/collection.html">
+          Découvrir ma collection <span>→</span>
+        </a>
+      </div>
 
-    <a class="cardmenu" href="/BOTM_2.0/booster.html">
-      <div class="ico">🎁</div>
-      <h2>Boosters</h2>
-      <div class="muted"><span data-boosters></span> disponible(s)</div>
-    </a>
+      <div class="hero-mark" aria-hidden="true">
+        <img src="/BOTM_2.0/assets/botm-logo-mark.png" alt="">
+      </div>
 
-    <a class="cardmenu" href="/BOTM_2.0/pioche.html">
-      <div class="ico">✨</div>
-      <h2>Pioche Miracle</h2>
-      <div class="muted"><span data-miracles></span> disponible(s)</div>
-    </a>
+      <div class="hero-motto">
+        <span>Plus qu'un jeu.</span>
+        <strong>Un multivers<br>entre tes mains.</strong>
+      </div>
+    </section>
 
-    <a
-      class="cardmenu"
-      id="admin-link"
-      href="/BOTM_2.0/admin.html"
-      style="display:none"
-    >
-      <div class="ico">🛠️</div>
-      <h2>Administration</h2>
-      <div class="muted">Cartes, récompenses et boutique</div>
-    </a>
+    <section class="feature-grid">
+      <a class="feature-card shop" href="/BOTM_2.0/boutique.html">
+        <div class="feature-icon">◆</div>
+        <div>
+          <h3>Boutique</h3>
+          <p>Dépense tes points et récupère de nouvelles cartes.</p>
+        </div>
+        <span class="feature-link">Accéder →</span>
+      </a>
 
-  </div>
+      <a class="feature-card booster" href="/BOTM_2.0/booster.html">
+        <div class="feature-icon">✦</div>
+        <div>
+          <h3>Boosters</h3>
+          <p>Choisis ton univers et découvre quatre nouvelles cartes.</p>
+        </div>
+        <span class="feature-link">Ouvrir un booster →</span>
+      </a>
 
-  <div class="panel" style="margin-top:18px">
-    <button class="btn danger" id="logout">
-      Déconnexion
-    </button>
-  </div>
+      <a class="feature-card miracle" href="/BOTM_2.0/pioche.html">
+        <div class="feature-icon">★</div>
+        <div>
+          <h3>Pioche Miracle</h3>
+          <p>Trois cartes sont révélées. Une seule rejoindra ta collection.</p>
+        </div>
+        <span class="feature-link">Jouer →</span>
+      </a>
+
+      <a class="feature-card trades" href="/BOTM_2.0/echanges.html">
+        <div class="feature-icon">⇄</div>
+        <div>
+          <h3>Échanges</h3>
+          <p>Propose tes cartes et négocie avec les autres joueurs.</p>
+        </div>
+        <span class="feature-link">Voir les échanges →</span>
+      </a>
+    </section>
+
+    <section class="home-bottom-grid">
+      <div class="home-panel welcome-panel">
+        <div class="panel-kicker">Ton espace</div>
+        <h3>Ta collection, ton multivers.</h3>
+        <p id="welcomeText">Chargement de ton profil...</p>
+        <a href="/BOTM_2.0/collection.html" class="text-link">Voir toute ma collection →</a>
+      </div>
+
+      <div class="home-panel bonus-panel">
+        <div class="panel-kicker">Bonus de connexion</div>
+        <h3>Reviens régulièrement.</h3>
+        <div class="bonus-lines">
+          <div><span>Quotidien</span><b>+250 points</b></div>
+          <div><span>Hebdomadaire</span><b>+1 booster · +2 Pioches Miracle</b></div>
+        </div>
+      </div>
+
+      <div class="home-panel quote-panel">
+        <div class="quote-mark">“</div>
+        <p>Chaque carte est une porte vers un autre monde.</p>
+      </div>
+    </section>
+
+  </main>
 </div>
 
 <script type="module">
-
-import {
-  BOTM,
-  supabase
-} from "/BOTM_2.0/app.js";
-
+import { BOTM, supabase } from "/BOTM_2.0/app.js";
 
 const session = await BOTM.requireAuth();
 
-
 if (session) {
-
-  /*
-   * Réclame automatiquement les récompenses disponibles.
-   * Toute la sécurité est gérée par Supabase.
-   */
   const { data: rewards, error: rewardError } =
     await supabase.rpc("claim_login_rewards");
 
-
   if (rewardError) {
-
-    console.error(
-      "Erreur bonus de connexion :",
-      rewardError
-    );
-
+    console.error("Erreur bonus de connexion :", rewardError);
   } else {
-
     const reward = rewards?.[0];
 
-    if (
-      reward?.daily_claimed ||
-      reward?.weekly_claimed
-    ) {
-
+    if (reward?.daily_claimed || reward?.weekly_claimed) {
       const parts = [];
 
-      if (reward.daily_claimed) {
-        parts.push("💠 +250 points");
-      }
-
+      if (reward.daily_claimed) parts.push("💠 +250 points");
       if (reward.weekly_claimed) {
         parts.push("🎁 +1 booster");
         parts.push("✨ +2 Pioches Miracle");
       }
 
-      const rewardBox =
-        document.getElementById("reward");
-
-      rewardBox.style.display = "block";
-
+      const rewardBox = document.getElementById("reward");
+      rewardBox.style.display = "flex";
       rewardBox.innerHTML = `
-        <h2 style="margin-top:0">
-          🎉 Bonus de connexion !
-        </h2>
-
-        <p>
-          ${parts.join(" &nbsp; • &nbsp; ")}
-        </p>
+        <div>
+          <b>Bonus de connexion récupéré !</b>
+          <span>${parts.join(" • ")}</span>
+        </div>
+        <span class="reward-spark">✦</span>
       `;
     }
-
   }
 
-
-  /*
-   * On recharge le profil APRÈS les récompenses
-   * afin d'afficher les nouveaux compteurs.
-   */
   const p = await BOTM.profile();
 
-
   if (!p.starter_claimed) {
-
-    location.href =
-      "/BOTM_2.0/starter.html";
-
+    location.href = "/BOTM_2.0/starter.html";
   }
 
-
-  document.getElementById("welcome").innerHTML = `
-    <h2 style="margin-top:0">
-      Bienvenue, ${p.username}
-    </h2>
-
-    <p class="muted">
-      Tu disposes actuellement de
-      <b>
-        ${Number(p.points || 0).toLocaleString("fr-FR")}
-        points
-      </b>.
-    </p>
-
-    <p class="muted">
-      Bonus quotidien :
-      <b>250 points</b>
-      &nbsp; • &nbsp;
-      Bonus hebdomadaire :
-      <b>1 booster + 2 Pioches Miracle</b>
-    </p>
+  document.getElementById("welcomeText").innerHTML = `
+    Tu disposes actuellement de
+    <b>${Number(p.points || 0).toLocaleString("fr-FR")} points</b>.
+    Continue d'ouvrir, collectionner, vendre et échanger tes cartes.
   `;
 
-
   if (p.role === "admin") {
-
-    document
-      .getElementById("admin-link")
-      .style.display = "";
-
+    document.getElementById("admin-link").style.display = "";
   }
 
+  document.querySelectorAll("[data-points]").forEach(el => {
+    el.textContent = Number(p.points || 0).toLocaleString("fr-FR");
+  });
 
-  /*
-   * Actualise les compteurs affichés en haut.
-   */
   await BOTM.refreshHeader();
-
 }
 
-
-document
-  .getElementById("logout")
-  .onclick = () => BOTM.signOut();
-
+document.getElementById("logout").onclick = () => BOTM.signOut();
 </script>
 </body>
 </html>
