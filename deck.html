@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Deck - BOTM</title><link rel="stylesheet" href="/BOTM_2.0/styles.css"></head><body><div class="app">
+<div class="topbar"><div class="brand"><img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png"><div><h1>Mon deck</h1><div class="muted">20 cartes maximum</div></div></div></div><div class="nav"><a class="btn" href="/BOTM_2.0/index.html">← Menu</a><button id="save" class="btn gold">Enregistrer le deck</button></div>
+<div class="panel" style="margin-bottom:18px"><h2>Deck <span id="count" class="badge"></span></h2><div id="deck" class="cards"></div></div><div class="panel"><h2>Collection</h2><div id="available" class="cards"></div></div></div>
+<script type="module">
+import { BOTM, supabase } from "/BOTM_2.0/app.js";await BOTM.requireAuth();let selected=[];let collection=[];
+function item(c,label,action){const d=document.createElement("div");d.className="card-item";d.innerHTML=`<img class="card-img" src="${BOTM.imagePath(c)}"><div class="meta"><b>${c.file_name.replace(/\.[^.]+$/,"")}</b><div class="rarity">${c.universe} • ${BOTM.rarityLabel(c.rarity)}</div></div>`;const b=document.createElement("button");b.className="btn";b.textContent=label;b.onclick=action;d.appendChild(b);return d;}
+function render(){document.getElementById("count").textContent=`${selected.length}/20`;const dw=document.getElementById("deck"),aw=document.getElementById("available");dw.innerHTML="";aw.innerHTML="";
+selected.forEach((id,i)=>{const row=collection.find(x=>x.cards.id===id);if(row)dw.appendChild(item(row.cards,"Retirer",()=>{selected.splice(i,1);render()}));});
+collection.forEach(row=>{const used=selected.filter(x=>x===row.cards.id).length;const left=row.quantity-used;if(left>0)aw.appendChild(item(row.cards,`Ajouter (${left})`,()=>{if(selected.length>=20)return alert("Deck complet.");selected.push(row.cards.id);render()}));});}
+collection=await BOTM.collection();const deck=await BOTM.deck();selected=deck.map(x=>x.card_id);render();
+document.getElementById("save").onclick=async()=>{const {error}=await supabase.rpc("set_deck",{p_card_ids:selected});if(error)return alert(error.message);alert("Deck enregistré !");};
+</script></body></html>

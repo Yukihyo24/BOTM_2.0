@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pioche Miracle - BOTM</title><link rel="stylesheet" href="/BOTM_2.0/styles.css"></head><body><div class="app">
+<div class="topbar"><div class="brand"><img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png"><div><h1>✨ Pioche Miracle</h1></div></div><span class="badge">✨ <span data-miracles></span></span></div>
+<div class="nav"><a class="btn" href="/BOTM_2.0/index.html">← Menu</a></div><div class="panel"><p>Une Pioche Miracle génère une seule sélection persistante de 3 cartes. Recharger la page ne permet pas de relancer le tirage.</p><div id="univers" class="univers-grid"></div><div id="msg" class="notice" style="display:none"></div><div id="cards" class="reveal-wrap"></div></div>
+</div>
+<script type="module">
+import { BOTM, supabase } from "/BOTM_2.0/app.js";await BOTM.requireAuth();let sessionId=null;
+const u=document.getElementById("univers");BOTM.universes.forEach(name=>{const img=document.createElement("img");img.src=`/BOTM_2.0/assets/univers/${name}.jpg`;img.className="univers-img";img.title=name;img.onclick=()=>start(name,img);u.appendChild(img)});
+async function start(name,img){document.querySelectorAll(".univers-img").forEach(x=>x.classList.remove("selected"));img.classList.add("selected");const m=document.getElementById("msg");m.style.display="block";m.textContent="Tirage...";
+const {data,error}=await supabase.rpc("start_miracle_draw",{p_universe:name});if(error){m.textContent=error.message;return;}sessionId=data[0]?.session_id;render(data);m.textContent="Choisis une carte : ce choix est définitif.";}
+function render(rows){const w=document.getElementById("cards");w.innerHTML="";rows.forEach(c=>{const d=document.createElement("div");d.className="card-item reveal";d.innerHTML=`<img class="card-img" src="${BOTM.imagePath(c)}"><div class="meta"><b>${c.file_name.replace(/\.[^.]+$/,"")}</b><div class="rarity">${BOTM.rarityLabel(c.rarity)}</div></div>`;const b=document.createElement("button");b.className="btn gold";b.textContent="Choisir";b.onclick=()=>choose(c.card_id);d.appendChild(b);w.appendChild(d)});}
+async function choose(cardId){const {data,error}=await supabase.rpc("choose_miracle_card",{p_session_id:sessionId,p_card_id:cardId});const m=document.getElementById("msg");if(error){m.textContent=error.message;return;}render(data);document.querySelectorAll("#cards button").forEach(b=>b.remove());m.textContent="Carte ajoutée à ta collection !";await BOTM.refreshHeader();}
+</script></body></html>
