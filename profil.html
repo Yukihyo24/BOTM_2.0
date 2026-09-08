@@ -69,31 +69,89 @@ function render(){
       <div class="profile-actions">${relationshipButtons()}</div>
     </div>
 
-    <div class="profile-tabs"><span class="active">Infos</span><span>Amis</span><span>Favoris</span><span>Collection</span></div>
-
-    <div class="profile-grid">
-      <div>
-        <h2 style="margin-top:0">Profil BOTM</h2>
-        <div class="profile-stats">
-          <div class="pstat"><span>Cartes</span><b>${fmt(profile.card_count)}</b></div>
-          <div class="pstat"><span>Cartes uniques</span><b>${fmt(profile.unique_cards)}</b></div>
-          <div class="pstat"><span>Points</span><b>${fmt(profile.points)}</b></div>
-          <div class="pstat"><span>Boosters</span><b>${fmt(profile.boosters)}</b></div>
-          <div class="pstat"><span>Pioches Miracle</span><b>${fmt(profile.miracle_draws)}</b></div>
-          <div class="pstat"><span>Amis</span><b>${fmt(profile.friends_count)}</b></div>
-        </div>
-        <p style="color:#95a1c5;margin-top:16px">Membre depuis le ${new Date(profile.created_at).toLocaleDateString("fr-FR")}</p>
-      </div>
-      <aside>
-        <h2 style="margin-top:0">Carte favorite</h2>
-        <div class="favorite-card">
-          ${fav?`<img src="${BOTM.imagePath(fav)}" alt="${esc(cardName(fav))}"><div style="text-align:center;margin-top:8px;font-weight:800">${esc(cardName(fav))}</div>`:`<div class="empty">Aucune carte favorite sélectionnée.</div>`}
-        </div>
-      </aside>
+    <div class="profile-tabs">
+      <button class="active" data-tab="infos">Infos</button>
+      <button data-tab="amis">Amis</button>
+      <button data-tab="favoris">Favoris</button>
+      <button data-tab="collection">Collection</button>
     </div>
+
+    <div id="tab-infos" class="profile-tab-panel active">
+      <h2 style="margin-top:0">Profil BOTM</h2>
+      <div class="profile-stats">
+        <div class="pstat"><span>Cartes</span><b>${fmt(profile.card_count)}</b></div>
+        <div class="pstat"><span>Cartes uniques</span><b>${fmt(profile.unique_cards)}</b></div>
+        <div class="pstat"><span>Points</span><b>${fmt(profile.points)}</b></div>
+        <div class="pstat"><span>Boosters</span><b>${fmt(profile.boosters)}</b></div>
+        <div class="pstat"><span>Pioches Miracle</span><b>${fmt(profile.miracle_draws)}</b></div>
+        <div class="pstat"><span>Amis</span><b>${fmt(profile.friends_count)}</b></div>
+      </div>
+      <p style="color:#95a1c5;margin-top:16px">Membre depuis le ${new Date(profile.created_at).toLocaleDateString("fr-FR")}</p>
+    </div>
+
+    <div id="tab-amis" class="profile-tab-panel">
+      <div id="publicFriends"><p style="color:#95a1c5">Chargement des amis…</p></div>
+    </div>
+
+    <div id="tab-favoris" class="profile-tab-panel">
+      <h2 style="margin-top:0">Carte favorite</h2>
+      <div class="favorite-card" style="max-width:300px">
+        ${fav?`<img src="${BOTM.imagePath(fav)}" alt="${esc(cardName(fav))}"><div style="text-align:center;margin-top:8px;font-weight:800">${esc(cardName(fav))}</div>`:`<div class="empty">Aucune carte favorite sélectionnée.</div>`}
+      </div>
+    </div>
+
+    <div id="tab-collection" class="profile-tab-panel">
+      <div id="publicCollection"><p style="color:#95a1c5">Chargement de la collection…</p></div>
+    </div>
+
     <div id="editor"></div>`;
   bindActions();
+  bindTabs();
 }
+
+function bindTabs(){
+  document.querySelectorAll(".profile-tabs button").forEach(btn=>{
+    btn.addEventListener("click",async()=>{
+      document.querySelectorAll(".profile-tabs button").forEach(b=>b.classList.remove("active"));
+      document.querySelectorAll(".profile-tab-panel").forEach(p=>p.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
+      if(btn.dataset.tab==="amis") await loadPublicFriends();
+      if(btn.dataset.tab==="collection") await loadPublicCollection();
+    });
+  });
+}
+
+async function loadPublicFriends(){
+  const box=document.getElementById("publicFriends");
+  if(box.dataset.loaded==="1")return;
+  const {data,error}=await supabase.rpc("get_public_friends",{p_user_id:target});
+  if(error){box.innerHTML=`<p>${esc(error.message)}</p>`;return}
+  box.dataset.loaded="1";
+  box.innerHTML=(data||[]).length
+    ? `<div class="user-list">${data.map(u=>`<div class="user-card">
+        <a href="/BOTM_2.0/profil.html?id=${u.user_id}"><img class="avatar-50" src="${esc(u.avatar_url||fallback)}"></a>
+        <div class="grow"><b>${esc(u.username)}</b><small><span class="online-dot ${u.online?"on":""}" style="display:inline-block;margin-right:5px"></span>${u.online?"En ligne":"Hors ligne"}</small></div>
+        <a class="iconbtn" href="/BOTM_2.0/profil.html?id=${u.user_id}">👤</a>
+      </div>`).join("")}</div>`
+    : `<p style="color:#95a1c5">Aucun ami à afficher.</p>`;
+}
+
+async function loadPublicCollection(){
+  const box=document.getElementById("publicCollection");
+  if(box.dataset.loaded==="1")return;
+  const {data,error}=await supabase.rpc("get_public_collection",{p_user_id:target});
+  if(error){box.innerHTML=`<p>${esc(error.message)}</p>`;return}
+  box.dataset.loaded="1";
+  box.innerHTML=(data||[]).length
+    ? `<div class="public-collection">${data.map(c=>`<div class="public-card">
+        <img src="${BOTM.imagePath(c)}" alt="${esc(cardName(c))}">
+        <b>${esc(cardName(c))}</b>
+        <small>${esc(c.universe)} · x${c.quantity}</small>
+      </div>`).join("")}</div>`
+    : `<p style="color:#95a1c5">Aucune carte à afficher.</p>`;
+}
+
 function bindActions(){
   document.getElementById("friendBtn")?.addEventListener("click",async()=>{
     const {error}=await supabase.rpc("send_friend_request",{p_target:target});
@@ -126,7 +184,7 @@ async function openEditor(){
       <div class="edit-grid">
         <div class="avatar-editor">
           <img id="avatarPreview" src="${esc(profile.avatar_url||fallback)}" alt="">
-          <div class="field" style="margin-top:10px"><label>Avatar libre — affiché en 50 × 50 px dans l’interface</label>
+          <div class="field" style="margin-top:10px"><label>Avatar libre — affiché en 50 × 50 px sur le profil</label>
           <input id="avatarFile" type="file" accept="image/png,image/jpeg,image/webp"></div>
         </div>
         <div>
