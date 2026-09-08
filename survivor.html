@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#070b1d">
+  <title>Survivor Valley - BOTM</title>
+  <link rel="stylesheet" href="/BOTM_2.0/styles.css">
+  <style>
+    .sv-app{width:min(1240px,95vw);margin:0 auto;padding:24px 0 70px}
+    .sv-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+    .sv-head h1{margin:4px 0 0;font-size:clamp(1.9rem,4vw,2.9rem)}
+    .sv-head p{margin:8px 0 0;color:#98a5c6}
+    .sv-progress{
+      display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px
+    }
+    .sv-progress>div{
+      text-align:center;padding:12px;border-radius:13px;
+      background:rgba(9,15,38,.9);border:1px solid rgba(126,145,255,.18)
+    }
+    .sv-progress span{display:block;color:#7f8aaa;font-size:.7rem;text-transform:uppercase;letter-spacing:.12em}
+    .sv-progress b{display:block;margin-top:4px;font-size:1.1rem}
+    .stage{
+      min-height:520px;padding:24px;border-radius:23px;
+      background:linear-gradient(145deg,rgba(8,14,37,.96),rgba(5,9,25,.97));
+      border:1px solid rgba(126,145,255,.18);
+      box-shadow:0 20px 60px rgba(0,0,0,.25)
+    }
+    .intro{text-align:center;padding:85px 20px}
+    .intro-mark{font-size:4.4rem;margin-bottom:10px}
+    .intro h2{font-size:2.1rem;margin:0 0 10px}
+    .intro p{max-width:680px;margin:0 auto 23px;color:#9da8c6;line-height:1.7}
+    .section-head{text-align:center;margin-bottom:19px}
+    .kicker{color:#7885a8;text-transform:uppercase;letter-spacing:.14em;font-size:.7rem}
+    .section-head h2{margin:7px 0 5px}
+    .section-head p{margin:0;color:#929dbc}
+    .hand{display:flex;justify-content:center;align-items:flex-start;gap:18px;flex-wrap:wrap}
+    .sv-card{
+      width:min(245px,30%);min-width:190px;padding:8px;border-radius:17px;
+      background:#080e24;border:2px solid rgba(116,137,205,.2);
+      transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease
+    }
+    button.sv-card{color:inherit;font:inherit;text-align:inherit;cursor:pointer}
+    button.sv-card:hover{
+      transform:translateY(-7px) scale(1.018);
+      border-color:rgba(146,111,255,.72);
+      box-shadow:0 23px 48px rgba(0,0,0,.32),0 0 25px rgba(119,73,255,.12)
+    }
+    .sv-card img{width:100%;display:block;border-radius:12px}
+    .card-meta{text-align:center;padding:10px 4px 4px}
+    .card-meta b{display:block}
+    .card-meta span{display:block;color:#8d99b9;font-size:.75rem;margin-top:3px}
+    .stat-pill{
+      display:inline-block!important;margin-top:8px!important;padding:6px 9px;border-radius:8px;
+      color:#eef1ff!important;background:rgba(116,85,255,.12);font-weight:900
+    }
+    .team-actions{text-align:center;margin-top:22px}
+    .arena{
+      display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,360px);
+      gap:25px;align-items:start
+    }
+    .enemy-panel{
+      position:sticky;top:20px;padding:14px;border-radius:20px;
+      background:rgba(8,13,33,.96);border:1px solid rgba(145,91,255,.27)
+    }
+    .enemy-panel img{display:block;width:100%;border-radius:14px}
+    .enemy-title{text-align:center;padding:10px 5px 4px}
+    .enemy-title h3{margin:0}
+    .enemy-title p{margin:4px 0 0;color:#8894b5;font-size:.78rem}
+    .stat-focus{
+      margin-top:12px;padding:12px;border-radius:12px;text-align:center;
+      background:linear-gradient(135deg,rgba(127,73,255,.2),rgba(37,85,255,.13));
+      border:1px solid rgba(147,107,255,.3)
+    }
+    .stat-focus span{display:block;color:#9ba6c5;font-size:.7rem;text-transform:uppercase;letter-spacing:.1em}
+    .stat-focus b{display:block;margin-top:4px;font-size:1.45rem}
+    .all-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .mini-stat{padding:8px;border-radius:9px;background:rgba(255,255,255,.035);text-align:center}
+    .mini-stat span{display:block;color:#7e8baa;font-size:.65rem;text-transform:uppercase}
+    .mini-stat b{display:block;margin-top:3px}
+    .mini-stat.target{outline:1px solid rgba(154,115,255,.42);background:rgba(123,81,255,.09)}
+    .team-panel h3{margin:0 0 4px}
+    .team-panel>p{margin:0 0 16px;color:#909cbb}
+    .team-panel .hand{justify-content:flex-start}
+    .team-panel .sv-card{width:min(220px,47%);min-width:170px}
+    .result{
+      display:grid;grid-template-columns:minmax(220px,340px) 170px minmax(220px,340px);
+      gap:22px;align-items:center;justify-content:center;margin-top:10px
+    }
+    .result-center{text-align:center}
+    .result-center .vs{font-size:1.6rem;font-weight:900;color:#68769b}
+    .result-center h3{margin:10px 0 4px}
+    .result-center p{margin:0;color:#95a1bf;font-size:.82rem;line-height:1.5}
+    .sv-card.win{border-color:#6df1a9;box-shadow:0 0 28px rgba(74,240,159,.2)}
+    .sv-card.lost{opacity:.65;border-color:rgba(255,89,122,.45)}
+    .damage{
+      margin-top:12px;padding:10px;border-radius:10px;
+      background:rgba(255,93,126,.08);border:1px solid rgba(255,93,126,.18)
+    }
+    .damage b{color:#ffb0c1}
+    .final{text-align:center;padding:65px 20px}
+    .final h2{font-size:2.5rem;margin:0 0 8px}
+    .final p{color:#a0abc7}
+    .reward{font-size:1.25rem;font-weight:900;color:#ffd86b;margin:17px 0 22px}
+    .loading{opacity:.6;pointer-events:none}
+    .error{padding:30px;text-align:center;color:#ff9cb0}
+    @media(max-width:900px){
+      .arena{grid-template-columns:1fr}
+      .enemy-panel{position:static;max-width:360px;margin:0 auto;order:-1}
+      .team-panel .hand{justify-content:center}
+      .result{grid-template-columns:1fr;max-width:360px;margin-inline:auto}
+      .result-center{order:-1}
+    }
+    @media(max-width:620px){
+      .sv-progress{grid-template-columns:1fr}
+      .sv-card,.team-panel .sv-card{width:min(300px,90%)}
+    }
+  </style>
+</head>
+<body>
+<div class="sv-app">
+  <header class="sv-head">
+    <div>
+      <div class="muted small">BATTLE OF THE MULTIVERSE</div>
+      <h1>🏔 Survivor Valley</h1>
+      <p>Trois cartes entrent dans la vallée. Jusqu'où pourront-elles survivre ?</p>
+    </div>
+    <div class="nav">
+      <a class="btn" href="/BOTM_2.0/index.html">← Menu</a>
+      <a class="btn" href="/BOTM_2.0/collection.html">Collection</a>
+      <span class="badge">💠 <span data-points>0</span> pts</span>
+    </div>
+  </header>
+
+  <section class="sv-progress">
+    <div><span>Adversaires vaincus</span><b id="defeated">0 / 7</b></div>
+    <div><span>Survivants</span><b id="survivors">3 / 3</b></div>
+    <div><span>Gains de la partie</span><b id="earned">0 pts</b></div>
+  </section>
+
+  <main id="stage" class="stage">
+    <div class="intro">
+      <div class="intro-mark">🏔</div>
+      <h2>Entre dans Survivor Valley</h2>
+      <p>
+        Trois cartes seront tirées dans ta collection. Elles devront survivre à sept
+        adversaires successifs. Chaque victoire conserve ta carte. Chaque défaite la
+        sacrifie, mais affaiblit l'adversaire pour ceux qui restent.
+      </p>
+      <button id="start" class="btn gold">🎴 Tirer mon équipe</button>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { BOTM, supabase } from "/BOTM_2.0/app.js";
+
+await BOTM.requireAuth();
+await BOTM.refreshHeader();
+
+const stage = document.getElementById("stage");
+
+let sessionId = null;
+let cards = [];
+let enemy = null;
+let enemyNumber = 1;
+let stat = null;
+let enemyCurrentValue = 0;
+let enemiesDefeated = 0;
+let earnedPoints = 0;
+let locked = false;
+let firstReveal = true;
+
+function nameOf(c){
+  return c.file_name.replace(/\.[^.]+$/,"");
+}
+
+function keyOf(label){
+  return {
+    "Physique":"physique",
+    "Pouvoirs":"pouvoirs",
+    "Vitesse":"vitesse",
+    "Valeur":"valeur"
+  }[label];
+}
+
+function updateProgress(){
+  document.getElementById("defeated").textContent = `${enemiesDefeated} / 7`;
+  document.getElementById("survivors").textContent = `${cards.length} / 3`;
+  document.getElementById("earned").textContent =
+    `${Number(earnedPoints).toLocaleString("fr-FR")} pts`;
+}
+
+function cardHtml(c, selectable=false){
+  const k = keyOf(stat);
+  const cls = selectable ? "sv-card choice" : "sv-card";
+  return `
+    <${selectable ? "button" : "article"} class="${cls}" ${selectable ? `data-id="${c.id}"` : ""}>
+      <img src="${BOTM.imagePath(c)}" alt="${nameOf(c)}">
+      <div class="card-meta">
+        <b>${nameOf(c)}</b>
+        <span>${c.universe} • ${BOTM.rarityLabel(c.rarity)}</span>
+        ${stat ? `<span class="stat-pill">${stat} : ${c[k]}</span>` : ""}
+      </div>
+    </${selectable ? "button" : "article"}>
+  `;
+}
+
+function enemyHtml(){
+  const values = [
+    ["Physique","physique"],
+    ["Pouvoirs","pouvoirs"],
+    ["Vitesse","vitesse"],
+    ["Valeur","valeur"]
+  ];
+
+  return `
+    <aside class="enemy-panel">
+      <img src="${BOTM.imagePath(enemy)}" alt="${nameOf(enemy)}">
+      <div class="enemy-title">
+        <h3>${nameOf(enemy)}</h3>
+        <p>${enemy.universe} • ${BOTM.rarityLabel(enemy.rarity)}</p>
+      </div>
+
+      <div class="stat-focus">
+        <span>Statistique imposée</span>
+        <b>${stat} : ${enemyCurrentValue}</b>
+      </div>
+
+      <div class="all-stats">
+        ${values.map(([label,key]) => `
+          <div class="mini-stat ${label === stat ? "target" : ""}">
+            <span>${label}</span>
+            <b>${label === stat ? enemyCurrentValue : enemy[key]}</b>
+          </div>
+        `).join("")}
+      </div>
+    </aside>
+  `;
+}
+
+function renderTeamIntro(){
+  stage.innerHTML = `
+    <div class="section-head">
+      <div class="kicker">Ton équipe</div>
+      <h2>Voici tes trois survivants</h2>
+      <p>Ils resteront avec toi jusqu'à leur élimination.</p>
+    </div>
+
+    <div class="hand">
+      ${cards.map(c => cardHtml(c,false)).join("")}
+    </div>
+
+    <div class="team-actions">
+      <button id="enter" class="btn gold">Entrer dans la vallée →</button>
+    </div>
+  `;
+
+  document.getElementById("enter").onclick = renderEncounter;
+}
+
+function renderEncounter(){
+  const k = keyOf(stat);
+
+  stage.innerHTML = `
+    <div class="section-head">
+      <div class="kicker">Adversaire ${enemyNumber} / 7</div>
+      <h2>${enemyNumber === 7 ? "Dernier obstacle" : "Choisis qui envoyer au combat"}</h2>
+      <p>L'adversaire impose <b>${stat}</b>. Une carte battue sera perdue pour le reste de la partie.</p>
+    </div>
+
+    <div class="arena">
+      <section class="team-panel">
+        <h3>Tes survivants</h3>
+        <p>${cards.length} carte${cards.length > 1 ? "s" : ""} encore disponible${cards.length > 1 ? "s" : ""}.</p>
+        <div class="hand">
+          ${cards.map(c => cardHtml(c,true)).join("")}
+        </div>
+      </section>
+
+      ${enemyHtml()}
+    </div>
+  `;
+
+  stage.querySelectorAll(".choice").forEach(el => {
+    el.onclick = () => playCard(Number(el.dataset.id));
+  });
+}
+
+async function start(){
+  if(locked) return;
+  locked = true;
+  stage.classList.add("loading");
+
+  const { data, error } = await supabase.rpc("start_survivor_valley");
+
+  stage.classList.remove("loading");
+  locked = false;
+
+  if(error){
+    stage.innerHTML = `<div class="error">${error.message}</div>`;
+    return;
+  }
+
+  sessionId = data.session_id;
+  cards = data.cards || [];
+  enemy = data.enemy;
+  enemyNumber = data.enemy_number;
+  stat = data.stat;
+  enemyCurrentValue = data.enemy_current_value;
+  enemiesDefeated = data.enemies_defeated;
+  earnedPoints = data.earned_points;
+
+  updateProgress();
+
+  // Nouvelle partie : on présente d'abord l'équipe.
+  // Partie reprise après rechargement : on retourne directement au combat.
+  if(enemyNumber === 1 && enemiesDefeated === 0 && cards.length === 3){
+    renderTeamIntro();
+  }else{
+    renderEncounter();
+  }
+}
+
+async function playCard(cardId){
+  if(locked) return;
+  locked = true;
+  stage.classList.add("loading");
+
+  const { data, error } = await supabase.rpc("play_survivor_valley_card", {
+    p_session_id: sessionId,
+    p_player_card_id: cardId
+  });
+
+  stage.classList.remove("loading");
+  locked = false;
+
+  if(error){
+    stage.innerHTML = `<div class="error">${error.message}</div>`;
+    return;
+  }
+
+  enemiesDefeated = data.enemies_defeated;
+  earnedPoints = data.earned_points;
+
+  if(data.action === "enemy_defeated"){
+    renderVictory(data);
+  }else{
+    renderLoss(data);
+  }
+
+  await BOTM.refreshHeader();
+}
+
+function resultCard(c, state, playedValue){
+  return `
+    <article class="sv-card ${state}">
+      <img src="${BOTM.imagePath(c)}" alt="${nameOf(c)}">
+      <div class="card-meta">
+        <b>${nameOf(c)}</b>
+        <span>${c.universe} • ${BOTM.rarityLabel(c.rarity)}</span>
+        <span class="stat-pill">${stat} : ${playedValue}</span>
+      </div>
+    </article>
+  `;
+}
+
+function renderVictory(data){
+  updateProgress();
+
+  stage.innerHTML = `
+    <div class="section-head">
+      <div class="kicker">Adversaire ${data.enemy_number}</div>
+      <h2>Adversaire éliminé !</h2>
+      <p>Ta carte survit et pourra être réutilisée.</p>
+    </div>
+
+    <div class="result">
+      ${resultCard(data.player_card,"win",data.player_value)}
+
+      <div class="result-center">
+        <div class="vs">VS</div>
+        <h3>Victoire</h3>
+        <p>${data.player_value} ≥ ${data.enemy_value_before}</p>
+        <div class="reward">+${data.reward_now} pts</div>
+      </div>
+
+      ${resultCard(data.enemy_card,"lost",data.enemy_value_before)}
+    </div>
+
+    <div class="team-actions">
+      ${
+        data.completed
+          ? `<button id="finish" class="btn gold">Voir le résultat final</button>`
+          : `<button id="next" class="btn gold">Adversaire suivant →</button>`
+      }
+    </div>
+  `;
+
+  if(data.completed){
+    cards = [];
+    document.getElementById("finish").onclick = () => renderFinal(true, data);
+  }else{
+    cards = data.remaining_cards || cards;
+    enemy = data.next_enemy;
+    enemyNumber = data.next_enemy_number;
+    stat = data.next_stat;
+    enemyCurrentValue = data.next_enemy_current_value;
+
+    document.getElementById("next").onclick = () => {
+      updateProgress();
+      renderEncounter();
+    };
+  }
+}
+
+function renderLoss(data){
+  cards = data.remaining_cards || [];
+  enemyCurrentValue = data.enemy_value_after;
+  updateProgress();
+
+  stage.innerHTML = `
+    <div class="section-head">
+      <div class="kicker">Adversaire ${data.enemy_number}</div>
+      <h2>Ta carte est éliminée</h2>
+      <p>Son sacrifice affaiblit l'adversaire sur <b>${data.stat}</b>.</p>
+    </div>
+
+    <div class="result">
+      ${resultCard(data.player_card,"lost",data.player_value)}
+
+      <div class="result-center">
+        <div class="vs">VS</div>
+        <h3>Défaite</h3>
+        <p>${data.player_value} &lt; ${data.enemy_value_before}</p>
+        <div class="damage">
+          ${data.stat} adverse<br>
+          <b>${data.enemy_value_before} → ${data.enemy_value_after}</b>
+        </div>
+      </div>
+
+      ${resultCard(data.enemy_card,"win",data.enemy_value_after)}
+    </div>
+
+    <div class="team-actions">
+      ${
+        data.completed
+          ? `<button id="finish" class="btn gold">Voir le résultat final</button>`
+          : `<button id="continue" class="btn gold">Continuer avec ${cards.length} survivant${cards.length > 1 ? "s" : ""} →</button>`
+      }
+    </div>
+  `;
+
+  if(data.completed){
+    document.getElementById("finish").onclick = () => renderFinal(false, data);
+  }else{
+    document.getElementById("continue").onclick = renderEncounter;
+  }
+}
+
+async function renderFinal(won, data){
+  stage.innerHTML = `
+    <div class="final">
+      <div class="intro-mark">${won ? "🏆" : "🏔"}</div>
+      <h2>${won ? "Survivor Valley conquise !" : "Fin de l'expédition"}</h2>
+      <p>
+        ${
+          won
+            ? "Tes survivants ont vaincu les sept adversaires de la vallée."
+            : `Tu as éliminé ${data.enemies_defeated} adversaire${data.enemies_defeated > 1 ? "s" : ""} avant de perdre toute ton équipe.`
+        }
+      </p>
+      <div class="reward">Gain total : +${data.earned_points} points</div>
+      <button id="replay" class="btn gold">🏔 Nouvelle expédition</button>
+    </div>
+  `;
+
+  await BOTM.refreshHeader();
+
+  document.getElementById("replay").onclick = () => location.reload();
+}
+
+document.getElementById("start").onclick = start;
+</script>
+</body>
+</html>
