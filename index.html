@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#070b1d">
   <title>Battle of the Multiverse</title>
   <link rel="stylesheet" href="/BOTM_2.0/styles.css">
+  <link rel="stylesheet" href="/BOTM_2.0/social.css">
 </head>
 
 <body class="home-page">
@@ -30,6 +31,9 @@
       <a href="/BOTM_2.0/booster.html"><span>✦</span> Boosters</a>
       <a href="/BOTM_2.0/pioche.html"><span>★</span> Pioche Miracle</a>
       <a href="/BOTM_2.0/echanges.html"><span>⇄</span> Échanges</a>
+      <a href="/BOTM_2.0/communaute.html"><span>●</span> Communauté</a>
+      <a href="/BOTM_2.0/profil.html"><span>👤</span> Mon profil</a>
+      <a href="/BOTM_2.0/messages.html"><span>✉</span> Messages</a>
 
       <a id="admin-link" href="/BOTM_2.0/admin.html" style="display:none">
         <span>⚙</span> Administration
@@ -144,6 +148,14 @@
         </div>
         <span class="feature-link">Voir les échanges →</span>
       </a>
+          <a class="feature-card" href="/BOTM_2.0/communaute.html">
+        <div class="feature-icon">●</div>
+        <div>
+          <h3>Communauté</h3>
+          <p>Découvre les joueurs en ligne, leurs profils, tes amis et tes messages.</p>
+        </div>
+        <span class="feature-link">Rejoindre la communauté →</span>
+      </a>
     </section>
 
     <section class="home-bottom-grid">
@@ -232,5 +244,6 @@ if (session) {
 
 document.getElementById("logout").onclick = () => BOTM.signOut();
 </script>
+<script type="module" src="/BOTM_2.0/social.js"></script>
 </body>
 </html>
