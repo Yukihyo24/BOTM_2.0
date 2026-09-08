@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#070b1d">
+  <title>Combat de stats - BOTM</title>
+  <link rel="stylesheet" href="/BOTM_2.0/styles.css">
+  <style>
+    body{min-height:100vh}
+    .battle-app{width:min(1240px,95vw);margin:0 auto;padding:24px 0 70px}
+    .battle-head{display:flex;justify-content:space-between;gap:15px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+    .battle-title h1{margin:4px 0 0;font-size:clamp(1.7rem,4vw,2.7rem)}
+    .battle-title p{margin:8px 0 0;color:#98a5c6}
+    .battle-rulebar{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:9px;
+      margin:14px 0 20px
+    }
+    .rule-chip{
+      padding:11px;
+      border-radius:12px;
+      text-align:center;
+      background:rgba(10,16,39,.88);
+      border:1px solid rgba(128,149,255,.18);
+      color:#b8c3e1;
+      font-size:.82rem
+    }
+    .scoreboard{
+      display:grid;
+      grid-template-columns:1fr auto 1fr;
+      align-items:center;
+      gap:16px;
+      padding:18px 22px;
+      margin-bottom:16px;
+      border-radius:18px;
+      background:linear-gradient(135deg,rgba(14,20,49,.94),rgba(6,10,28,.96));
+      border:1px solid rgba(128,149,255,.2)
+    }
+    .score-side{text-align:center}
+    .score-side span{display:block;color:#8e9aba;font-size:.74rem;text-transform:uppercase;letter-spacing:.13em}
+    .score-side b{font-size:2.8rem;line-height:1.1}
+    .score-vs{font-weight:900;color:#7a83a8;letter-spacing:.14em}
+    .rounds{display:grid;gap:16px}
+    .round{
+      display:none;
+      grid-template-columns:minmax(0,1fr) 180px minmax(0,1fr);
+      gap:18px;
+      align-items:center;
+      padding:20px;
+      border-radius:20px;
+      background:rgba(7,12,32,.92);
+      border:1px solid rgba(126,145,255,.18);
+      box-shadow:0 18px 50px rgba(0,0,0,.23)
+    }
+    .round.show{display:grid;animation:roundIn .45s ease both}
+    @keyframes roundIn{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:none}}
+    .fighter{display:grid;grid-template-columns:minmax(110px,220px) 1fr;gap:15px;align-items:center}
+    .fighter.ai{grid-template-columns:1fr minmax(110px,220px)}
+    .fighter.ai .fighter-card{order:2}
+    .fighter-card{
+      position:relative;
+      padding:7px;
+      border-radius:14px;
+      background:#080d21;
+      border:2px solid rgba(119,138,205,.22);
+      transition:.25s
+    }
+    .fighter-card.win{border-color:#6df1a9;box-shadow:0 0 28px rgba(74,240,159,.25)}
+    .fighter-card.lose{opacity:.68}
+    .fighter-card.draw{border-color:#d2c56e}
+    .fighter-card img{display:block;width:100%;border-radius:10px}
+    .fighter-info h3{margin:0 0 5px;font-size:1rem}
+    .fighter-info p{margin:0;color:#8490b3;font-size:.77rem}
+    .value-box{
+      display:inline-flex;
+      align-items:baseline;
+      gap:7px;
+      margin-top:13px;
+      padding:8px 11px;
+      border-radius:10px;
+      background:rgba(118,87,255,.11);
+      border:1px solid rgba(139,110,255,.2)
+    }
+    .value-box span{color:#9ba6c4;font-size:.73rem}
+    .value-box b{font-size:1.55rem}
+    .round-center{text-align:center}
+    .round-kicker{color:#7b87ac;text-transform:uppercase;letter-spacing:.12em;font-size:.68rem}
+    .stat-wheel{
+      margin:8px auto;
+      padding:13px 8px;
+      border-radius:14px;
+      background:linear-gradient(135deg,rgba(110,65,255,.18),rgba(36,90,255,.12));
+      border:1px solid rgba(139,106,255,.3);
+      font-size:1.1rem;
+      font-weight:900
+    }
+    .round-result{font-size:.8rem;color:#aeb8d4;min-height:20px}
+    .battle-actions{text-align:center;margin-top:20px}
+    .battle-actions .btn{font-size:1rem;padding:14px 28px}
+    .result-panel{
+      display:none;
+      margin-top:18px;
+      padding:23px;
+      text-align:center;
+      border-radius:20px;
+      background:linear-gradient(145deg,rgba(13,20,49,.97),rgba(7,11,29,.97));
+      border:1px solid rgba(132,151,255,.23)
+    }
+    .result-panel.show{display:block;animation:roundIn .4s ease}
+    .result-panel h2{font-size:2rem;margin:0 0 8px}
+    .reward{font-size:1.18rem;color:#ffd86b;font-weight:800}
+    .loading{opacity:.65;pointer-events:none}
+    .error{color:#ff9cb0}
+    @media(max-width:900px){
+      .battle-rulebar{grid-template-columns:1fr 1fr}
+      .round{grid-template-columns:1fr}
+      .round-center{order:-1}
+      .fighter,.fighter.ai{grid-template-columns:minmax(100px,180px) 1fr}
+      .fighter.ai .fighter-card{order:0}
+    }
+    @media(max-width:560px){
+      .battle-app{width:min(96vw,1240px)}
+      .scoreboard{padding:14px}
+      .fighter,.fighter.ai{grid-template-columns:115px 1fr}
+      .battle-rulebar{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+<div class="battle-app">
+  <div class="battle-head">
+    <div class="battle-title">
+      <div class="muted small">BATTLE OF THE MULTIVERSE</div>
+      <h1>⚔ Combat de stats</h1>
+      <p>Trois cartes de ta collection affrontent trois cartes tirées dans tout le multivers.</p>
+    </div>
+    <div class="nav">
+      <a class="btn" href="/BOTM_2.0/index.html">← Menu</a>
+      <a class="btn" href="/BOTM_2.0/collection.html">Collection</a>
+      <span class="badge">💠 <span data-points>0</span> pts</span>
+    </div>
+  </div>
+
+  <div class="battle-rulebar">
+    <div class="rule-chip">3 cartes par camp</div>
+    <div class="rule-chip">1 utilisation par carte</div>
+    <div class="rule-chip">Stat tirée au hasard</div>
+    <div class="rule-chip">Victoire +25 • Sinon +5</div>
+  </div>
+
+  <div class="scoreboard">
+    <div class="score-side">
+      <span>Toi</span>
+      <b id="player-score">0</b>
+    </div>
+    <div class="score-vs">VS</div>
+    <div class="score-side">
+      <span>Multivers</span>
+      <b id="ai-score">0</b>
+    </div>
+  </div>
+
+  <div id="rounds" class="rounds"></div>
+
+  <div class="battle-actions">
+    <button id="play" class="btn gold">⚔ Lancer le combat</button>
+    <div id="status" class="muted small" style="margin-top:12px"></div>
+  </div>
+
+  <div id="final" class="result-panel"></div>
+</div>
+
+<script type="module">
+import { BOTM, supabase } from "/BOTM_2.0/app.js";
+
+await BOTM.requireAuth();
+await BOTM.refreshHeader();
+
+const playBtn = document.getElementById("play");
+const roundsWrap = document.getElementById("rounds");
+const final = document.getElementById("final");
+const status = document.getElementById("status");
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+function safeName(card){
+  return card.file_name.replace(/\.[^.]+$/,"");
+}
+
+function fighter(card, value, side, winner){
+  const state =
+    winner === "draw" ? "draw" :
+    winner === side ? "win" : "lose";
+
+  const label = side === "player" ? "Ta carte" : "Carte adverse";
+
+  return `
+    <div class="fighter ${side === "ai" ? "ai" : ""}">
+      <div class="fighter-card ${state}">
+        <img src="${BOTM.imagePath(card)}" alt="${safeName(card)}">
+      </div>
+      <div class="fighter-info">
+        <p>${label}</p>
+        <h3>${safeName(card)}</h3>
+        <p>${card.universe} • ${BOTM.rarityLabel(card.rarity)}</p>
+        <div class="value-box"><span>Valeur jouée</span><b>${value}</b></div>
+      </div>
+    </div>
+  `;
+}
+
+function roundHtml(r){
+  const label =
+    r.winner === "player" ? "Point pour toi" :
+    r.winner === "ai" ? "Point pour le Multivers" :
+    "Égalité — aucun point";
+
+  return `
+    <section class="round">
+      ${fighter(r.player_card, r.player_value, "player", r.winner)}
+      <div class="round-center">
+        <div class="round-kicker">Manche ${r.round}</div>
+        <div class="stat-wheel">${r.stat}</div>
+        <div class="round-result">${label}</div>
+      </div>
+      ${fighter(r.ai_card, r.ai_value, "ai", r.winner)}
+    </section>
+  `;
+}
+
+async function playBattle(){
+  playBtn.disabled = true;
+  playBtn.classList.add("loading");
+  final.classList.remove("show");
+  final.innerHTML = "";
+  roundsWrap.innerHTML = "";
+  document.getElementById("player-score").textContent = "0";
+  document.getElementById("ai-score").textContent = "0";
+  status.textContent = "Tirage des six cartes et des statistiques…";
+
+  const { data, error } = await supabase.rpc("play_stat_battle");
+
+  if(error){
+    status.innerHTML = `<span class="error">${error.message}</span>`;
+    playBtn.disabled = false;
+    playBtn.classList.remove("loading");
+    return;
+  }
+
+  const battle = data;
+  status.textContent = "";
+
+  let ps = 0;
+  let ai = 0;
+
+  for(const r of battle.rounds){
+    roundsWrap.insertAdjacentHTML("beforeend", roundHtml(r));
+    const el = roundsWrap.lastElementChild;
+    await sleep(300);
+    el.classList.add("show");
+
+    if(r.winner === "player") ps++;
+    if(r.winner === "ai") ai++;
+
+    document.getElementById("player-score").textContent = ps;
+    document.getElementById("ai-score").textContent = ai;
+
+    await sleep(900);
+  }
+
+  let title;
+  let text;
+
+  if(battle.result === "win"){
+    title = "🏆 Victoire !";
+    text = `Tu remportes le combat ${battle.player_score} à ${battle.ai_score}.`;
+  }else if(battle.result === "loss"){
+    title = "Défaite";
+    text = `Le Multivers l'emporte ${battle.ai_score} à ${battle.player_score}.`;
+  }else{
+    title = "Match nul";
+    text = `Le combat se termine à ${battle.player_score} - ${battle.ai_score}.`;
+  }
+
+  final.innerHTML = `
+    <h2>${title}</h2>
+    <p>${text}</p>
+    <div class="reward">+${battle.reward} points</div>
+  `;
+  final.classList.add("show");
+
+  await BOTM.refreshHeader();
+
+  playBtn.textContent = "⚔ Rejouer";
+  playBtn.disabled = false;
+  playBtn.classList.remove("loading");
+}
+
+playBtn.onclick = playBattle;
+</script>
+</body>
+</html>
