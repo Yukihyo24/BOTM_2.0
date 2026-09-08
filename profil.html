@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Profil - BOTM</title>
+<link rel="stylesheet" href="/BOTM_2.0/styles.css">
+<link rel="stylesheet" href="/BOTM_2.0/social.css">
+</head>
+<body class="social-page">
+<div class="social-wrap">
+  <header class="social-top">
+    <div><div class="muted small">BATTLE OF THE MULTIVERSE</div><h1>Profil joueur</h1></div>
+    <nav class="social-nav">
+      <a href="/BOTM_2.0/index.html">← Accueil</a>
+      <a href="/BOTM_2.0/communaute.html">Communauté</a>
+      <a href="/BOTM_2.0/messages.html">Messages</a>
+    </nav>
+  </header>
+
+  <section class="social-panel" id="profile">Chargement…</section>
+</div>
+
+<script type="module">
+import { BOTM, supabase } from "/BOTM_2.0/app.js";
+await BOTM.requireAuth();
+const {data:{session}}=await supabase.auth.getSession();
+const me=session.user.id;
+await supabase.rpc("touch_presence");
+
+const params=new URLSearchParams(location.search);
+const target=params.get("id")||me;
+const root=document.getElementById("profile");
+const fallback="/BOTM_2.0/assets/botm-logo-mark.png";
+const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+const fmt=n=>Number(n||0).toLocaleString("fr-FR");
+const cardName=c=>c?.file_name?.replace(/\.[^.]+$/,"")||"";
+let profile=null;
+
+async function load(){
+  const {data,error}=await supabase.rpc("get_public_profile",{p_user_id:target});
+  if(error){root.innerHTML=`<p>${esc(error.message)}</p>`;return}
+  profile=data; render();
+}
+function relationshipButtons(){
+  if(target===me) return `<button class="sbtn primary" id="editBtn">Modifier le profil</button>`;
+  const r=profile.relationship;
+  if(!r) return `<button class="sbtn primary" id="friendBtn">＋ Ajouter en ami</button>
+                 <a class="sbtn" href="/BOTM_2.0/messages.html?id=${target}">✉ Message privé</a>`;
+  if(r.status==="accepted") return `<a class="sbtn primary" href="/BOTM_2.0/messages.html?id=${target}">✉ Message privé</a>
+    <button class="sbtn danger" id="removeFriend">Retirer des amis</button>`;
+  if(r.requested_by===me) return `<button class="sbtn" disabled>Demande envoyée</button>
+    <a class="sbtn" href="/BOTM_2.0/messages.html?id=${target}">✉ Message privé</a>`;
+  return `<button class="sbtn primary" id="acceptFriend">✓ Accepter</button>
+          <button class="sbtn danger" id="rejectFriend">Refuser</button>
+          <a class="sbtn" href="/BOTM_2.0/messages.html?id=${target}">✉ Message privé</a>`;
+}
+function render(){
+  const avatar=profile.avatar_url||fallback;
+  const fav=profile.favorite_card;
+  root.innerHTML=`
+    <div class="profile-banner">
+      <img class="profile-avatar-large" src="${esc(avatar)}" alt="Avatar">
+      <div>
+        <div class="profile-name">${esc(profile.username)}</div>
+        <div class="profile-status"><span class="online-dot ${profile.online?"on":""}"></span>${profile.online?"En ligne":"Hors ligne"}</div>
+        <div class="profile-bio">${esc(profile.bio||"Aucune bio pour le moment.")}</div>
+        <div style="margin-top:12px;color:#95a1c5">Univers préféré : <b style="color:white">${esc(profile.favorite_universe||"Non renseigné")}</b></div>
+      </div>
+      <div class="profile-actions">${relationshipButtons()}</div>
+    </div>
+
+    <div class="profile-tabs"><span class="active">Infos</span><span>Amis</span><span>Favoris</span><span>Collection</span></div>
+
+    <div class="profile-grid">
+      <div>
+        <h2 style="margin-top:0">Profil BOTM</h2>
+        <div class="profile-stats">
+          <div class="pstat"><span>Cartes</span><b>${fmt(profile.card_count)}</b></div>
+          <div class="pstat"><span>Cartes uniques</span><b>${fmt(profile.unique_cards)}</b></div>
+          <div class="pstat"><span>Points</span><b>${fmt(profile.points)}</b></div>
+          <div class="pstat"><span>Boosters</span><b>${fmt(profile.boosters)}</b></div>
+          <div class="pstat"><span>Pioches Miracle</span><b>${fmt(profile.miracle_draws)}</b></div>
+          <div class="pstat"><span>Amis</span><b>${fmt(profile.friends_count)}</b></div>
+        </div>
+        <p style="color:#95a1c5;margin-top:16px">Membre depuis le ${new Date(profile.created_at).toLocaleDateString("fr-FR")}</p>
+      </div>
+      <aside>
+        <h2 style="margin-top:0">Carte favorite</h2>
+        <div class="favorite-card">
+          ${fav?`<img src="${BOTM.imagePath(fav)}" alt="${esc(cardName(fav))}"><div style="text-align:center;margin-top:8px;font-weight:800">${esc(cardName(fav))}</div>`:`<div class="empty">Aucune carte favorite sélectionnée.</div>`}
+        </div>
+      </aside>
+    </div>
+    <div id="editor"></div>`;
+  bindActions();
+}
+function bindActions(){
+  document.getElementById("friendBtn")?.addEventListener("click",async()=>{
+    const {error}=await supabase.rpc("send_friend_request",{p_target:target});
+    if(error) alert(error.message); else load();
+  });
+  document.getElementById("acceptFriend")?.addEventListener("click",()=>respond(true));
+  document.getElementById("rejectFriend")?.addEventListener("click",()=>respond(false));
+  document.getElementById("removeFriend")?.addEventListener("click",async()=>{
+    if(!confirm("Retirer cet utilisateur de tes amis ?"))return;
+    const {error}=await supabase.rpc("remove_friend",{p_friendship_id:profile.relationship.id});
+    if(error)alert(error.message); else load();
+  });
+  document.getElementById("editBtn")?.addEventListener("click",openEditor);
+}
+async function respond(accept){
+  const {error}=await supabase.rpc("respond_friend_request",{p_friendship_id:profile.relationship.id,p_accept:accept});
+  if(error)alert(error.message); else load();
+}
+async function openEditor(){
+  const editor=document.getElementById("editor");
+  const {data:cards,error}=await supabase.from("user_cards")
+    .select("card_id,quantity,cards(id,universe,rarity,file_name,image_path)")
+    .eq("user_id",me).gt("quantity",0);
+  if(error){alert(error.message);return}
+  const owned=(cards||[]).map(x=>x.cards).filter(Boolean);
+  const universes=[...new Set(owned.map(c=>c.universe))].sort();
+  editor.innerHTML=`
+    <div class="social-panel" style="margin-top:20px">
+      <h2>Modifier mon profil</h2>
+      <div class="edit-grid">
+        <div class="avatar-editor">
+          <img id="avatarPreview" src="${esc(profile.avatar_url||fallback)}" alt="">
+          <div class="field" style="margin-top:10px"><label>Avatar libre — enregistré en 50 × 50 px</label>
+          <input id="avatarFile" type="file" accept="image/png,image/jpeg,image/webp"></div>
+        </div>
+        <div>
+          <div class="field"><label>Bio (300 caractères max.)</label><textarea id="bio" maxlength="300">${esc(profile.bio||"")}</textarea></div>
+          <div class="field"><label>Univers préféré</label><select id="favUniverse"><option value="">— Aucun —</option>${universes.map(u=>`<option ${u===profile.favorite_universe?"selected":""}>${esc(u)}</option>`).join("")}</select></div>
+          <div class="field"><label>Carte favorite</label><select id="favCard"><option value="">— Aucune —</option>${owned.map(c=>`<option value="${c.id}" ${c.id===profile.favorite_card_id?"selected":""}>${esc(cardName(c))} — ${esc(c.universe)}</option>`).join("")}</select></div>
+          <button class="sbtn primary" id="saveProfile">Enregistrer</button>
+        </div>
+      </div>
+    </div>`;
+  const input=document.getElementById("avatarFile");
+  input.onchange=()=>{const f=input.files?.[0];if(f)document.getElementById("avatarPreview").src=URL.createObjectURL(f)};
+  document.getElementById("saveProfile").onclick=saveProfile;
+  editor.scrollIntoView({behavior:"smooth"});
+}
+async function resizeAvatar(file){
+  if(file.size>5*1024*1024) throw new Error("Image trop lourde : 5 Mo maximum avant redimensionnement.");
+  if(!["image/png","image/jpeg","image/webp"].includes(file.type)) throw new Error("Format accepté : PNG, JPG/JPEG ou WebP.");
+  const bitmap=await createImageBitmap(file);
+  const canvas=document.createElement("canvas");canvas.width=50;canvas.height=50;
+  const ctx=canvas.getContext("2d");
+  const scale=Math.max(50/bitmap.width,50/bitmap.height);
+  const w=bitmap.width*scale,h=bitmap.height*scale;
+  ctx.drawImage(bitmap,(50-w)/2,(50-h)/2,w,h);
+  return await new Promise(r=>canvas.toBlob(r,"image/webp",.88));
+}
+async function saveProfile(){
+  const btn=document.getElementById("saveProfile");btn.disabled=true;
+  try{
+    let avatar=profile.avatar_url||null;
+    const file=document.getElementById("avatarFile").files?.[0];
+    if(file){
+      const blob=await resizeAvatar(file);
+      const path=`${me}/avatar.webp`;
+      const {error}=await supabase.storage.from("avatars").upload(path,blob,{contentType:"image/webp",upsert:true,cacheControl:"3600"});
+      if(error)throw error;
+      avatar=supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl+`?v=${Date.now()}`;
+    }
+    const {error}=await supabase.rpc("update_social_profile",{
+      p_avatar_url:avatar,
+      p_bio:document.getElementById("bio").value,
+      p_favorite_universe:document.getElementById("favUniverse").value||null,
+      p_favorite_card_id:document.getElementById("favCard").value?Number(document.getElementById("favCard").value):null
+    });
+    if(error)throw error;
+    await load();
+  }catch(e){alert(e.message)}finally{btn.disabled=false}
+}
+await load();
+</script>
+<script type="module" src="/BOTM_2.0/social.js"></script>
+</body></html>

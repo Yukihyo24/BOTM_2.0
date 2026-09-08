@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Communauté - BOTM</title><link rel="stylesheet" href="/BOTM_2.0/styles.css"><link rel="stylesheet" href="/BOTM_2.0/social.css"></head>
+<body class="social-page"><div class="social-wrap">
+<header class="social-top"><div><div class="muted small">BATTLE OF THE MULTIVERSE</div><h1>Communauté</h1></div>
+<nav class="social-nav"><a href="/BOTM_2.0/index.html">← Accueil</a><a href="/BOTM_2.0/profil.html">Mon profil</a><a href="/BOTM_2.0/messages.html">Messages</a></nav></header>
+
+<section class="social-panel" style="margin-bottom:16px"><h2>Joueurs</h2><div class="community-head"><input id="search" placeholder="Rechercher un pseudo…"><button class="sbtn primary" id="searchBtn">Rechercher</button></div><div id="users" class="user-list"></div></section>
+<section class="social-panel" style="margin-bottom:16px"><h2>Demandes d'amis</h2><div id="requests" class="user-list"></div></section>
+<section class="social-panel"><h2>Mes amis</h2><div id="friends" class="user-list"></div></section>
+</div>
+<script type="module">
+import {BOTM,supabase} from "/BOTM_2.0/app.js";
+await BOTM.requireAuth(); await supabase.rpc("touch_presence");
+const fallback="/BOTM_2.0/assets/botm-logo-mark.png";
+const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+function person(u,actions=""){return `<div class="user-card"><a href="/BOTM_2.0/profil.html?id=${u.user_id||u.id}"><img class="avatar-50" src="${esc(u.avatar_url||fallback)}"></a><div class="grow"><b>${esc(u.username)}</b><small><span class="online-dot ${u.online?"on":""}" style="display:inline-block;margin-right:5px"></span>${u.online?"En ligne":"Hors ligne"}</small></div><div class="mini-actions">${actions}</div></div>`}
+async function loadUsers(){
+ const q=document.getElementById("search").value.trim()||null;
+ const {data,error}=await supabase.rpc("list_community_users",{p_search:q});
+ if(error){alert(error.message);return}
+ document.getElementById("users").innerHTML=(data||[]).map(u=>person(u,`<a class="iconbtn" title="Profil" href="/BOTM_2.0/profil.html?id=${u.id}">👤</a><a class="iconbtn" title="Message" href="/BOTM_2.0/messages.html?id=${u.id}">✉</a>`)).join("")||"<p>Aucun joueur.</p>";
+}
+async function loadRequests(){
+ const {data,error}=await supabase.rpc("get_pending_friend_requests");
+ if(error)return;
+ document.getElementById("requests").innerHTML=(data||[]).map(u=>person(u,`<button class="iconbtn accept" data-id="${u.friendship_id}">✓</button><button class="iconbtn reject" data-id="${u.friendship_id}">✕</button>`)).join("")||"<p style='color:#95a1c5'>Aucune demande.</p>";
+ document.querySelectorAll(".accept").forEach(b=>b.onclick=()=>respond(b.dataset.id,true));
+ document.querySelectorAll(".reject").forEach(b=>b.onclick=()=>respond(b.dataset.id,false));
+}
+async function respond(id,ok){const {error}=await supabase.rpc("respond_friend_request",{p_friendship_id:Number(id),p_accept:ok});if(error)alert(error.message);else{loadRequests();loadFriends();loadUsers()}}
+async function loadFriends(){
+ const {data,error}=await supabase.rpc("get_friends");if(error)return;
+ document.getElementById("friends").innerHTML=(data||[]).map(u=>person(u,`<a class="iconbtn" href="/BOTM_2.0/profil.html?id=${u.user_id}">👤</a><a class="iconbtn" href="/BOTM_2.0/messages.html?id=${u.user_id}">✉</a>`)).join("")||"<p style='color:#95a1c5'>Aucun ami pour le moment.</p>";
+}
+document.getElementById("searchBtn").onclick=loadUsers;document.getElementById("search").onkeydown=e=>{if(e.key==="Enter")loadUsers()};
+await Promise.all([loadUsers(),loadRequests(),loadFriends()]);
+</script><script type="module" src="/BOTM_2.0/social.js"></script></body></html>
