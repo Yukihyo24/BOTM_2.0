@@ -81,8 +81,17 @@
       </div>
 
       <div class="hero-motto">
-        <span>Plus qu'un jeu.</span>
-        <strong>Un multivers<br>entre tes mains.</strong>
+        <div class="home-live-chat">
+          <div class="home-chat-head">
+            <b>💬 Chat du Multivers</b>
+            <span>instantané</span>
+          </div>
+          <div class="home-chat-messages" id="homeChatMessages"></div>
+          <form class="home-chat-form" id="homeChatForm">
+            <input id="homeChatInput" maxlength="500" placeholder="Écrire à tout le monde…" autocomplete="off">
+            <button>➤</button>
+          </form>
+        </div>
       </div>
     </section>
 
@@ -176,8 +185,12 @@
       </div>
 
       <div class="home-panel quote-panel">
-        <div class="quote-mark">“</div>
-        <p>Chaque carte est une porte vers un autre monde.</p>
+        <div class="online-panel">
+          <h3>🟢 Joueurs en ligne</h3>
+          <div class="online-list" id="homeOnlineList">
+            <div class="online-empty">Chargement…</div>
+          </div>
+        </div>
       </div>
     </section>
 
