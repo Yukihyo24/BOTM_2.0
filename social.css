@@ -43,3 +43,60 @@
 .online-user .name{font-size:.78rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .online-user .dot{width:7px;height:7px;border-radius:50%;background:#52e19a;box-shadow:0 0 8px rgba(82,225,154,.7);margin-left:auto}
 .online-empty{font-size:.78rem;color:#95a1c5}
+
+/* ===== Accueil social V1.3 ===== */
+.hero-motto.hero-chat-frame{
+  width:min(390px,32vw);
+  min-width:300px;
+  align-self:stretch;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  box-sizing:border-box;
+  background:rgba(6,10,31,.76);
+  border:1px solid rgba(132,112,255,.38);
+  border-radius:18px;
+  backdrop-filter:blur(10px);
+  box-shadow:inset 0 0 32px rgba(92,64,224,.08);
+  text-align:left;
+}
+.hero-chat-frame .home-live-chat{
+  width:100%;
+  height:250px;
+  min-height:250px;
+}
+.hero-chat-frame .home-chat-messages{
+  min-height:145px;
+  max-height:145px;
+  padding:8px;
+  border:1px solid rgba(132,148,255,.16);
+  border-radius:11px;
+  background:rgba(4,8,24,.58);
+}
+.hero-chat-frame .home-chat-form{
+  margin-top:8px;
+}
+.hero-chat-frame .home-chat-form input{
+  height:38px;
+}
+.hero-chat-frame .home-chat-form button{
+  min-width:42px;
+}
+.online-panel{
+  min-height:150px;
+}
+.online-list{
+  min-height:105px;
+}
+@media(max-width:1050px){
+  .hero-motto.hero-chat-frame{
+    width:100%;
+    min-width:0;
+    grid-column:1/-1;
+  }
+  .hero-chat-frame .home-live-chat{
+    height:230px;
+    min-height:230px;
+  }
+}
