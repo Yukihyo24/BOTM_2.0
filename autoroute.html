@@ -31,7 +31,7 @@ function prog(a,nextRecharge){
       tick(); clearInterval(window._fortuneCd); window._fortuneCd=setInterval(tick,1000);
     }
   }
-} / 10`;document.getElementById("wins").textContent=`${wins} / 10`;}
+}
 function pc(c,active=true){return `<button class="card pick p ${sc===c.id?"selected":""}" data-id="${c.id}" ${!active||c.uses_left<=0?"disabled":""}><img src="${BOTM.imagePath(c)}"><div class="meta"><b>${name(c)}</b><small>${c.universe} • ${BOTM.rarityLabel(c.rarity)}</small><small class="pill">Utilisations ${c.uses}/4 • reste ${c.uses_left}</small></div></button>`}
 function rc(r){return `<button class="card pick r ${sr===r.route?"selected":""}" data-r="${r.route}"><img src="${BOTM.imagePath(r)}"><div class="meta"><b>Route ${r.route} — ${name(r)}</b><small>${r.universe} • ${BOTM.rarityLabel(r.rarity)}</small><small class="pill">${r.stat} : ${r.target_value}</small></div></button>`}
 function team(){stage.innerHTML=`<div class="section"><h2>Ton équipe</h2><p class="mut">Trois cartes pour dix péages. Quatre utilisations maximum par carte.</p></div><div class="cards">${cards.map(c=>pc(c,false)).join("")}</div><div class="action"><button id="go" class="btn gold">Voir le premier péage →</button></div>`;document.getElementById("go").onclick=render}
