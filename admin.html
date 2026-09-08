@@ -5,12 +5,20 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Admin - BOTM</title>
   <link rel="stylesheet" href="/BOTM_2.0/styles.css">
+  <style>
+    .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .admin-note{font-size:.86rem;line-height:1.55}
+    .batch-help{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.78rem}
+    #batch{width:100%;min-height:150px;resize:vertical;padding:12px;border-radius:10px;border:1px solid rgba(128,149,255,.22);background:#080d22;color:#fff}
+    .batch-result{white-space:pre-wrap}
+    @media(max-width:680px){.stat-row{grid-template-columns:1fr 1fr}}
+  </style>
 </head>
 <body>
 <div class="app">
   <div class="topbar">
     <div class="brand">
-      <img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png" alt="BOTM">
+      <img src="/BOTM_2.0/assets/botm-logo-mark.png" alt="BOTM">
       <div><h1>Administration BOTM</h1></div>
     </div>
   </div>
@@ -33,6 +41,11 @@
 
     <div class="panel">
       <h2>Ajouter une carte au catalogue</h2>
+      <p class="muted admin-note">
+        L'image doit d'abord être présente sur GitHub.
+        Le nom du fichier est l'identifiant fonctionnel de la carte.
+      </p>
+
       <select id="u" class="btn"></select>
       <select id="r" class="btn">
         <option value="commune">Commune</option>
@@ -41,11 +54,35 @@
         <option value="tres_rare">Très Rare</option>
         <option value="ultra_rare">Ultra Rare</option>
       </select>
-      <input id="file" placeholder="nom-image.jpg">
-      <input id="path" placeholder="univers/Naruto/rare/nom-image.jpg">
+
+      <input id="file" placeholder="Ex : Naruto6.jpg">
+      <input id="path" placeholder="univers/Naruto/rare/Naruto6.jpg">
+
+      <div class="stat-row">
+        <input id="physique" type="number" min="0" max="100" placeholder="Physique">
+        <input id="pouvoirs" type="number" min="0" max="100" placeholder="Pouvoirs">
+        <input id="vitesse" type="number" min="0" max="100" placeholder="Vitesse">
+        <input id="valeur" type="number" min="0" max="100" placeholder="Valeur">
+      </div>
+
       <button class="btn gold" id="add">Ajouter au catalogue</button>
       <div id="addmsg" class="notice" style="display:none"></div>
     </div>
+  </div>
+
+  <div class="panel" style="margin-top:18px">
+    <h2>Ajouter un petit lot</h2>
+    <p class="muted admin-note">
+      Une ligne par carte. Format :
+    </p>
+    <div class="notice batch-help">fichier.jpg ; Univers ; rarete ; physique ; pouvoirs ; vitesse ; valeur</div>
+    <p class="muted small">
+      Exemple : <code>Naruto6.jpg ; Naruto ; super_rare ; 88 ; 95 ; 93 ; 92</code><br>
+      Le chemin sera créé automatiquement : <code>univers/Univers/rarete/fichier.jpg</code>.
+    </p>
+    <textarea id="batch" placeholder="Naruto6.jpg ; Naruto ; super_rare ; 88 ; 95 ; 93 ; 92&#10;Sasuke9.jpg ; Naruto ; rare ; 85 ; 91 ; 88 ; 86"></textarea>
+    <button class="btn gold" id="batch-add" style="margin-top:10px">Ajouter le lot</button>
+    <div id="batchmsg" class="notice batch-result" style="display:none"></div>
   </div>
 
   <div class="panel" style="margin-top:18px">
@@ -92,25 +129,101 @@ BOTM.universes.forEach(x => document.getElementById("u").add(new Option(x, x)));
 function updatePath() {
   const u = document.getElementById("u").value;
   const r = document.getElementById("r").value;
-  const f = document.getElementById("file").value;
-  document.getElementById("path").value = `univers/${u}/${r}/${f}`;
+  const f = document.getElementById("file").value.trim();
+  document.getElementById("path").value = f ? `univers/${u}/${r}/${f}` : "";
 }
 
 document.getElementById("u").onchange = updatePath;
 document.getElementById("r").onchange = updatePath;
 document.getElementById("file").oninput = updatePath;
 
+async function rpcAddCard({universe, rarity, fileName, imagePath, physique, pouvoirs, vitesse, valeur}) {
+  return supabase.rpc("admin_add_card", {
+    p_universe: universe,
+    p_rarity: rarity,
+    p_file_name: fileName,
+    p_image_path: imagePath,
+    p_physique: physique,
+    p_pouvoirs: pouvoirs,
+    p_vitesse: vitesse,
+    p_valeur: valeur
+  });
+}
+
 document.getElementById("add").onclick = async () => {
-  const row = {
-    universe: document.getElementById("u").value,
-    rarity: document.getElementById("r").value,
-    file_name: document.getElementById("file").value.trim(),
-    image_path: document.getElementById("path").value.trim()
+  const universe = document.getElementById("u").value;
+  const rarity = document.getElementById("r").value;
+  const fileName = document.getElementById("file").value.trim();
+  const imagePath = document.getElementById("path").value.trim();
+
+  const stats = {
+    physique: Number(document.getElementById("physique").value),
+    pouvoirs: Number(document.getElementById("pouvoirs").value),
+    vitesse: Number(document.getElementById("vitesse").value),
+    valeur: Number(document.getElementById("valeur").value)
   };
 
-  const { error } = await supabase.from("cards").insert(row);
+  if (!fileName || !imagePath || Object.values(stats).some(v => !Number.isInteger(v) || v < 0 || v > 100)) {
+    show(document.getElementById("addmsg"), "Renseigne le fichier, le chemin et les 4 statistiques (0 à 100).");
+    return;
+  }
+
+  const { error } = await rpcAddCard({
+    universe, rarity, fileName, imagePath, ...stats
+  });
+
   const m = document.getElementById("addmsg");
   show(m, error ? error.message : "Carte ajoutée au catalogue.");
+
+  if (!error) {
+    document.getElementById("file").value = "";
+    document.getElementById("path").value = "";
+    ["physique","pouvoirs","vitesse","valeur"].forEach(id => document.getElementById(id).value = "");
+  }
+};
+
+document.getElementById("batch-add").onclick = async () => {
+  const text = document.getElementById("batch").value.trim();
+  const out = document.getElementById("batchmsg");
+
+  if (!text) {
+    show(out, "Aucune ligne à importer.");
+    return;
+  }
+
+  const lines = text.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+  const results = [];
+  let ok = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    const parts = lines[i].split(";").map(x => x.trim());
+
+    if (parts.length !== 7) {
+      results.push(`Ligne ${i+1} : format invalide`);
+      continue;
+    }
+
+    const [fileName, universe, rarity, p1, p2, p3, p4] = parts;
+    const physique = Number(p1);
+    const pouvoirs = Number(p2);
+    const vitesse = Number(p3);
+    const valeur = Number(p4);
+    const imagePath = `univers/${universe}/${rarity}/${fileName}`;
+
+    const { error } = await rpcAddCard({
+      universe, rarity, fileName, imagePath,
+      physique, pouvoirs, vitesse, valeur
+    });
+
+    if (error) {
+      results.push(`❌ ${fileName} : ${error.message}`);
+    } else {
+      ok++;
+      results.push(`✅ ${fileName}`);
+    }
+  }
+
+  show(out, `${ok}/${lines.length} carte(s) ajoutée(s)\n\n${results.join("\n")}`);
 };
 
 document.getElementById("grant").onclick = async () => {
@@ -135,10 +248,7 @@ document.getElementById("grant").onclick = async () => {
     p_points: points
   });
 
-  show(
-    grantMsg,
-    pointError ? pointError.message : "Récompenses et points crédités."
-  );
+  show(grantMsg, pointError ? pointError.message : "Récompenses et points crédités.");
 };
 
 async function searchCards() {
@@ -153,7 +263,7 @@ async function searchCards() {
 
   const { data, error } = await supabase
     .from("cards")
-    .select("id,universe,rarity,file_name,image_path")
+    .select("id,universe,rarity,file_name,image_path,physique,pouvoirs,vitesse,valeur")
     .eq("active", true)
     .ilike("file_name", `%${q}%`)
     .limit(30);
@@ -171,6 +281,9 @@ async function searchCards() {
       <div class="shop-body">
         <h3>${c.file_name.replace(/\.[^.]+$/, "")}</h3>
         <div class="muted small">${c.universe} • ${BOTM.rarityLabel(c.rarity)}</div>
+        <div class="muted small">
+          PHY ${c.physique ?? "—"} • POU ${c.pouvoirs ?? "—"} • VIT ${c.vitesse ?? "—"} • VAL ${c.valeur ?? "—"}
+        </div>
       </div>`;
 
     const b = document.createElement("button");
@@ -201,11 +314,7 @@ async function addCardToShop(c) {
     p_stock: stock
   });
 
-  show(
-    shopMsg,
-    error ? error.message : `${c.file_name.replace(/\.[^.]+$/, "")} ajoutée à la boutique.`
-  );
-
+  show(shopMsg, error ? error.message : `${c.file_name.replace(/\.[^.]+$/, "")} ajoutée à la boutique.`);
   if (!error) await loadShopItems();
 }
 
@@ -222,7 +331,7 @@ async function loadShopItems() {
     .from("shop_items")
     .select(`
       id,item_type,title,price,stock,active,card_id,
-      cards(id,universe,rarity,file_name,image_path)
+      cards(id,universe,rarity,file_name,image_path,physique,pouvoirs,vitesse,valeur)
     `)
     .order("item_type")
     .order("id");
