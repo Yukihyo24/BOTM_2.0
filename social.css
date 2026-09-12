@@ -100,3 +100,104 @@
     min-height:230px;
   }
 }
+
+
+/* ===== Profil V1.4 : filtres Collection + Catalogue ===== */
+.profile-section-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:14px;
+}
+.profile-section-head h2{
+  margin:0 0 5px;
+}
+.profile-section-head p{
+  margin:0;
+  color:var(--social-muted);
+  font-size:.93rem;
+}
+.profile-filter-count{
+  color:#aab5d7;
+  font-size:.86rem;
+  font-weight:700;
+  white-space:nowrap;
+}
+.profile-card-filters{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:0 0 18px;
+  padding:12px;
+  border:1px solid var(--social-line);
+  border-radius:14px;
+  background:rgba(255,255,255,.025);
+}
+.profile-filter-select{
+  appearance:none;
+  min-width:190px;
+  padding:10px 38px 10px 12px;
+  border:1px solid rgba(139,124,255,.28);
+  border-radius:10px;
+  color:#eef1ff;
+  background:
+    linear-gradient(45deg,transparent 50%,#9ba7cf 50%) calc(100% - 16px) 50%/5px 5px no-repeat,
+    linear-gradient(135deg,#9ba7cf 50%,transparent 50%) calc(100% - 11px) 50%/5px 5px no-repeat,
+    rgba(9,13,36,.92);
+  font:inherit;
+  cursor:pointer;
+}
+.profile-filter-select:focus{
+  outline:none;
+  border-color:#846dff;
+  box-shadow:0 0 0 3px rgba(132,109,255,.12);
+}
+.public-card-image-wrap{
+  position:relative;
+}
+.public-card-qty{
+  position:absolute;
+  right:7px;
+  top:7px;
+  min-width:31px;
+  padding:4px 7px;
+  border-radius:999px;
+  background:rgba(5,8,23,.88);
+  border:1px solid rgba(255,255,255,.16);
+  color:white;
+  font-size:.78rem;
+  font-weight:900;
+  text-align:center;
+  box-shadow:0 4px 14px rgba(0,0,0,.3);
+}
+.catalogue-card small,
+.public-card small{
+  display:block;
+  margin-top:3px;
+  line-height:1.35;
+}
+.profile-empty-filter{
+  color:#95a1c5;
+  padding:22px 4px;
+}
+.catalogue-grid{
+  grid-template-columns:repeat(auto-fill,minmax(145px,1fr));
+}
+@media(max-width:700px){
+  .profile-section-head{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:7px;
+  }
+  .profile-filter-count{
+    white-space:normal;
+  }
+  .profile-card-filters{
+    flex-direction:column;
+  }
+  .profile-filter-select{
+    width:100%;
+    min-width:0;
+  }
+}
