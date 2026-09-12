@@ -24,6 +24,7 @@
     <nav class="side-nav">
       <a class="active" href="/BOTM_2.0/index.html"><span>⌂</span> Accueil</a>
       <a href="/BOTM_2.0/collection.html"><span>▱</span> Collection</a>
+      <a href="/BOTM_2.0/catalogue.html"><span>▦</span> Catalogue</a>
       <a href="/BOTM_2.0/jeu.html"><span>⚔</span> Combat</a>
       <a href="/BOTM_2.0/survivor.html"><span>🏔</span> Survivor Valley</a>
       <a href="/BOTM_2.0/autoroute.html"><span>🛣️</span> Autoroute de la Fortune</a>
@@ -167,37 +168,6 @@
       </a>
     </section>
 
-
-    <section class="home-catalogue-panel">
-      <div class="home-catalogue-head">
-        <div>
-          <div class="panel-kicker">Catalogue global</div>
-          <h3>Les cartes du Multivers</h3>
-          <p>Parcours toutes les cartes actuellement disponibles dans BOTM.</p>
-        </div>
-        <div class="home-catalogue-count" id="homeCatalogueCount">Chargement…</div>
-      </div>
-
-      <div class="home-catalogue-filters">
-        <select id="homeCatalogueUniverse" class="profile-filter-select">
-          <option value="">Tous les univers</option>
-        </select>
-
-        <select id="homeCatalogueRarity" class="profile-filter-select">
-          <option value="">Toutes les raretés</option>
-          <option value="commune">Commune</option>
-          <option value="rare">Rare</option>
-          <option value="super_rare">Super Rare</option>
-          <option value="tres_rare">Très Rare</option>
-          <option value="ultra_rare">Ultra Rare</option>
-        </select>
-      </div>
-
-      <div id="homeCatalogueCards" class="home-catalogue-cards">
-        <div class="home-catalogue-empty">Chargement du catalogue…</div>
-      </div>
-    </section>
-
     <section class="home-bottom-grid">
       <div class="home-panel welcome-panel">
         <div class="panel-kicker">Ton espace</div>
@@ -287,82 +257,6 @@ if (session) {
 }
 
 
-const catalogueEsc = (v="") => String(v).replace(/[&<>"']/g, m => ({
-  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-}[m]));
-
-const catalogueRarityLabel = rarity => ({
-  commune:"Commune",
-  rare:"Rare",
-  super_rare:"Super Rare",
-  tres_rare:"Très Rare",
-  ultra_rare:"Ultra Rare"
-})[rarity] || rarity || "";
-
-const catalogueCardName = card =>
-  card?.file_name?.replace(/\.[^.]+$/,"") || "";
-
-let homeCatalogueRows = [];
-
-function fillHomeCatalogueUniverses() {
-  const select = document.getElementById("homeCatalogueUniverse");
-  const universes = [...new Set(homeCatalogueRows.map(c => c.universe).filter(Boolean))]
-    .sort((a,b) => a.localeCompare(b, "fr"));
-
-  select.innerHTML =
-    `<option value="">Tous les univers</option>` +
-    universes.map(u => `<option value="${catalogueEsc(u)}">${catalogueEsc(u)}</option>`).join("");
-}
-
-function renderHomeCatalogue() {
-  const box = document.getElementById("homeCatalogueCards");
-  const universe = document.getElementById("homeCatalogueUniverse").value;
-  const rarity = document.getElementById("homeCatalogueRarity").value;
-
-  const filtered = homeCatalogueRows.filter(c =>
-    (!universe || c.universe === universe) &&
-    (!rarity || c.rarity === rarity)
-  );
-
-  document.getElementById("homeCatalogueCount").textContent =
-    `${filtered.length} carte${filtered.length > 1 ? "s" : ""}`;
-
-  box.innerHTML = filtered.length
-    ? filtered.map(c => `
-        <article class="home-catalogue-card">
-          <img src="${BOTM.imagePath(c)}" alt="${catalogueEsc(catalogueCardName(c))}">
-          <div class="home-catalogue-card-info">
-            <b>${catalogueEsc(catalogueCardName(c))}</b>
-            <span>${catalogueEsc(c.universe)} · ${catalogueEsc(catalogueRarityLabel(c.rarity))}</span>
-          </div>
-        </article>
-      `).join("")
-    : `<div class="home-catalogue-empty">Aucune carte ne correspond à ces filtres.</div>`;
-}
-
-async function loadHomeCatalogue() {
-  const box = document.getElementById("homeCatalogueCards");
-  try {
-    const { data, error } = await supabase.rpc("get_card_catalog");
-    if (error) throw error;
-
-    homeCatalogueRows = data || [];
-    fillHomeCatalogueUniverses();
-    renderHomeCatalogue();
-
-    document.getElementById("homeCatalogueUniverse")
-      .addEventListener("change", renderHomeCatalogue);
-
-    document.getElementById("homeCatalogueRarity")
-      .addEventListener("change", renderHomeCatalogue);
-  } catch (error) {
-    console.error("Catalogue BOTM :", error);
-    document.getElementById("homeCatalogueCount").textContent = "";
-    box.innerHTML = `<div class="home-catalogue-empty">Impossible de charger le catalogue.</div>`;
-  }
-}
-
-await loadHomeCatalogue();
 
 document.getElementById("logout").onclick = () => BOTM.signOut();
 </script>
