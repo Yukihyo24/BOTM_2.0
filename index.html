@@ -7,6 +7,59 @@
   <title>Battle of the Multiverse</title>
   <link rel="stylesheet" href="/BOTM_2.0/styles.css">
   <link rel="stylesheet" href="/BOTM_2.0/social.css">
+
+<style>
+/* BOTM — barre latérale avec menu défilant */
+.sidebar{
+  height:100vh;
+  height:100dvh;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+.sidebar .side-brand{
+  flex:0 0 auto;
+}
+
+.sidebar .side-nav{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding-right:6px;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(139,92,246,.65) rgba(255,255,255,.04);
+  overscroll-behavior:contain;
+}
+
+.sidebar .side-nav::-webkit-scrollbar{
+  width:6px;
+}
+
+.sidebar .side-nav::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.04);
+  border-radius:999px;
+}
+
+.sidebar .side-nav::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg,#7657ff,#a12cff);
+  border-radius:999px;
+}
+
+.sidebar .side-quote,
+.sidebar .side-logout{
+  flex:0 0 auto;
+}
+
+/* Sur les écrans moins hauts, on libère encore un peu d'espace au menu. */
+@media (max-height:850px){
+  .sidebar .side-quote{
+    display:none;
+  }
+}
+</style>
+
 </head>
 
 <body class="home-page">
