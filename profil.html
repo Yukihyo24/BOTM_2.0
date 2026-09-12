@@ -74,7 +74,6 @@ function render(){
       <button data-tab="amis">Amis</button>
       <button data-tab="favoris">Favoris</button>
       <button data-tab="collection">Collection</button>
-      <button data-tab="catalogue">Catalogue</button>
     </div>
 
     <div id="tab-infos" class="profile-tab-panel active">
@@ -127,32 +126,6 @@ function render(){
       <div id="publicCollection"><p style="color:#95a1c5">Chargement de la collection…</p></div>
     </div>
 
-    <div id="tab-catalogue" class="profile-tab-panel">
-      <div class="profile-section-head">
-        <div>
-          <h2>Catalogue BOTM</h2>
-          <p>Toutes les cartes actuellement disponibles dans les univers du jeu.</p>
-        </div>
-        <div class="profile-filter-count" id="catalogueCount"></div>
-      </div>
-
-      <div class="profile-card-filters">
-        <select id="catalogueUniverse" class="profile-filter-select">
-          <option value="">Tous les univers</option>
-        </select>
-        <select id="catalogueRarity" class="profile-filter-select">
-          <option value="">Toutes les raretés</option>
-          <option value="commune">Commune</option>
-          <option value="rare">Rare</option>
-          <option value="super_rare">Super Rare</option>
-          <option value="tres_rare">Très Rare</option>
-          <option value="ultra_rare">Ultra Rare</option>
-        </select>
-      </div>
-
-      <div id="catalogueCards"><p style="color:#95a1c5">Chargement du catalogue…</p></div>
-    </div>
-
     <div id="editor"></div>`;
   bindActions();
   bindTabs();
@@ -167,7 +140,6 @@ function bindTabs(){
       document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
       if(btn.dataset.tab==="amis") await loadPublicFriends();
       if(btn.dataset.tab==="collection") await loadPublicCollection();
-      if(btn.dataset.tab==="catalogue") await loadCatalogue();
     });
   });
 }
@@ -188,7 +160,6 @@ async function loadPublicFriends(){
 }
 
 let publicCollectionRows=[];
-let catalogueRows=[];
 
 function rarityText(rarity){
   if(typeof BOTM.rarityLabel==="function") return BOTM.rarityLabel(rarity);
@@ -262,55 +233,6 @@ async function loadPublicCollection(){
   raritySelect?.addEventListener("change",renderPublicCollection);
 
   renderPublicCollection();
-}
-
-function renderCatalogue(){
-  const box=document.getElementById("catalogueCards");
-  if(!box) return;
-
-  const universe=document.getElementById("catalogueUniverse")?.value||"";
-  const rarity=document.getElementById("catalogueRarity")?.value||"";
-
-  const filtered=catalogueRows.filter(c=>
-    (!universe||c.universe===universe) &&
-    (!rarity||c.rarity===rarity)
-  );
-
-  const count=document.getElementById("catalogueCount");
-  if(count){
-    count.textContent=`${filtered.length} carte${filtered.length>1?"s":""} disponible${filtered.length>1?"s":""}`;
-  }
-
-  box.innerHTML=filtered.length
-    ? `<div class="public-collection catalogue-grid">${filtered.map(c=>`<div class="public-card catalogue-card">
-        <img src="${BOTM.imagePath(c)}" alt="${esc(cardName(c))}">
-        <b>${esc(cardName(c))}</b>
-        <small>${esc(c.universe)} · ${esc(rarityText(c.rarity))}</small>
-      </div>`).join("")}</div>`
-    : `<p class="profile-empty-filter">Aucune carte ne correspond à ces filtres.</p>`;
-}
-
-async function loadCatalogue(){
-  const box=document.getElementById("catalogueCards");
-  if(!box||box.dataset.loaded==="1") return;
-
-  const {data,error}=await supabase.rpc("get_card_catalog");
-  if(error){
-    box.innerHTML=`<p>${esc(error.message)}</p>`;
-    return;
-  }
-
-  catalogueRows=data||[];
-  box.dataset.loaded="1";
-
-  const universeSelect=document.getElementById("catalogueUniverse");
-  const raritySelect=document.getElementById("catalogueRarity");
-  fillUniverseSelect(universeSelect,catalogueRows);
-
-  universeSelect?.addEventListener("change",renderCatalogue);
-  raritySelect?.addEventListener("change",renderCatalogue);
-
-  renderCatalogue();
 }
 
 function bindActions(){
