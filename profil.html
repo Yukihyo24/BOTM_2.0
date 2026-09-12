@@ -74,6 +74,7 @@ function render(){
       <button data-tab="amis">Amis</button>
       <button data-tab="favoris">Favoris</button>
       <button data-tab="collection">Collection</button>
+      <button data-tab="catalogue">Catalogue</button>
     </div>
 
     <div id="tab-infos" class="profile-tab-panel active">
@@ -101,7 +102,55 @@ function render(){
     </div>
 
     <div id="tab-collection" class="profile-tab-panel">
+      <div class="profile-section-head">
+        <div>
+          <h2>Collection de ${esc(profile.username)}</h2>
+          <p>Filtre les cartes possédées par univers et par rareté.</p>
+        </div>
+        <div class="profile-filter-count" id="publicCollectionCount"></div>
+      </div>
+
+      <div class="profile-card-filters">
+        <select id="publicCollectionUniverse" class="profile-filter-select">
+          <option value="">Tous les univers</option>
+        </select>
+        <select id="publicCollectionRarity" class="profile-filter-select">
+          <option value="">Toutes les raretés</option>
+          <option value="commune">Commune</option>
+          <option value="rare">Rare</option>
+          <option value="super_rare">Super Rare</option>
+          <option value="tres_rare">Très Rare</option>
+          <option value="ultra_rare">Ultra Rare</option>
+        </select>
+      </div>
+
       <div id="publicCollection"><p style="color:#95a1c5">Chargement de la collection…</p></div>
+    </div>
+
+    <div id="tab-catalogue" class="profile-tab-panel">
+      <div class="profile-section-head">
+        <div>
+          <h2>Catalogue BOTM</h2>
+          <p>Toutes les cartes actuellement disponibles dans les univers du jeu.</p>
+        </div>
+        <div class="profile-filter-count" id="catalogueCount"></div>
+      </div>
+
+      <div class="profile-card-filters">
+        <select id="catalogueUniverse" class="profile-filter-select">
+          <option value="">Tous les univers</option>
+        </select>
+        <select id="catalogueRarity" class="profile-filter-select">
+          <option value="">Toutes les raretés</option>
+          <option value="commune">Commune</option>
+          <option value="rare">Rare</option>
+          <option value="super_rare">Super Rare</option>
+          <option value="tres_rare">Très Rare</option>
+          <option value="ultra_rare">Ultra Rare</option>
+        </select>
+      </div>
+
+      <div id="catalogueCards"><p style="color:#95a1c5">Chargement du catalogue…</p></div>
     </div>
 
     <div id="editor"></div>`;
@@ -118,6 +167,7 @@ function bindTabs(){
       document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
       if(btn.dataset.tab==="amis") await loadPublicFriends();
       if(btn.dataset.tab==="collection") await loadPublicCollection();
+      if(btn.dataset.tab==="catalogue") await loadCatalogue();
     });
   });
 }
@@ -137,19 +187,130 @@ async function loadPublicFriends(){
     : `<p style="color:#95a1c5">Aucun ami à afficher.</p>`;
 }
 
+let publicCollectionRows=[];
+let catalogueRows=[];
+
+function rarityText(rarity){
+  if(typeof BOTM.rarityLabel==="function") return BOTM.rarityLabel(rarity);
+  return ({
+    commune:"Commune",
+    rare:"Rare",
+    super_rare:"Super Rare",
+    tres_rare:"Très Rare",
+    ultra_rare:"Ultra Rare"
+  })[rarity]||rarity||"";
+}
+
+function fillUniverseSelect(select,rows){
+  if(!select) return;
+  const current=select.value;
+  const universes=[...new Set((rows||[]).map(c=>c.universe).filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b,"fr"));
+  select.innerHTML=`<option value="">Tous les univers</option>`+
+    universes.map(u=>`<option value="${esc(u)}">${esc(u)}</option>`).join("");
+  if(universes.includes(current)) select.value=current;
+}
+
+function renderPublicCollection(){
+  const box=document.getElementById("publicCollection");
+  if(!box) return;
+
+  const universe=document.getElementById("publicCollectionUniverse")?.value||"";
+  const rarity=document.getElementById("publicCollectionRarity")?.value||"";
+
+  const filtered=publicCollectionRows.filter(c=>
+    (!universe||c.universe===universe) &&
+    (!rarity||c.rarity===rarity)
+  );
+
+  const count=document.getElementById("publicCollectionCount");
+  if(count){
+    const copies=filtered.reduce((sum,c)=>sum+Number(c.quantity||0),0);
+    count.textContent=`${filtered.length} carte${filtered.length>1?"s":""} unique${filtered.length>1?"s":""} · ${copies} exemplaire${copies>1?"s":""}`;
+  }
+
+  box.innerHTML=filtered.length
+    ? `<div class="public-collection">${filtered.map(c=>`<div class="public-card">
+        <div class="public-card-image-wrap">
+          <img src="${BOTM.imagePath(c)}" alt="${esc(cardName(c))}">
+          <span class="public-card-qty">×${Number(c.quantity||0)}</span>
+        </div>
+        <b>${esc(cardName(c))}</b>
+        <small>${esc(c.universe)} · ${esc(rarityText(c.rarity))}</small>
+      </div>`).join("")}</div>`
+    : `<p class="profile-empty-filter">Aucune carte ne correspond à ces filtres.</p>`;
+}
+
 async function loadPublicCollection(){
   const box=document.getElementById("publicCollection");
-  if(box.dataset.loaded==="1")return;
+  if(!box||box.dataset.loaded==="1") return;
+
   const {data,error}=await supabase.rpc("get_public_collection",{p_user_id:target});
-  if(error){box.innerHTML=`<p>${esc(error.message)}</p>`;return}
+  if(error){
+    box.innerHTML=`<p>${esc(error.message)}</p>`;
+    return;
+  }
+
+  publicCollectionRows=data||[];
   box.dataset.loaded="1";
-  box.innerHTML=(data||[]).length
-    ? `<div class="public-collection">${data.map(c=>`<div class="public-card">
+
+  const universeSelect=document.getElementById("publicCollectionUniverse");
+  const raritySelect=document.getElementById("publicCollectionRarity");
+  fillUniverseSelect(universeSelect,publicCollectionRows);
+
+  universeSelect?.addEventListener("change",renderPublicCollection);
+  raritySelect?.addEventListener("change",renderPublicCollection);
+
+  renderPublicCollection();
+}
+
+function renderCatalogue(){
+  const box=document.getElementById("catalogueCards");
+  if(!box) return;
+
+  const universe=document.getElementById("catalogueUniverse")?.value||"";
+  const rarity=document.getElementById("catalogueRarity")?.value||"";
+
+  const filtered=catalogueRows.filter(c=>
+    (!universe||c.universe===universe) &&
+    (!rarity||c.rarity===rarity)
+  );
+
+  const count=document.getElementById("catalogueCount");
+  if(count){
+    count.textContent=`${filtered.length} carte${filtered.length>1?"s":""} disponible${filtered.length>1?"s":""}`;
+  }
+
+  box.innerHTML=filtered.length
+    ? `<div class="public-collection catalogue-grid">${filtered.map(c=>`<div class="public-card catalogue-card">
         <img src="${BOTM.imagePath(c)}" alt="${esc(cardName(c))}">
         <b>${esc(cardName(c))}</b>
-        <small>${esc(c.universe)} · x${c.quantity}</small>
+        <small>${esc(c.universe)} · ${esc(rarityText(c.rarity))}</small>
       </div>`).join("")}</div>`
-    : `<p style="color:#95a1c5">Aucune carte à afficher.</p>`;
+    : `<p class="profile-empty-filter">Aucune carte ne correspond à ces filtres.</p>`;
+}
+
+async function loadCatalogue(){
+  const box=document.getElementById("catalogueCards");
+  if(!box||box.dataset.loaded==="1") return;
+
+  const {data,error}=await supabase.rpc("get_card_catalog");
+  if(error){
+    box.innerHTML=`<p>${esc(error.message)}</p>`;
+    return;
+  }
+
+  catalogueRows=data||[];
+  box.dataset.loaded="1";
+
+  const universeSelect=document.getElementById("catalogueUniverse");
+  const raritySelect=document.getElementById("catalogueRarity");
+  fillUniverseSelect(universeSelect,catalogueRows);
+
+  universeSelect?.addEventListener("change",renderCatalogue);
+  raritySelect?.addEventListener("change",renderCatalogue);
+
+  renderCatalogue();
 }
 
 function bindActions(){
