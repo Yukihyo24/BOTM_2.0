@@ -5,22 +5,176 @@
 <div class="weekly"><div class="badge">UNIVERS DE LA SEMAINE<strong id="universe">—</strong></div><div class="badge">STATISTIQUE DE LA SEMAINE<strong id="stat">—</strong></div></div></section>
 <section class="panel" id="startPanel"><h2>Jusqu'à 200 points</h2><p>3 tentatives par jour. Bats jusqu'à 20 tirages. Après chaque victoire, encaisse ou continue en risquant ta cagnotte.</p><button class="btn" id="start">Démarrer une tentative</button><div id="startMsg" class="msg hidden"></div></section>
 <section class="panel hidden" id="choosePanel"><h2>Choisis ta carte</h2><p id="chooseText"></p><div class="cards" id="cards"></div></section>
-<section class="panel hidden" id="arenaPanel"><div class="meter"><b id="progress"></b><b id="pot"></b></div><div class="arena"><div class="chosen" id="chosen"></div><div><div class="roll" id="roll">?</div><div class="msg" id="result">Le tirage sera compris entre 60 et 99.</div><div class="actions"><button class="btn" id="play">Lancer la roulette</button><button class="btn gold" id="cash">Encaisser</button><button class="btn ghost hidden" id="joker">🔥 Utiliser mon Joker</button></div></div></div></section>
+<section class="panel hidden" id="arenaPanel"><div class="meter"><b id="progress"></b><b id="pot"></b></div><div class="arena"><div class="chosen" id="chosen"></div><div><div class="roll" id="roll">?</div><div class="msg" id="result">Le tirage sera compris entre 60 et 99.</div><div class="actions"><button class="btn" id="play">Lancer la roulette</button><button class="btn gold" id="cash">Encaisser</button></div></div></div></section>
 </main><script type="module">
-import {BOTM,supabase} from "/BOTM_2.0/app.js"; await BOTM.requireAuth(); const $=s=>document.querySelector(s); let S=null,Q=null;
-async function rpc(n,a={}){const {data,error}=await supabase.rpc(n,a);if(error)throw error;return data}
-const show=(s,v=true)=>$(s).classList.toggle("hidden",!v); const pic=c=>BOTM.imagePath(c);
-function ch(c){return `<img src="${pic(c)}"><h3>${c.file_name.replace(/\.[^.]+$/,"")}</h3><p>Physique ${c.physique} · Pouvoirs ${c.pouvoirs} · Vitesse ${c.vitesse}</p>`}
-async function refresh(){S=await rpc("get_roulette_status");Q=S.session;$("#universe").textContent=S.universe;$("#stat").textContent=S.stat;$("#attempts").textContent=`Tentatives : ${S.attempts}/3`;show("#startPanel",!Q);show("#choosePanel",Q?.state==="choosing");show("#arenaPanel",!!Q&&Q.state!=="choosing");if(Q?.state==="choosing")await cards();if(Q&&Q.state!=="choosing")arena()}
-async function cards(){$("#chooseText").textContent=`Choisis une carte ${S.universe}. ${S.stat} sera utilisée pendant toute la tentative.`;let cs=await rpc("get_roulette_cards");$("#cards").innerHTML="";for(const c of cs){let d=document.createElement("div");d.className="card";d.innerHTML=ch(c)+`<div class="stat">${S.stat} : ${c[S.stat.toLowerCase()]}</div>`;d.onclick=async()=>{await rpc("choose_roulette_card",{p_card_id:c.id});await refresh()};$("#cards").append(d)}}
-function arena(){let c=Q.player_card;$("#chosen").innerHTML=ch(c)+`<div class="stat">${S.stat} : ${c[S.stat.toLowerCase()]}</div>`;$("#progress").textContent=`Victoires : ${Q.victories}/20`;$("#pot").textContent=`Cagnotte : ${Q.pending_points} pts${Q.miracle_pending?" + 1 Pioche Miracle":""}`;$("#roll").textContent=Q.last_roll??"?";$("#cash").disabled=Q.victories<1;show("#joker",false)}
-$("#start").onclick=async()=>{try{await rpc("start_roulette");await refresh()}catch(e){show("#startMsg");$("#startMsg").textContent=e.message}};
-$("#play").onclick=async()=>{try{let id=Q.id,r=await rpc("play_roulette_round",{p_session_id:id});$("#roll").textContent=r.roll;if(r.result==="win"){if(Q.victories===19){$("#result").innerHTML='<span class="good">JACKPOT ! 200 points + 1 Pioche Miracle + 1 carte de l’univers !</span>';$("#play").disabled=true;$("#cash").disabled=true}else{await refresh();$("#result").innerHTML=`<span class="good">Victoire !</span> ${r.card_stat} bat ${r.roll}. Continue ou encaisse.`}}else if(r.result==="tie"){await refresh();$("#result").textContent=`Égalité ${r.card_stat}–${r.roll}. Tu restes en vie : rejoue ou encaisse.`}else{$("#result").innerHTML=`<span class="bad">Perdu : ${r.card_stat} contre ${r.roll}. Ta cagnotte est perdue.</span>`;$("#play").disabled=true;$("#cash").disabled=true;if(S.joker_available)show("#joker",true)}}catch(e){alert(e.message)}};
-$("#cash").onclick=async()=>{if(confirm("Encaisser et terminer cette tentative ?")){let r=await rpc("cashout_roulette",{p_session_id:Q.id});alert(`${r.points} points encaissés${r.miracle?" + 1 Pioche Miracle":""}.`);await refresh()}};
-$("#joker").onclick=async()=>{await rpc("use_roulette_joker",{p_session_id:Q.id});await refresh();$("#result").textContent="🔥 Joker utilisé : tu peux rejouer."};
+import {BOTM,supabase} from "/BOTM_2.0/app.js";
+await BOTM.requireAuth();
+
+const $ = s => document.querySelector(s);
+let S = null;
+let Q = null;
+
+async function rpc(name,args={}){
+  const {data,error}=await supabase.rpc(name,args);
+  if(error) throw error;
+  return data;
+}
+
+const show=(s,v=true)=>$(s).classList.toggle("hidden",!v);
+const pic=c=>BOTM.imagePath(c);
+
+function cardHtml(c){
+  return `<img src="${pic(c)}" alt="">
+    <h3>${c.file_name.replace(/\.[^.]+$/,"")}</h3>
+    <p>Physique ${c.physique} · Pouvoirs ${c.pouvoirs} · Vitesse ${c.vitesse}</p>`;
+}
+
+function startMessage(message,type=""){
+  const box=$("#startMsg");
+  box.classList.remove("hidden","good","bad");
+  if(type) box.classList.add(type);
+  box.innerHTML=message;
+}
+
+async function refresh(){
+  S=await rpc("get_roulette_status");
+  Q=S.session;
+
+  $("#universe").textContent=S.universe;
+  $("#stat").textContent=S.stat;
+  $("#attempts").textContent=`Tentatives : ${S.attempts}/3`;
+
+  show("#startPanel",!Q);
+  show("#choosePanel",Q?.state==="choosing");
+  show("#arenaPanel",!!Q && Q.state!=="choosing");
+
+  if(Q?.state==="choosing") await loadCards();
+  if(Q && Q.state!=="choosing") renderArena();
+}
+
+async function loadCards(){
+  $("#chooseText").textContent=
+    `Choisis une carte ${S.universe}. ${S.stat} sera utilisée pendant toute la tentative.`;
+
+  const cards=await rpc("get_roulette_cards");
+  $("#cards").innerHTML="";
+
+  for(const c of cards){
+    const el=document.createElement("div");
+    el.className="card";
+    el.innerHTML=cardHtml(c)+
+      `<div class="stat">${S.stat} : ${c[S.stat.toLowerCase()]}</div>`;
+
+    el.onclick=async()=>{
+      try{
+        await rpc("choose_roulette_card",{p_card_id:c.id});
+        await refresh();
+      }catch(e){
+        alert(e.message);
+      }
+    };
+
+    $("#cards").append(el);
+  }
+}
+
+function renderArena(){
+  const c=Q.player_card;
+
+  $("#chosen").innerHTML=cardHtml(c)+
+    `<div class="stat">${S.stat} : ${c[S.stat.toLowerCase()]}</div>`;
+
+  $("#progress").textContent=`Victoires : ${Q.victories}/20`;
+  $("#pot").textContent=
+    `Cagnotte : ${Q.pending_points} pts${Q.miracle_pending?" + 1 Pioche Miracle":""}`;
+
+  $("#roll").textContent=Q.last_roll??"?";
+  $("#play").disabled=false;
+  $("#cash").disabled=Q.victories<1;
+
+  if(Q.state==="tie"){
+    $("#result").textContent="Égalité : tu restes en vie. Rejoue ou encaisse.";
+  }else{
+    $("#result").textContent="Le tirage sera compris entre 60 et 99.";
+  }
+}
+
+async function finishAttempt(message,type){
+  // Actualise l'état serveur sans recharger le navigateur.
+  await refresh();
+  startMessage(message,type);
+}
+
+$("#start").onclick=async()=>{
+  try{
+    $("#startMsg").classList.add("hidden");
+    await rpc("start_roulette");
+    await refresh();
+  }catch(e){
+    startMessage(e.message,"bad");
+  }
+};
+
+$("#play").onclick=async()=>{
+  if(!Q) return;
+
+  const sessionId=Q.id;
+  const oldVictories=Q.victories;
+  $("#play").disabled=true;
+
+  try{
+    const r=await rpc("play_roulette_round",{p_session_id:sessionId});
+    $("#roll").textContent=r.roll;
+
+    if(r.result==="win"){
+      if(oldVictories===19){
+        await finishAttempt(
+          "🎉 <b>JACKPOT !</b> 20 adversaires vaincus : 200 points + 1 Pioche Miracle + 1 carte de l’univers. Tu peux immédiatement lancer une nouvelle tentative.",
+          "good"
+        );
+      }else{
+        await refresh();
+        $("#result").innerHTML=
+          `<span class="good">Victoire !</span> ${r.card_stat} bat ${r.roll}. Continue ou encaisse.`;
+      }
+      return;
+    }
+
+    if(r.result==="tie"){
+      await refresh();
+      $("#result").textContent=
+        `Égalité ${r.card_stat}–${r.roll}. Tu restes en vie : rejoue ou encaisse.`;
+      return;
+    }
+
+    await finishAttempt(
+      `☠️ <b>Défaite :</b> ${r.card_stat} contre ${r.roll}. Ta cagnotte est perdue. Tu peux lancer une nouvelle tentative immédiatement.`,
+      "bad"
+    );
+
+  }catch(e){
+    alert(e.message);
+    $("#play").disabled=false;
+  }
+};
+
+$("#cash").onclick=async()=>{
+  if(!Q) return;
+  if(!confirm("Encaisser et terminer cette tentative ?")) return;
+
+  try{
+    const r=await rpc("cashout_roulette",{p_session_id:Q.id});
+    await finishAttempt(
+      `✅ <b>${r.points} points encaissés</b>${r.miracle?" + 1 Pioche Miracle":""}. Tu peux lancer une nouvelle tentative immédiatement.`,
+      "good"
+    );
+  }catch(e){
+    alert(e.message);
+  }
+};
+
 refresh().catch(e=>{
   console.error(e);
-  document.querySelector("#startMsg").classList.remove("hidden");
-  document.querySelector("#startMsg").innerHTML = "<b>Impossible de charger le tirage :</b> " + e.message;
+  startMessage("<b>Impossible de charger le tirage :</b> "+e.message,"bad");
 });
 </script></body></html>
