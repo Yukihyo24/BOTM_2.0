@@ -3,7 +3,7 @@
 <body><main><div class="top"><a class="back" href="/BOTM_2.0/">← Accueil BOTM</a><b id="attempts">Tentatives —</b></div>
 <section class="hero"><small>MODE À RISQUE</small><h1>🎰 Roulette du <b>Multivers</b></h1><p>Le tirage hebdomadaire est commun à tous. <strong>Cette fois, c'est toi qui choisis ta carte.</strong></p>
 <div class="weekly"><div class="badge">UNIVERS DE LA SEMAINE<strong id="universe">—</strong></div><div class="badge">STATISTIQUE DE LA SEMAINE<strong id="stat">—</strong></div></div></section>
-<section class="panel" id="startPanel"><h2>Jusqu'à 200 points</h2><p>3 tentatives par jour. Bats jusqu'à 20 tirages. Après chaque victoire, encaisse ou continue en risquant ta cagnotte.</p><button class="btn" id="start">Démarrer une tentative</button><div id="startMsg" class="msg hidden"></div></section>
+<section class="panel" id="startPanel"><h2>Jusqu'à 200 points</h2><p>7 tentatives par jour. Bats jusqu'à 20 tirages. Après chaque victoire, encaisse ou continue en risquant ta cagnotte.</p><button class="btn" id="start">Démarrer une tentative</button><div id="startMsg" class="msg hidden"></div></section>
 <section class="panel hidden" id="choosePanel"><h2>Choisis ta carte</h2><p id="chooseText"></p><div class="cards" id="cards"></div></section>
 <section class="panel hidden" id="arenaPanel"><div class="meter"><b id="progress"></b><b id="pot"></b></div><div class="arena"><div class="chosen" id="chosen"></div><div><div class="roll" id="roll">?</div><div class="msg" id="result">Le tirage sera compris entre 60 et 99.</div><div class="actions"><button class="btn" id="play">Lancer la roulette</button><button class="btn gold" id="cash">Encaisser</button></div></div></div></section>
 </main><script type="module">
@@ -42,7 +42,7 @@ async function refresh(){
 
   $("#universe").textContent=S.universe;
   $("#stat").textContent=S.stat;
-  $("#attempts").textContent=`Tentatives : ${S.attempts}/6`;
+  $("#attempts").textContent=`Tentatives : ${S.attempts}/7`;
 
   show("#startPanel",!Q);
   show("#choosePanel",Q?.state==="choosing");
