@@ -247,6 +247,35 @@
 }
 </style>
 
+
+<style>
+/* Accueil BOTM — organisation 4 modes de jeu / 4 services */
+.feature-card.combat-mode::after{
+  background:radial-gradient(circle,rgba(137,55,255,.58) 0%,rgba(137,55,255,.22) 42%,transparent 72%) !important;
+}
+.feature-card.survivor-mode::after{
+  background:radial-gradient(circle,rgba(29,205,159,.48) 0%,rgba(29,205,159,.18) 42%,transparent 72%) !important;
+}
+.feature-card.fortune-mode::after{
+  background:radial-gradient(circle,rgba(241,139,55,.55) 0%,rgba(241,139,55,.19) 42%,transparent 72%) !important;
+}
+.feature-card.ascension-mode::after{
+  background:radial-gradient(circle,rgba(194,36,255,.60) 0%,rgba(194,36,255,.20) 42%,transparent 72%) !important;
+}
+.feature-card.shop::after{
+  background:radial-gradient(circle,rgba(232,184,61,.52) 0%,rgba(232,184,61,.18) 42%,transparent 72%) !important;
+}
+.feature-card.booster::after{
+  background:radial-gradient(circle,rgba(39,157,255,.50) 0%,rgba(39,157,255,.18) 42%,transparent 72%) !important;
+}
+.feature-card.miracle::after{
+  background:radial-gradient(circle,rgba(174,48,255,.57) 0%,rgba(174,48,255,.20) 42%,transparent 72%) !important;
+}
+.feature-card.trades::after{
+  background:radial-gradient(circle,rgba(83,58,255,.57) 0%,rgba(83,58,255,.20) 42%,transparent 72%) !important;
+}
+</style>
+
 </head>
 
 <body class="home-page">
@@ -345,7 +374,7 @@
     </section>
 
     <section class="feature-grid">
-      <a class="feature-card" href="/BOTM_2.0/jeu.html">
+      <a class="feature-card combat-mode" href="/BOTM_2.0/jeu.html">
         <div class="feature-icon">⚔</div>
         <div>
           <h3>Combat de stats</h3>
@@ -354,7 +383,7 @@
         <span class="feature-link">Combattre →</span>
       </a>
 
-      <a class="feature-card" href="/BOTM_2.0/survivor.html">
+      <a class="feature-card survivor-mode" href="/BOTM_2.0/survivor.html">
         <div class="feature-icon">🏔</div>
         <div>
           <h3>Survivor Valley</h3>
@@ -362,13 +391,23 @@
         </div>
         <span class="feature-link">Entrer dans la vallée →</span>
       </a>
-      <a class="feature-card" href="/BOTM_2.0/autoroute.html">
+
+      <a class="feature-card fortune-mode" href="/BOTM_2.0/autoroute.html">
         <div class="feature-icon">🛣️</div>
         <div>
           <h3>Autoroute de la Fortune</h3>
           <p>Dix péages, trois routes à chaque étape et quatre utilisations maximum par carte.</p>
         </div>
-        <span class="feature-link">PRENDRE LA ROUTE →</span>
+        <span class="feature-link">Prendre la route →</span>
+      </a>
+
+      <a class="feature-card ascension-mode" href="/BOTM_2.0/ascension.html">
+        <div class="feature-icon">🪜</div>
+        <div>
+          <h3>L’Ascension</h3>
+          <p>Six échelons. Une seule carte. Atteins le sommet et remporte jusqu’à 120 points.</p>
+        </div>
+        <span class="feature-link">Grimper →</span>
       </a>
 
       <a class="feature-card shop" href="/BOTM_2.0/boutique.html">
@@ -405,14 +444,6 @@
           <p>Propose tes cartes et négocie avec les autres joueurs.</p>
         </div>
         <span class="feature-link">Voir les échanges →</span>
-      </a>
-          <a class="feature-card" href="/BOTM_2.0/communaute.html">
-        <div class="feature-icon">●</div>
-        <div>
-          <h3>Communauté</h3>
-          <p>Découvre les joueurs en ligne, leurs profils, tes amis et tes messages.</p>
-        </div>
-        <span class="feature-link">Rejoindre la communauté →</span>
       </a>
     </section>
 
