@@ -279,7 +279,48 @@
 <style>
 .feature-card.roulette-mode::after{background:radial-gradient(circle,rgba(239,57,117,.58) 0%,rgba(239,57,117,.20) 42%,transparent 72%)!important}
 .roulette-home-grid{margin-top:16px}
-</style></head>
+</style>
+<style>
+/* Bloc des modes/services : 2 lignes, défilement horizontal si nécessaire.
+   Les blocs situés dessous restent strictement inchangés. */
+.feature-grid.feature-scroll{
+  display:grid !important;
+  grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+  grid-auto-flow:column !important;
+  grid-auto-columns:minmax(280px,calc((100% - 48px)/4)) !important;
+  grid-template-columns:none !important;
+  gap:16px !important;
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+  scroll-snap-type:x proximity;
+  padding-bottom:10px;
+  scrollbar-width:thin;
+  scrollbar-color:#6d45e8 rgba(255,255,255,.05);
+}
+.feature-grid.feature-scroll .feature-card{
+  min-width:0;
+  scroll-snap-align:start;
+}
+.feature-grid.feature-scroll::-webkit-scrollbar{height:8px}
+.feature-grid.feature-scroll::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.04);
+  border-radius:999px;
+}
+.feature-grid.feature-scroll::-webkit-scrollbar-thumb{
+  background:linear-gradient(90deg,#6042d8,#9b42ff);
+  border-radius:999px;
+}
+.feature-card.roulette-mode::after{
+  background:radial-gradient(circle,rgba(239,57,117,.58) 0%,rgba(239,57,117,.20) 42%,transparent 72%) !important;
+}
+@media(max-width:900px){
+  .feature-grid.feature-scroll{
+    grid-auto-columns:minmax(260px,78vw) !important;
+  }
+}
+</style>
+
+</head>
 
 <body class="home-page">
 
@@ -307,7 +348,7 @@
       <a href="/BOTM_2.0/jeu.html"><span>⚔</span> Combat</a>
       <a href="/BOTM_2.0/survivor.html"><span>🏔</span> Survivor Valley</a>
       <a href="/BOTM_2.0/autoroute.html"><span>🛣️</span> Autoroute de la Fortune</a>
-      \1
+      
       <a href="/BOTM_2.0/roulette.html">🎰 Roulette du Multivers</a>
       <a href="/BOTM_2.0/boutique.html"><span>◆</span> Boutique</a>
       <a href="/BOTM_2.0/booster.html"><span>✦</span> Boosters</a>
@@ -377,86 +418,53 @@
       </div>
     </section>
 
-    <section class="feature-grid">
+    <section class="feature-grid feature-scroll">
       <a class="feature-card combat-mode" href="/BOTM_2.0/jeu.html">
         <div class="feature-icon">⚔</div>
-        <div>
-          <h3>Combat de stats</h3>
-          <p>Trois cartes. Trois manches. Une statistique tirée au hasard à chaque duel.</p>
-        </div>
+        <div><h3>Combat de stats</h3><p>Trois cartes. Trois manches. Une statistique tirée au hasard à chaque duel.</p></div>
         <span class="feature-link">Combattre →</span>
       </a>
-
-      <a class="feature-card survivor-mode" href="/BOTM_2.0/survivor.html">
-        <div class="feature-icon">🏔</div>
-        <div>
-          <h3>Survivor Valley</h3>
-          <p>Trois survivants face à sept adversaires. Chaque sacrifice peut ouvrir la voie au suivant.</p>
-        </div>
-        <span class="feature-link">Entrer dans la vallée →</span>
-      </a>
-
-      <a class="feature-card fortune-mode" href="/BOTM_2.0/autoroute.html">
-        <div class="feature-icon">🛣️</div>
-        <div>
-          <h3>Autoroute de la Fortune</h3>
-          <p>Dix péages, trois routes à chaque étape et quatre utilisations maximum par carte.</p>
-        </div>
-        <span class="feature-link">Prendre la route →</span>
-      </a>
-
-      <a class="feature-card ascension-mode" href="/BOTM_2.0/ascension.html">
-        <div class="feature-icon">🪜</div>
-        <div>
-          <h3>L’Ascension</h3>
-          <p>Six échelons. Une seule carte. Atteins le sommet et remporte jusqu’à 120 points.</p>
-        </div>
-        <span class="feature-link">Grimper →</span>
-      </a>
-
       <a class="feature-card shop" href="/BOTM_2.0/boutique.html">
         <div class="feature-icon">◆</div>
-        <div>
-          <h3>Boutique</h3>
-          <p>Dépense tes points et récupère de nouvelles cartes.</p>
-        </div>
+        <div><h3>Boutique</h3><p>Dépense tes points et récupère de nouvelles cartes.</p></div>
         <span class="feature-link">Accéder →</span>
       </a>
-
+      <a class="feature-card survivor-mode" href="/BOTM_2.0/survivor.html">
+        <div class="feature-icon">🏔</div>
+        <div><h3>Survivor Valley</h3><p>Trois survivants face à sept adversaires. Chaque sacrifice peut ouvrir la voie au suivant.</p></div>
+        <span class="feature-link">Entrer dans la vallée →</span>
+      </a>
       <a class="feature-card booster" href="/BOTM_2.0/booster.html">
         <div class="feature-icon">✦</div>
-        <div>
-          <h3>Boosters</h3>
-          <p>Choisis ton univers et découvre quatre nouvelles cartes.</p>
-        </div>
+        <div><h3>Boosters</h3><p>Choisis ton univers et découvre quatre nouvelles cartes.</p></div>
         <span class="feature-link">Ouvrir un booster →</span>
       </a>
-
+      <a class="feature-card fortune-mode" href="/BOTM_2.0/autoroute.html">
+        <div class="feature-icon">🛣️</div>
+        <div><h3>Autoroute de la Fortune</h3><p>Dix péages, trois routes à chaque étape et quatre utilisations maximum par carte.</p></div>
+        <span class="feature-link">Prendre la route →</span>
+      </a>
       <a class="feature-card miracle" href="/BOTM_2.0/pioche.html">
         <div class="feature-icon">★</div>
-        <div>
-          <h3>Pioche Miracle</h3>
-          <p>Trois cartes sont révélées. Une seule rejoindra ta collection.</p>
-        </div>
+        <div><h3>Pioche Miracle</h3><p>Trois cartes sont révélées. Une seule rejoindra ta collection.</p></div>
         <span class="feature-link">Jouer →</span>
       </a>
-
+      <a class="feature-card ascension-mode" href="/BOTM_2.0/ascension.html">
+        <div class="feature-icon">🪜</div>
+        <div><h3>L’Ascension</h3><p>Six échelons. Une seule carte. Atteins le sommet et remporte jusqu’à 120 points.</p></div>
+        <span class="feature-link">Grimper →</span>
+      </a>
       <a class="feature-card trades" href="/BOTM_2.0/echanges.html">
         <div class="feature-icon">⇄</div>
-        <div>
-          <h3>Échanges</h3>
-          <p>Propose tes cartes et négocie avec les autres joueurs.</p>
-        </div>
+        <div><h3>Échanges</h3><p>Propose tes cartes et négocie avec les autres joueurs.</p></div>
         <span class="feature-link">Voir les échanges →</span>
       </a>
-    </section>
-    <section class="feature-grid roulette-home-grid">
       <a class="feature-card roulette-mode" href="/BOTM_2.0/roulette.html">
-        <div class="feature-icon">🎰</div><div><h3>Roulette du Multivers</h3>
-        <p>Choisis ta carte, défie le hasard et décide quand encaisser avant de tout perdre.</p></div>
+        <div class="feature-icon">🎰</div>
+        <div><h3>Roulette du Multivers</h3><p>Choisis ta carte, défie le hasard et décide quand encaisser avant de tout perdre.</p></div>
         <span class="feature-link">Tenter ma chance →</span>
       </a>
-
+    </section>
     <section class="home-bottom-grid">
       <div class="home-panel welcome-panel">
         <div class="panel-kicker">Ton espace</div>
