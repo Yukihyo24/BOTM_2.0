@@ -278,6 +278,18 @@
 
 <style>
 .feature-card.roulette-mode::after{background:radial-gradient(circle,rgba(239,57,117,.58) 0%,rgba(239,57,117,.20) 42%,transparent 72%)!important}
+.feature-card.duel-mode::after{background:radial-gradient(circle,rgba(255,72,122,.58) 0%,rgba(128,69,255,.22) 44%,transparent 72%)!important}
+.duel-notification-banner{display:none;align-items:center;justify-content:space-between;gap:14px;margin:0 0 16px;padding:14px 16px;border:1px solid rgba(139,92,246,.48);border-radius:15px;background:linear-gradient(135deg,rgba(72,42,170,.30),rgba(13,19,48,.96));box-shadow:0 12px 35px rgba(0,0,0,.20)}
+.duel-notification-banner.show{display:flex}
+.duel-notification-banner .dn-copy{display:flex;gap:11px;align-items:center;min-width:0}
+.duel-notification-banner .dn-icon{font-size:1.45rem}
+.duel-notification-banner b,.duel-notification-banner span{display:block}
+.duel-notification-banner span{color:#b6bdd9;font-size:.9rem;margin-top:2px}
+.duel-notification-banner .dn-actions{display:flex;gap:8px;flex:0 0 auto}
+.duel-notification-banner a,.duel-notification-banner button{border:0;border-radius:10px;padding:9px 12px;font:inherit;font-weight:800;cursor:pointer;text-decoration:none}
+.duel-notification-banner a{background:#795cff;color:#fff}
+.duel-notification-banner button{background:rgba(255,255,255,.08);color:#d9def5}
+@media(max-width:650px){.duel-notification-banner{align-items:flex-start;flex-direction:column}.duel-notification-banner .dn-actions{width:100%}.duel-notification-banner a,.duel-notification-banner button{flex:1;text-align:center}}
 .roulette-home-grid{margin-top:16px}
 </style>
 <style>
@@ -350,6 +362,7 @@
       <a href="/BOTM_2.0/autoroute.html"><span>🛣️</span> Autoroute de la Fortune</a>
       <a href="/BOTM_2.0/ascension.html"><span>🪜</span> L’Ascension</a>
       <a href="/BOTM_2.0/roulette.html"><span>🎰</span> Roulette du Multivers</a>
+      <a href="/BOTM_2.0/duel-lobby.html"><span>⚔️</span> Duel PvP</a>
       <a href="/BOTM_2.0/boutique.html"><span>◆</span> Boutique</a>
       <a href="/BOTM_2.0/booster.html"><span>✦</span> Boosters</a>
       <a href="/BOTM_2.0/pioche.html"><span>★</span> Pioche Miracle</a>
@@ -385,6 +398,7 @@
     </header>
 
     <div id="reward" class="reward-banner" style="display:none"></div>
+    <div id="duelNotification" class="duel-notification-banner" role="status" aria-live="polite"></div>
 
     <section class="hero-panel">
       <div class="hero-copy">
@@ -455,6 +469,11 @@
         <div class="feature-icon">⇄</div>
         <div><h3>Échanges</h3><p>Propose tes cartes et négocie avec les autres joueurs.</p></div>
         <span class="feature-link">Voir les échanges →</span>
+      </a>
+      <a class="feature-card duel-mode" href="/BOTM_2.0/duel-lobby.html">
+        <div class="feature-icon">⚔️</div>
+        <div><h3>Duel PvP</h3><p>Prépare ton deck de 40 cartes, défie un joueur et impose ta stratégie sur sept lignes.</p></div>
+        <span class="feature-link">Entrer dans l’arène →</span>
       </a>
       <a class="feature-card roulette-mode" href="/BOTM_2.0/roulette.html">
         <div class="feature-icon">🎰</div>
@@ -551,6 +570,61 @@ if (session) {
 }
 
 
+
+
+// ===== Notifications Duel =====
+const duelNotificationBox = document.getElementById("duelNotification");
+
+function duelNotificationTarget(n){
+  if (n.match_id) return `/BOTM_2.0/duel.html?match=${n.match_id}`;
+  if (n.kind === "challenge_received") return "/BOTM_2.0/communaute.html";
+  return "/BOTM_2.0/duel-lobby.html";
+}
+
+async function markDuelNotificationRead(id){
+  if(!id) return;
+  const {error}=await supabase.rpc("read_duel_notification",{p_notification_id:id});
+  if(error) console.warn("Notification Duel non marquée comme lue :",error);
+}
+
+async function loadDuelNotifications(){
+  if(!duelNotificationBox) return;
+  const {data,error}=await supabase.rpc("get_duel_notifications");
+  if(error){
+    console.warn("Notifications Duel :",error);
+    return;
+  }
+  const rows=Array.isArray(data)?data:(data?.notifications||[]);
+  const unread=rows.filter(n=>!n.is_read);
+  if(!unread.length){
+    duelNotificationBox.classList.remove("show");
+    duelNotificationBox.innerHTML="";
+    return;
+  }
+  const n=unread[0];
+  const target=duelNotificationTarget(n);
+  duelNotificationBox.innerHTML=`
+    <div class="dn-copy">
+      <div class="dn-icon">⚔️</div>
+      <div><b>${String(n.title||"Duel BOTM").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}</b>
+      <span>${String(n.body||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}</span></div>
+    </div>
+    <div class="dn-actions">
+      <a id="openDuelNotification" href="${target}">Voir</a>
+      <button id="dismissDuelNotification" type="button">Fermer</button>
+    </div>`;
+  duelNotificationBox.classList.add("show");
+  document.getElementById("openDuelNotification")?.addEventListener("click",()=>markDuelNotificationRead(n.id));
+  document.getElementById("dismissDuelNotification")?.addEventListener("click",async()=>{
+    await markDuelNotificationRead(n.id);
+    await loadDuelNotifications();
+  });
+}
+
+if(session){
+  await loadDuelNotifications();
+  setInterval(loadDuelNotifications,10000);
+}
 
 document.getElementById("logout").onclick = () => BOTM.signOut();
 </script>
