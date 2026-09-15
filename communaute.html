@@ -27,16 +27,39 @@ async function loadDuelChallenges(){
  document.querySelectorAll(".duelAccept").forEach(b=>b.onclick=()=>answerDuel(+b.dataset.id,true));
  document.querySelectorAll(".duelReject").forEach(b=>b.onclick=()=>answerDuel(+b.dataset.id,false));
 }
+
+function chooseDuelDeck(valid){
+ return new Promise(resolve=>{
+   const overlay=document.createElement("div");
+   overlay.style.cssText="position:fixed;inset:0;z-index:9999;background:rgba(3,7,22,.82);display:flex;align-items:center;justify-content:center;padding:20px";
+   overlay.innerHTML=`<div class="social-panel" style="width:min(520px,100%);max-height:85vh;overflow:auto">
+     <h2 style="margin-top:0">Choisis ton deck</h2>
+     <p style="color:#95a1c5">Sélectionne le deck que tu veux utiliser pour ce Duel.</p>
+     <div style="display:grid;gap:10px">
+       ${valid.map(d=>`<button class="sbtn duelDeckChoice" data-id="${d.id}" style="width:100%;text-align:left;padding:14px">
+         <b>${esc(d.name)}</b><br><span style="color:#95a1c5">${d.card_count}/40 cartes · Valeur ${Number(d.total_value||0).toLocaleString("fr-FR")}</span>
+       </button>`).join("")}
+     </div>
+     <button class="sbtn" id="cancelDeckChoice" style="margin-top:14px">Annuler</button>
+   </div>`;
+   document.body.appendChild(overlay);
+   const close=value=>{overlay.remove();resolve(value)};
+   overlay.querySelectorAll(".duelDeckChoice").forEach(b=>b.onclick=()=>close(Number(b.dataset.id)));
+   overlay.querySelector("#cancelDeckChoice").onclick=()=>close(null);
+   overlay.onclick=e=>{if(e.target===overlay)close(null)};
+ });
+}
+
 async function answerDuel(id,accept){
  let deck=null;
  if(accept){
    const {data:decks,error}=await supabase.rpc("get_duel_decks");if(error){alert(error.message);return}
    const valid=(decks||[]).filter(d=>d.is_ready);
    if(!valid.length){alert("Tu dois avoir un deck Duel valide pour accepter.");return}
-   const choices=valid.map((d,i)=>`${i+1}. ${d.name} (${d.card_count}/40, valeur ${d.total_value})`).join("\\n");
-   const n=Number(prompt(`Choisis ton deck :\\n${choices}`));
-   if(!Number.isInteger(n)||n<1||n>valid.length)return;
-   deck=valid[n-1].id;
+   // Sélection via une vraie boîte de dialogue HTML :
+   // évite l'affichage littéral de "\\n" dans prompt() et la saisie manuelle d'un numéro.
+   deck=await chooseDuelDeck(valid);
+   if(!deck)return;
  }
  const {data,error}=await supabase.rpc("respond_duel_challenge",{p_challenge_id:id,p_accept:accept,p_deck_id:deck});
  if(error){alert(error.message);return}
