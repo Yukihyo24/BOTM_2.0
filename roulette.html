@@ -128,10 +128,20 @@ $("#play").onclick=async()=>{
 
     if(r.result==="win"){
       if(oldVictories===19){
-        await finishAttempt(
-          "🎉 <b>JACKPOT !</b> 20 adversaires vaincus : 200 points + 1 Pioche Miracle + 1 carte de l’univers. Tu peux immédiatement lancer une nouvelle tentative.",
-          "good"
-        );
+        const won=r.won_card;
+        let rewardHtml="🎉 <b>JACKPOT !</b> 20 adversaires vaincus : 200 points + 1 Pioche Miracle";
+        if(won){
+          rewardHtml+=`<div style="margin-top:18px"><div style="font-weight:800;margin-bottom:10px">CARTE GAGNÉE</div>
+            <div style="max-width:230px;margin:0 auto">
+              <img src="${pic(won)}" alt="${won.file_name}" style="width:100%;display:block;border-radius:14px;box-shadow:0 14px 35px rgba(0,0,0,.35)">
+              <div style="margin-top:9px;font-weight:800">${won.file_name.replace(/\.[^.]+$/,"")}</div>
+              <div style="opacity:.8">${won.rarity.replaceAll("_"," ")}</div>
+            </div></div>`;
+        }else{
+          rewardHtml+=" + 1 carte de l’univers.";
+        }
+        rewardHtml+=`<div style="margin-top:14px">Tu peux immédiatement lancer une nouvelle tentative.</div>`;
+        await finishAttempt(rewardHtml,"good");
       }else{
         await refresh();
         $("#result").innerHTML=
