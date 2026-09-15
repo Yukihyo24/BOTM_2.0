@@ -39,7 +39,14 @@ let profile=null;
 async function load(){
   const {data,error}=await supabase.rpc("get_public_profile",{p_user_id:target});
   if(error){root.innerHTML=`<p>${esc(error.message)}</p>`;return}
-  profile=data; render();
+
+  // Nombre de Duels PvP remportés par le profil affiché.
+  // duel_match_results n'est pas lisible directement à cause de la RLS :
+  // on passe par le RPC public dédié ajouté avec le SQL fourni.
+  const {data:duelStats,error:duelError}=await supabase.rpc("get_public_duel_stats",{p_user_id:target});
+  profile=data;
+  profile.duel_wins=duelError ? 0 : Number(duelStats?.wins||0);
+  render();
 }
 function relationshipButtons(){
   if(target===me) return `<button class="sbtn primary" id="editBtn">Modifier le profil</button>`;
@@ -79,7 +86,7 @@ function render(){
     <div id="tab-infos" class="profile-tab-panel active">
       <h2 style="margin-top:0">Profil BOTM</h2>
       <div class="profile-stats">
-        <div class="pstat"><span>Cartes</span><b>${fmt(profile.card_count)}</b></div>
+        <div class="pstat"><span>Duels gagnés</span><b>${fmt(profile.duel_wins)}</b></div>
         <div class="pstat"><span>Cartes uniques</span><b>${fmt(profile.unique_cards)}</b></div>
         <div class="pstat"><span>Points</span><b>${fmt(profile.points)}</b></div>
         <div class="pstat"><span>Boosters</span><b>${fmt(profile.boosters)}</b></div>
