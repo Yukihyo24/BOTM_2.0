@@ -58,7 +58,7 @@ async function load(){
   render();
 }
 function relationshipButtons(){
-  if(target===me) return `<button class="sbtn primary" id="editBtn">Modifier le profil</button>`;
+  if(target===me) return `<button class="sbtn primary" id="editBtn">Modifier le profil</button><a class="sbtn" href="/BOTM_2.0/duel-deck.html">🃏 Gérer mes decks Duel</a>`;
   const r=profile.relationship;
   if(!r) return `<button class="sbtn primary" id="friendBtn">＋ Ajouter en ami</button>
                  <a class="sbtn" href="/BOTM_2.0/messages.html?id=${target}">✉ Message privé</a>
@@ -92,7 +92,7 @@ function render(){
       <button data-tab="amis">Amis</button>
       <button data-tab="favoris">Favoris</button>
       <button data-tab="collection">Collection</button>
-      <button data-tab="duels">Duels</button>
+      <button data-tab="decks">Decks Duel</button><button data-tab="duels">Duels</button>
     </div>
 
     <div id="tab-infos" class="profile-tab-panel active">
@@ -145,7 +145,12 @@ function render(){
       <div id="publicCollection"><p style="color:#95a1c5">Chargement de la collection…</p></div>
     </div>
 
-    <div id="tab-duels" class="profile-tab-panel">
+    <div id="tab-decks" class="profile-tab-panel">
+<h2 style="margin-top:0">Decks Duel de ${esc(profile.username)}</h2>
+${target===me?`<p><a class="sbtn primary" href="/BOTM_2.0/duel-deck.html">🃏 Gérer mes decks</a></p>`:""}
+<div id="publicDuelDecks"><p style="color:#95a1c5">Chargement…</p></div>
+</div>
+<div id="tab-duels" class="profile-tab-panel">
       <h2 style="margin-top:0">Historique des Duels</h2>
       <div id="duelHistory"><p style="color:#95a1c5">Chargement…</p></div>
     </div>
@@ -165,7 +170,8 @@ function bindTabs(){
       document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
       if(btn.dataset.tab==="amis") await loadPublicFriends();
       if(btn.dataset.tab==="collection") await loadPublicCollection();
-      if(btn.dataset.tab==="duels") await loadDuelHistory();
+      if(btn.dataset.tab==="decks") await loadPublicDuelDecks();
+       if(btn.dataset.tab==="duels") await loadDuelHistory();
     });
   });
 }
@@ -261,6 +267,22 @@ async function loadPublicCollection(){
   renderPublicCollection();
 }
 
+
+
+async function loadPublicDuelDecks(){
+ const box=document.getElementById("publicDuelDecks"); if(!box||box.dataset.loaded==="1")return;
+ const {data,error}=await supabase.rpc("get_public_duel_decks",{p_user_id:target});
+ if(error){box.innerHTML=`<p>${esc(error.message)}</p>`;return}
+ box.dataset.loaded="1"; const decks=data||[];
+ box.innerHTML=decks.length?`<div style="display:grid;gap:16px">${decks.map(d=>`
+ <div class="social-panel" style="margin:0"><div class="profile-section-head"><div><h3>${esc(d.name)}</h3>
+ <p>${d.card_count}/40 cartes · Valeur ${fmt(d.total_value)}/4000 · ${d.is_ready?"✓ Valide":"Incomplet"}</p></div>
+ ${target===me?`<a class="sbtn" href="/BOTM_2.0/duel-deck.html">Modifier</a>`:""}</div>
+ <div class="public-collection">${(d.cards||[]).map(c=>`<div class="public-card"><div class="public-card-image-wrap">
+ <img src="${BOTM.imagePath(c)}" alt="${esc(cardName(c))}"></div><b>${esc(cardName(c))}</b>
+ <small>${esc(c.universe)} · ${esc(rarityText(c.rarity))}</small></div>`).join("")}</div></div>`).join("")}</div>`
+ :`<p style="color:#95a1c5">Aucun Deck Duel enregistré.</p>`;
+}
 
 async function loadDuelHistory(){
   const box=document.getElementById("duelHistory");
