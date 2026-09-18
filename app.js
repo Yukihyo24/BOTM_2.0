@@ -25,7 +25,7 @@ export const BOTM = {
     "Sports",
     "DBZ",
     "Naruto",
-    "OP",
+    "One Piece",
     "Pokemon",
     "S_Heros",
     "Mythologie",
