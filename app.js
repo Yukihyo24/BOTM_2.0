@@ -31,7 +31,7 @@ export const BOTM = {
     "Mythologie",
     "Television",
     "JV",
-    "Animes"
+    "Animes Divers"
   ],
 
 
