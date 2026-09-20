@@ -582,9 +582,35 @@ function duelNotificationTarget(n){
 }
 
 async function markDuelNotificationRead(id){
-  if(!id) return;
+  if(!id) return false;
   const {error}=await supabase.rpc("read_duel_notification",{p_notification_id:id});
-  if(error) console.warn("Notification Duel non marquée comme lue :",error);
+  if(error){
+    console.warn("Notification Duel non marquée comme lue :",error);
+    return false;
+  }
+  return true;
+}
+
+/* Le bouton Fermer doit rester effectif même si l'ancienne RPC
+   read_duel_notification ne persiste pas correctement côté Supabase.
+   On mémorise uniquement les notifications explicitement fermées
+   sur ce navigateur, sans modifier le système Duel existant. */
+const DUEL_DISMISSED_KEY = "botm_duel_notifications_dismissed";
+
+function getDismissedDuelNotifications(){
+  try{
+    const ids = JSON.parse(localStorage.getItem(DUEL_DISMISSED_KEY) || "[]");
+    return new Set(Array.isArray(ids) ? ids.map(String) : []);
+  }catch{
+    return new Set();
+  }
+}
+
+function dismissDuelNotificationLocally(id){
+  if(id === null || id === undefined) return;
+  const ids = getDismissedDuelNotifications();
+  ids.add(String(id));
+  localStorage.setItem(DUEL_DISMISSED_KEY, JSON.stringify([...ids].slice(-100)));
 }
 
 async function loadDuelNotifications(){
@@ -595,7 +621,8 @@ async function loadDuelNotifications(){
     return;
   }
   const rows=Array.isArray(data)?data:(data?.notifications||[]);
-  const unread=rows.filter(n=>!n.is_read);
+  const dismissed=getDismissedDuelNotifications();
+  const unread=rows.filter(n=>!n.is_read && !dismissed.has(String(n.id)));
   if(!unread.length){
     duelNotificationBox.classList.remove("show");
     duelNotificationBox.innerHTML="";
@@ -616,6 +643,9 @@ async function loadDuelNotifications(){
   duelNotificationBox.classList.add("show");
   document.getElementById("openDuelNotification")?.addEventListener("click",()=>markDuelNotificationRead(n.id));
   document.getElementById("dismissDuelNotification")?.addEventListener("click",async()=>{
+    dismissDuelNotificationLocally(n.id);
+    duelNotificationBox.classList.remove("show");
+    duelNotificationBox.innerHTML="";
     await markDuelNotificationRead(n.id);
     await loadDuelNotifications();
   });
