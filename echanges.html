@@ -8,22 +8,37 @@
   <style>
     .trade-layout{display:grid;grid-template-columns:minmax(280px,.9fr) minmax(0,2fr);gap:18px}
     .trade-card{display:grid;grid-template-columns:110px 1fr;gap:14px;align-items:start;background:rgba(8,7,12,.92);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px;margin-bottom:14px}
-    .trade-card img{width:110px;aspect-ratio:3/4;object-fit:cover;border-radius:10px}
+    .trade-card>img{width:110px;aspect-ratio:3/4;object-fit:cover;border-radius:10px}
     .trade-card h3{margin:0 0 4px}
-    .trade-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .trade-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
     .trade-actions .btn{padding:9px 12px}
     .offer-box{margin-top:12px;padding:12px;border:1px solid rgba(0,255,255,.18);border-radius:12px;background:rgba(255,255,255,.03)}
-    .offer-row{display:grid;grid-template-columns:75px 1fr;gap:10px;align-items:start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+    .offer-row{padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08)}
     .offer-row:last-child{border-bottom:0}
-    .offer-row img{width:75px;aspect-ratio:3/4;object-fit:cover;border-radius:8px}
-    .status{font-size:.85rem;color:var(--gold);margin-top:4px}
-    .mini-select{width:100%;margin-top:8px}
+    .offer-cards{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+    .offer-card-mini{width:82px;text-align:center;font-size:.72rem}
+    .offer-card-mini img{width:72px;aspect-ratio:3/4;object-fit:cover;border-radius:8px;display:block;margin:0 auto 4px}
+    .offer-resources{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+    .resource-chip{padding:6px 9px;border-radius:999px;background:rgba(255,255,255,.08);font-size:.85rem}
+    .status{font-size:.85rem;color:var(--gold);margin-top:6px}
     .my-card-picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;max-height:510px;overflow:auto}
     .pick-card{cursor:pointer;border:2px solid transparent;border-radius:12px;padding:6px;background:rgba(8,7,12,.9)}
     .pick-card.selected{border-color:var(--accent);box-shadow:0 0 12px rgba(0,255,255,.45)}
     .pick-card img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px}
     .pick-card .muted{font-size:.72rem}
-    @media(max-width:850px){.trade-layout{grid-template-columns:1fr}.trade-card{grid-template-columns:90px 1fr}.trade-card img{width:90px}}
+    .offer-builder{display:none;margin-top:12px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.025)}
+    .offer-builder.open{display:block}
+    .builder-title{font-weight:700;margin-bottom:8px}
+    .builder-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;max-height:300px;overflow:auto;padding:4px}
+    .builder-card{cursor:pointer;border:2px solid transparent;border-radius:10px;padding:5px;background:rgba(8,7,12,.9);position:relative}
+    .builder-card img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:7px}
+    .builder-card.selected{border-color:var(--accent)}
+    .builder-card .count{position:absolute;right:8px;top:8px;background:#111;border-radius:999px;padding:3px 7px;font-weight:700}
+    .builder-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .builder-fields label{display:flex;flex-direction:column;gap:5px;font-size:.85rem}
+    .builder-fields input{width:100%;box-sizing:border-box;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:inherit}
+    .builder-summary{margin-top:10px;font-size:.85rem}
+    @media(max-width:850px){.trade-layout{grid-template-columns:1fr}.trade-card{grid-template-columns:90px 1fr}.trade-card>img{width:90px}.builder-fields{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -72,6 +87,7 @@ const uid = session.user.id;
 
 let myCollection = [];
 let selectedListingCardId = null;
+const offerDrafts = new Map();
 
 const msg = document.getElementById("msg");
 function showMsg(text, error=false){
@@ -79,8 +95,12 @@ function showMsg(text, error=false){
   msg.textContent = text;
   msg.style.borderColor = error ? "rgba(255,92,122,.7)" : "";
 }
-function cardName(c){ return c.file_name.replace(/\.[^.]+$/,""); }
+function cardName(c){ return String(c.file_name || "Carte").replace(/\.[^.]+$/,""); }
 function esc(s){ return String(s ?? "").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
+function draftFor(listingId){
+  if(!offerDrafts.has(listingId)) offerDrafts.set(listingId,{cards:[],points:0,miracle:0});
+  return offerDrafts.get(listingId);
+}
 
 async function loadMyCards(){
   myCollection = await BOTM.collection();
@@ -99,7 +119,7 @@ async function loadMyCards(){
     `;
     d.onclick = () => {
       selectedListingCardId = c.id;
-      document.querySelectorAll(".pick-card").forEach(x=>x.classList.remove("selected"));
+      document.querySelectorAll("#mycards .pick-card").forEach(x=>x.classList.remove("selected"));
       d.classList.add("selected");
       document.getElementById("create").disabled = false;
     };
@@ -120,15 +140,27 @@ document.getElementById("create").onclick = async () => {
   await loadMarket();
 };
 
-async function submitOffer(listingId, select){
-  const cardId = Number(select.value);
-  if(!cardId) return;
+async function submitOffer(listingId){
+  const d = draftFor(listingId);
+  const points = Math.max(0, Number(d.points) || 0);
+  const miracle = d.miracle ? 1 : 0;
+
+  if(d.cards.length > 5){ showMsg("Tu peux proposer au maximum 5 cartes.", true); return; }
+  if(d.cards.length === 0 && points === 0 && miracle === 0){
+    showMsg("Ajoute au moins une carte, des points ou une pioche miracle.", true); return;
+  }
+
   const { error } = await supabase.rpc("create_trade_offer", {
     p_listing_id: listingId,
-    p_card_id: cardId
+    p_card_ids: d.cards,
+    p_points: points,
+    p_miracle_draws: miracle
   });
   if(error){ showMsg(error.message, true); return; }
+
+  offerDrafts.delete(listingId);
   showMsg("Proposition envoyée. Tu dois encore la valider pour autoriser l'échange.");
+  await loadMyCards();
   await loadMarket();
 }
 
@@ -136,7 +168,7 @@ async function confirmOffer(offerId){
   const { data, error } = await supabase.rpc("confirm_trade_offer", { p_offer_id: offerId });
   if(error){ showMsg(error.message, true); return; }
   const done = data?.[0]?.completed;
-  showMsg(done ? "✅ Échange effectué ! Les deux collections ont été mises à jour." : "Validation enregistrée. En attente de l'autre joueur.");
+  showMsg(done ? "✅ Échange effectué ! Cartes, points et pioches ont été transférés." : "Validation enregistrée. En attente de l'autre joueur.");
   await BOTM.refreshHeader();
   await loadMyCards();
   await loadMarket();
@@ -163,6 +195,7 @@ async function cancelListing(listingId){
   const { error } = await supabase.rpc("cancel_trade_listing", { p_listing_id: listingId });
   if(error){ showMsg(error.message, true); return; }
   showMsg("Annonce retirée.");
+  await loadMyCards();
   await loadMarket();
 }
 
@@ -175,21 +208,32 @@ async function loadOffers(listingId, holder){
   (data || []).forEach(o => {
     const row = document.createElement("div");
     row.className = "offer-row";
-    row.innerHTML = `
-      <img src="${BOTM.imagePath(o)}">
-      <div>
-        <b>${esc(o.proposer_username)}</b> propose <b>${esc(o.file_name.replace(/\.[^.]+$/,""))}</b>
-        <div class="rarity">${esc(o.universe)} • ${esc(BOTM.rarityLabel(o.rarity))}</div>
-        <div class="status">
-          Proposant : ${o.proposer_confirmed ? "✅ validé" : "⏳ à valider"}
-          &nbsp; • &nbsp;
-          Propriétaire : ${o.owner_confirmed ? "✅ validé" : "⏳ à valider"}
-        </div>
-        <div class="trade-actions"></div>
-      </div>
-    `;
-    const actions = row.querySelector(".trade-actions");
 
+    const cards = Array.isArray(o.cards) ? o.cards : [];
+    const cardsHtml = cards.length ? cards.map(c => `
+      <div class="offer-card-mini">
+        <img src="${BOTM.imagePath(c)}">
+        <div>${esc(cardName(c))}${Number(c.quantity) > 1 ? ` ×${Number(c.quantity)}` : ""}</div>
+      </div>
+    `).join("") : '<span class="muted">Aucune carte</span>';
+
+    const resources = [];
+    if(Number(o.offered_points) > 0) resources.push(`<span class="resource-chip">💠 ${Number(o.offered_points).toLocaleString("fr-FR")} points</span>`);
+    if(Number(o.offered_miracle_draws) > 0) resources.push('<span class="resource-chip">✨ 1 pioche miracle</span>');
+
+    row.innerHTML = `
+      <div><b>${esc(o.proposer_username)}</b> propose :</div>
+      <div class="offer-cards">${cardsHtml}</div>
+      ${resources.length ? `<div class="offer-resources">${resources.join("")}</div>` : ""}
+      <div class="status">
+        Proposant : ${o.proposer_confirmed ? "✅ validé" : "⏳ à valider"}
+        &nbsp; • &nbsp;
+        Propriétaire : ${o.owner_confirmed ? "✅ validé" : "⏳ à valider"}
+      </div>
+      <div class="trade-actions"></div>
+    `;
+
+    const actions = row.querySelector(".trade-actions");
     if(o.can_confirm){
       const b = document.createElement("button");
       b.className = "btn gold";
@@ -211,10 +255,98 @@ async function loadOffers(listingId, holder){
       b.onclick = () => cancelOffer(o.offer_id);
       actions.appendChild(b);
     }
-
     holder.appendChild(row);
   });
+
   if(!(data||[]).length) holder.innerHTML = '<div class="muted">Aucune proposition pour le moment.</div>';
+}
+
+function buildOfferBuilder(listingId, holder){
+  const d = draftFor(listingId);
+  holder.innerHTML = `
+    <div class="builder-title">Composer mon offre <span class="muted">(maximum 5 cartes)</span></div>
+    <div class="builder-cards"></div>
+    <div class="builder-fields">
+      <label>💠 Points
+        <input class="offer-points" type="number" min="0" step="1" value="${Number(d.points)||0}" placeholder="0">
+      </label>
+      <label>✨ Pioche miracle
+        <span style="padding:10px 0"><input class="offer-miracle" type="checkbox" ${d.miracle ? "checked" : ""}> Ajouter 1 pioche miracle</span>
+      </label>
+    </div>
+    <div class="builder-summary muted"></div>
+    <div class="trade-actions">
+      <button class="btn gold send-offer">Envoyer cette offre</button>
+      <button class="btn close-builder">Fermer</button>
+    </div>
+  `;
+
+  const grid = holder.querySelector(".builder-cards");
+  const summary = holder.querySelector(".builder-summary");
+
+  function renderCards(){
+    grid.innerHTML = "";
+    myCollection.forEach(r => {
+      const c = r.cards;
+      const selectedCount = d.cards.filter(id => Number(id) === Number(c.id)).length;
+      const el = document.createElement("div");
+      el.className = "builder-card" + (selectedCount ? " selected" : "");
+      el.innerHTML = `
+        <img src="${BOTM.imagePath(c)}">
+        ${selectedCount ? `<span class="count">×${selectedCount}</span>` : ""}
+        <div>${esc(cardName(c))}</div>
+        <div class="muted">${esc(BOTM.rarityLabel(c.rarity))} • possédé ×${r.quantity}</div>
+      `;
+      el.onclick = () => {
+        const current = d.cards.filter(id => Number(id) === Number(c.id)).length;
+        if(current > 0){
+          const idx = d.cards.findIndex(id => Number(id) === Number(c.id));
+          d.cards.splice(idx,1);
+        } else {
+          if(d.cards.length >= 5){ showMsg("Maximum 5 cartes par offre.", true); return; }
+          d.cards.push(Number(c.id));
+        }
+        renderCards();
+        updateSummary();
+      };
+      // Shift/clic n'est pas nécessaire : un clic ajoute 1 exemplaire, puis le clic suivant le retire.
+      // Pour proposer plusieurs exemplaires identiques, utiliser le bouton + créé ci-dessous.
+      if(Number(r.quantity) > 1){
+        const plus = document.createElement("button");
+        plus.className = "btn";
+        plus.type = "button";
+        plus.textContent = "+1";
+        plus.style.marginTop = "5px";
+        plus.onclick = ev => {
+          ev.stopPropagation();
+          const current = d.cards.filter(id => Number(id) === Number(c.id)).length;
+          if(d.cards.length >= 5){ showMsg("Maximum 5 cartes par offre.", true); return; }
+          if(current >= Number(r.quantity)){ showMsg("Tu n'en possèdes pas davantage.", true); return; }
+          d.cards.push(Number(c.id));
+          renderCards();
+          updateSummary();
+        };
+        el.appendChild(plus);
+      }
+      grid.appendChild(el);
+    });
+  }
+
+  function updateSummary(){
+    const pts = Math.max(0, Number(holder.querySelector(".offer-points").value)||0);
+    const mir = holder.querySelector(".offer-miracle").checked;
+    d.points = pts;
+    d.miracle = mir ? 1 : 0;
+    summary.textContent = `${d.cards.length}/5 carte(s) • ${pts.toLocaleString("fr-FR")} point(s)${mir ? " • 1 pioche miracle" : ""}`;
+  }
+
+  holder.querySelector(".offer-points").oninput = updateSummary;
+  holder.querySelector(".offer-miracle").onchange = updateSummary;
+  holder.querySelector(".send-offer").onclick = () => { updateSummary(); submitOffer(listingId); };
+  holder.querySelector(".close-builder").onclick = () => holder.classList.remove("open");
+
+  renderCards();
+  updateSummary();
 }
 
 async function loadMarket(){
@@ -225,23 +357,24 @@ async function loadMarket(){
   if(error){ market.innerHTML = `<div class="muted">${esc(error.message)}</div>`; return; }
 
   market.innerHTML = "";
-
   (data || []).forEach(l => {
     const box = document.createElement("div");
     box.className = "trade-card";
     box.innerHTML = `
       <img src="${BOTM.imagePath(l)}">
       <div>
-        <h3>${esc(l.file_name.replace(/\.[^.]+$/,""))}</h3>
+        <h3>${esc(l.file_name.replace(/\.[^.]+$/, ""))}</h3>
         <div class="rarity">${esc(l.universe)} • ${esc(BOTM.rarityLabel(l.rarity))}</div>
         <div class="muted">Proposée par <b>${esc(l.owner_username)}</b></div>
         <div class="trade-actions"></div>
+        <div class="offer-builder"></div>
         <div class="offer-box" style="display:none"></div>
       </div>
     `;
 
     const actions = box.querySelector(".trade-actions");
     const offersHolder = box.querySelector(".offer-box");
+    const builder = box.querySelector(".offer-builder");
 
     const view = document.createElement("button");
     view.className = "btn";
@@ -260,20 +393,13 @@ async function loadMarket(){
       cancel.onclick = () => cancelListing(l.listing_id);
       actions.appendChild(cancel);
     } else {
-      const select = document.createElement("select");
-      select.className = "btn mini-select";
-      select.innerHTML = '<option value="">Choisir une carte à proposer...</option>';
-      myCollection.forEach(r => {
-        const c = r.cards;
-        const opt = new Option(`${cardName(c)} — ${BOTM.rarityLabel(c.rarity)} (×${r.quantity})`, c.id);
-        select.add(opt);
-      });
-      actions.appendChild(select);
-
       const propose = document.createElement("button");
       propose.className = "btn gold";
-      propose.textContent = "Proposer cette carte";
-      propose.onclick = () => submitOffer(l.listing_id, select);
+      propose.textContent = "Composer une offre";
+      propose.onclick = () => {
+        if(!builder.innerHTML) buildOfferBuilder(l.listing_id, builder);
+        builder.classList.toggle("open");
+      };
       actions.appendChild(propose);
     }
 
@@ -286,6 +412,7 @@ async function loadMarket(){
 }
 
 document.getElementById("refresh").onclick = async () => {
+  offerDrafts.clear();
   await loadMyCards();
   await loadMarket();
 };
