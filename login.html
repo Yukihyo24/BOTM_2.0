@@ -9,6 +9,7 @@
 <input id="email" type="email" placeholder="Adresse e-mail">
 <input id="password" type="password" minlength="6" placeholder="Mot de passe">
 <button class="btn gold" id="submit">Se connecter</button>
+<button class="btn" id="forgot-password" type="button" style="width:100%;margin-top:10px">Mot de passe oublié ?</button>
 <div id="msg" class="notice" style="display:none"></div>
 </div></div>
 <script type="module">
@@ -19,9 +20,21 @@ function setMode(m){
  mode=m;
  document.getElementById("username-wrap").style.display=m==="signup"?"block":"none";
  document.getElementById("submit").textContent=m==="signup"?"Créer mon compte":"Se connecter";
+ document.getElementById("forgot-password").style.display=m==="signup"?"none":"block";
 }
 document.getElementById("mode-login").onclick=()=>setMode("login");
 document.getElementById("mode-signup").onclick=()=>setMode("signup");
+document.getElementById("forgot-password").onclick=async()=>{
+ const email=document.getElementById("email").value.trim();
+ msg.style.display="block";
+ if(!email){msg.textContent="Saisis d’abord ton adresse e-mail.";return;}
+ msg.textContent="Envoi du lien de réinitialisation...";
+ const {error}=await supabase.auth.resetPasswordForEmail(email,{
+   redirectTo:new URL("/BOTM_2.0/reset-password.html",location.origin).href
+ });
+ if(error){msg.textContent=error.message;return;}
+ msg.textContent="Si un compte correspond à cette adresse, un e-mail de réinitialisation vient d’être envoyé.";
+};
 document.getElementById("submit").onclick=async()=>{
  const email=document.getElementById("email").value.trim();
  const password=document.getElementById("password").value;
