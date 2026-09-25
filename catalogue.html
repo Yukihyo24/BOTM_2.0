@@ -47,6 +47,23 @@
       filter:brightness(1.04);
     }
 
+    .card-item.not-owned .card-img.zoomable{
+      filter:grayscale(1) brightness(.58);
+      opacity:.78;
+    }
+
+    .card-item.not-owned:hover .card-img.zoomable{
+      filter:grayscale(1) brightness(.72);
+    }
+
+    .catalogue-progress{
+      width:100%;
+      margin-top:2px;
+      color:#c8d0ee;
+      font-weight:800;
+      font-size:.92rem;
+    }
+
     .catalogue-badge{
       position:absolute;
       top:9px;
@@ -224,6 +241,7 @@
       </select>
 
       <div id="catalogue-count" class="catalogue-count">Chargement…</div>
+      <div id="catalogue-progress" class="catalogue-progress">Progression : chargement…</div>
     </div>
 
     <div id="cards" class="cards"></div>
@@ -271,9 +289,11 @@ const universeSelect = document.getElementById("universe");
 const raritySelect = document.getElementById("rarity");
 const cardsWrap = document.getElementById("cards");
 const count = document.getElementById("catalogue-count");
+const progress = document.getElementById("catalogue-progress");
 const preview = document.getElementById("preview");
 
 let catalogue = [];
+let ownedCardIds = new Set();
 
 function cardName(card){
   return (card.file_name || "").replace(/\.[^.]+$/,"");
@@ -332,6 +352,14 @@ function render(){
   count.textContent =
     `${filtered.length} carte${filtered.length > 1 ? "s" : ""}`;
 
+  const universeCards = catalogue.filter(card => !universe || card.universe === universe);
+  const ownedInUniverse = universeCards.filter(card => ownedCardIds.has(Number(card.id))).length;
+  const totalInUniverse = universeCards.length;
+  const percent = totalInUniverse ? (ownedInUniverse / totalInUniverse * 100) : 0;
+  const progressLabel = universe || "Collection globale";
+  progress.textContent =
+    `${progressLabel} — ${ownedInUniverse} / ${totalInUniverse} cartes obtenues — ${percent.toLocaleString("fr-FR",{minimumFractionDigits:1,maximumFractionDigits:1})} %`;
+
   cardsWrap.innerHTML = "";
 
   if(!filtered.length){
@@ -342,7 +370,8 @@ function render(){
 
   filtered.forEach(card => {
     const item = document.createElement("div");
-    item.className = "card-item";
+    const owned = ownedCardIds.has(Number(card.id));
+    item.className = `card-item${owned ? "" : " not-owned"}`;
 
     item.innerHTML = `
       <span class="catalogue-badge">${BOTM.rarityLabel(card.rarity)}</span>
@@ -374,6 +403,15 @@ async function loadCatalogue(){
   }
 
   catalogue = data || [];
+
+  try {
+    const owned = await BOTM.collection();
+    ownedCardIds = new Set((owned || []).filter(card => Number(card.quantity || 0) > 0).map(card => Number(card.id)));
+  } catch(error) {
+    console.error("Impossible de charger la progression de collection :", error);
+    ownedCardIds = new Set();
+  }
+
   fillUniverses();
   render();
 }
