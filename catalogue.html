@@ -406,7 +406,11 @@ async function loadCatalogue(){
 
   try {
     const owned = await BOTM.collection();
-    ownedCardIds = new Set((owned || []).filter(card => Number(card.quantity || 0) > 0).map(card => Number(card.id)));
+    ownedCardIds = new Set(
+      (owned || [])
+        .filter(row => Number(row.quantity || 0) > 0 && row.cards?.id != null)
+        .map(row => Number(row.cards.id))
+    );
   } catch(error) {
     console.error("Impossible de charger la progression de collection :", error);
     ownedCardIds = new Set();
