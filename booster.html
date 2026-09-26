@@ -5,7 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Boosters - BOTM</title>
   <link rel="stylesheet" href="/BOTM_2.0/styles.css">
-</head>
+<style>
+.booster-carousel{position:relative;height:570px;max-width:1000px;margin:8px auto 16px;overflow:hidden;user-select:none;touch-action:pan-y}
+.booster-track{position:absolute;inset:0}.booster-choice{position:absolute;left:50%;top:50%;width:270px;border:0;padding:0;background:transparent;cursor:pointer;transform-origin:center;transition:transform .35s ease,opacity .35s ease,filter .35s ease}
+.booster-choice img{display:block;width:100%;height:auto;pointer-events:none;filter:drop-shadow(0 18px 28px rgba(0,0,0,.48))}.booster-choice.is-center img{filter:drop-shadow(0 20px 34px rgba(105,78,255,.42))}
+.booster-arrow{position:absolute;z-index:30;top:50%;transform:translateY(-50%);width:52px;height:52px;border-radius:50%;border:1px solid rgba(128,116,255,.45);background:rgba(8,13,42,.84);color:#fff;font-size:30px;cursor:pointer}
+.booster-arrow.prev{left:14px}.booster-arrow.next{right:14px}.booster-universe-name{text-align:center;font-size:1.15rem;font-weight:800;margin:-2px 0 15px}
+@media(max-width:700px){.booster-carousel{height:440px}.booster-choice{width:205px}.booster-arrow{width:44px;height:44px;font-size:24px}.booster-arrow.prev{left:2px}.booster-arrow.next{right:2px}}
+</style></head>
 <body>
 <div class="app">
   <div class="topbar">
@@ -22,8 +29,9 @@
     <h2>Choisir l'univers</h2>
     <p class="muted">1 booster = 4 cartes. Les 4 cartes sont ajoutées automatiquement à ta collection.</p>
     <div id="status" class="notice" style="display:none"></div>
-    <div id="univers" class="univers-grid"></div>
-    <button id="open" class="btn gold" disabled>Ouvrir</button>
+    <div id="univers" class="booster-carousel"><button type="button" id="booster-prev" class="booster-arrow prev">‹</button><div id="booster-track" class="booster-track"></div><button type="button" id="booster-next" class="booster-arrow next">›</button></div>
+    <div id="booster-universe-name" class="booster-universe-name"></div>
+    <button id="open" class="btn gold" disabled>Ouvrir ce booster</button>
     <div id="msg" class="notice" style="display:none"></div>
     <div id="cards" class="reveal-wrap"></div>
     <audio id="audio" src="/BOTM_2.0/booster.mp3" preload="auto"></audio>
@@ -39,7 +47,10 @@ let selected = null;
 let boosterCount = 0;
 let busy = false;
 
-const universWrap = document.getElementById("univers");
+const universWrap=document.getElementById("univers");
+const boosterTrack=document.getElementById("booster-track"),boosterName=document.getElementById("booster-universe-name"),prevBtn=document.getElementById("booster-prev"),nextBtn=document.getElementById("booster-next");
+const boosterUniverses=["Animes Divers","Catch","DBZ","Jeux-Videos","Naruto","One Piece","Pokemon","Super Heros","Television"];
+let carouselIndex=0,boosterButtons=[];
 const openBtn = document.getElementById("open");
 const msg = document.getElementById("msg");
 const status = document.getElementById("status");
@@ -55,28 +66,19 @@ async function refreshAvailability() {
     ? "Tu n'as aucun booster disponible. Un administrateur doit t'en créditer."
     : `Il te reste ${boosterCount} booster(s).`;
 
-  document.querySelectorAll(".univers-img").forEach(img => {
-    img.style.opacity = noBooster ? ".45" : "1";
-    img.style.pointerEvents = noBooster ? "none" : "auto";
-  });
+  renderCarousel();
 
   openBtn.disabled = busy || noBooster || !selected;
 }
 
-BOTM.universes.forEach(name => {
-  const img = document.createElement("img");
-  img.src = `/BOTM_2.0/assets/univers/${name}.jpg`;
-  img.className = "univers-img";
-  img.title = name;
-  img.onclick = () => {
-    if (boosterCount <= 0 || busy) return;
-    selected = name;
-    document.querySelectorAll(".univers-img").forEach(x => x.classList.remove("selected"));
-    img.classList.add("selected");
-    openBtn.disabled = false;
-  };
-  universWrap.appendChild(img);
-});
+function circularOffset(i,c,n){let o=i-c;if(o>n/2)o-=n;if(o<-n/2)o+=n;return o}
+function renderCarousel(){const no=boosterCount<=0;boosterButtons.forEach((b,i)=>{const o=circularOffset(i,carouselIndex,boosterButtons.length),d=Math.abs(o);if(d>2){b.style.opacity="0";b.style.pointerEvents="none";b.style.zIndex="0";return}b.style.transform=`translate(-50%,-50%) translateX(${o*235}px) scale(${d===0?1:d===1?.72:.52})`;b.style.opacity=String(no?.35:d===0?1:d===1?.62:.25);b.style.zIndex=String(10-d);b.style.filter=d===0?"none":"saturate(.72)";b.style.pointerEvents=no?"none":"auto";b.classList.toggle("is-center",d===0)});selected=boosterUniverses[carouselIndex];boosterName.textContent=selected;openBtn.disabled=busy||no}
+function moveCarousel(step){if(busy)return;carouselIndex=(carouselIndex+step+boosterUniverses.length)%boosterUniverses.length;renderCarousel()}
+boosterUniverses.forEach((name,index)=>{const b=document.createElement("button");b.type="button";b.className="booster-choice";b.title=name;const img=document.createElement("img");img.src=`/BOTM_2.0/assets/boosters/${name}.png`;img.alt=`Booster ${name}`;b.appendChild(img);b.onclick=()=>{if(busy||index===carouselIndex)return;carouselIndex=index;renderCarousel()};boosterTrack.appendChild(b);boosterButtons.push(b)});
+prevBtn.onclick=()=>moveCarousel(-1);nextBtn.onclick=()=>moveCarousel(1);
+document.addEventListener("keydown",e=>{if(e.key==="ArrowLeft")moveCarousel(-1);if(e.key==="ArrowRight")moveCarousel(1)});
+let swipeStartX=null;universWrap.addEventListener("pointerdown",e=>swipeStartX=e.clientX);universWrap.addEventListener("pointerup",e=>{if(swipeStartX===null)return;const d=e.clientX-swipeStartX;swipeStartX=null;if(Math.abs(d)>=45)moveCarousel(d<0?1:-1)});
+renderCarousel();
 
 openBtn.onclick = async () => {
   if (busy || !selected) return;
