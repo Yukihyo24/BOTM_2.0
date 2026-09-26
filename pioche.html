@@ -12,6 +12,61 @@ body{overflow-x:hidden}.panel{min-height:720px;position:relative;overflow:hidden
 #cards.chosen-card{display:flex!important;justify-content:center!important;align-items:flex-start;width:100%}#cards.chosen-card .card-item{flex:0 0 200px;width:200px;max-width:200px;margin:0 auto}#cards.chosen-card .card-item img.card-img{width:184px;max-width:184px}
 @media(max-width:760px){.panel{min-height:650px}#univers{height:430px}.miracle-card{width:220px;height:352px}.miracle-card.pos--1{transform:translateX(calc(-50% - 205px)) scale(.72)}.miracle-card.pos-1{transform:translateX(calc(-50% + 205px)) scale(.72)}.miracle-card.pos--2,.miracle-card.pos-2{opacity:0;pointer-events:none}.carousel-arrow{top:165px;width:46px;height:46px;font-size:28px}#prev-universe{left:2%}#next-universe{right:2%}#cards.reveal-wrap{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}#cards .card-item,#cards .card-item:only-child{max-width:180px}#cards .card-item img.card-img,#cards .card-item:only-child img.card-img{max-width:164px}}
 @media(max-width:520px){#univers{height:385px}.miracle-card{width:205px;height:328px}.miracle-card.pos--1,.miracle-card.pos-1{opacity:.18}#selected-universe{font-size:19px;bottom:0}#cards.reveal-wrap{grid-template-columns:1fr}#cards .card-item{max-width:190px}#cards .card-item img.card-img{max-width:174px}#cards .card-item:only-child{max-width:180px}#cards .card-item:only-child img.card-img{max-width:164px}}
+
+  /* Révélation Pioche Miracle : flash blanc + cartes superposées à la sélection */
+  #miracle-reveal-overlay{
+    position:fixed;inset:0;z-index:10000;display:none;
+    align-items:center;justify-content:center;
+    background:rgba(4,8,30,.82);
+    backdrop-filter:blur(7px);
+  }
+  #miracle-reveal-overlay.active{display:flex}
+  #miracle-reveal-overlay::before{
+    content:"";position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;
+  }
+  #miracle-reveal-overlay.flash::before{animation:miracleWhiteFlash .9s ease-out}
+  @keyframes miracleWhiteFlash{
+    0%{opacity:0}18%{opacity:1}42%{opacity:.92}100%{opacity:0}
+  }
+  #miracle-reveal-stage{
+    position:relative;z-index:2;width:min(920px,94vw);min-height:520px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
+  #miracle-reveal-title{
+    margin:0 0 22px;text-align:center;font-size:22px;font-weight:800;color:#fff;
+    text-shadow:0 0 18px rgba(255,255,255,.35);
+  }
+  #miracle-overlay-cards{
+    width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,220px));
+    justify-content:center;align-items:start;gap:24px;
+  }
+  #miracle-overlay-cards .card-item{
+    width:100%;max-width:220px;justify-self:center;
+    animation:miracleCardAppear .55s cubic-bezier(.2,.8,.2,1) both;
+  }
+  #miracle-overlay-cards .card-item:nth-child(2){animation-delay:.10s}
+  #miracle-overlay-cards .card-item:nth-child(3){animation-delay:.20s}
+  #miracle-overlay-cards .card-img{width:100%;max-width:204px;margin:0 auto;display:block}
+  @keyframes miracleCardAppear{
+    from{opacity:0;transform:translateY(24px) scale(.72);filter:brightness(2.4) blur(5px)}
+    to{opacity:1;transform:translateY(0) scale(1);filter:brightness(1) blur(0)}
+  }
+  #miracle-overlay-cards.chosen-card{display:flex!important;justify-content:center!important}
+  #miracle-overlay-cards.chosen-card .card-item{flex:0 0 220px;max-width:220px}
+  #miracle-overlay-cards.chosen-card .card-img{max-width:204px}
+  @media(max-width:700px){
+    #miracle-reveal-stage{min-height:440px}
+    #miracle-overlay-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:0 8px}
+    #miracle-overlay-cards .card-item{max-width:180px}
+    #miracle-overlay-cards .card-img{max-width:164px}
+  }
+  @media(max-width:520px){
+    #miracle-reveal-stage{justify-content:flex-start;padding-top:55px;max-height:94vh;overflow:auto}
+    #miracle-overlay-cards{grid-template-columns:1fr}
+    #miracle-overlay-cards .card-item{max-width:190px}
+    #miracle-overlay-cards .card-img{max-width:174px}
+  }
+
 </style>
 </head><body><div class="app">
 <div class="topbar"><div class="brand"><img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png"><div><h1>✨ Pioche Miracle</h1></div></div><span class="badge">✨ <span data-miracles></span></span></div>
@@ -19,6 +74,12 @@ body{overflow-x:hidden}.panel{min-height:720px;position:relative;overflow:hidden
 <p class="miracle-intro">Choisis l’univers de ta Pioche Miracle. Une seule sélection persistante de 3 cartes sera générée : recharger la page ne permet pas de relancer le tirage.</p>
 <div id="univers"><button id="prev-universe" class="carousel-arrow" type="button">‹</button><button id="next-universe" class="carousel-arrow" type="button">›</button><div id="selected-universe"></div></div>
 <div id="draw-action"><button id="start-draw" class="btn gold" type="button">Lancer la Pioche Miracle</button></div><div id="msg" class="notice" style="display:none"></div><div id="cards" class="reveal-wrap"></div></div>
+</div>
+<div id="miracle-reveal-overlay" aria-hidden="true">
+  <div id="miracle-reveal-stage">
+    <div id="miracle-reveal-title">Choisis une carte</div>
+    <div id="miracle-overlay-cards" class="reveal-wrap"></div>
+  </div>
 </div>
 <script type="module">
 import { BOTM, supabase } from "./app.js";await BOTM.requireAuth();let sessionId=null;
@@ -31,6 +92,28 @@ function moveCarousel(step){if(!availableUniverses.length)return;currentIndex=(c
 document.getElementById("prev-universe").onclick=()=>moveCarousel(-1);document.getElementById("next-universe").onclick=()=>moveCarousel(1);document.getElementById("start-draw").onclick=()=>{const name=availableUniverses[currentIndex];if(name)start(name)};renderCarousel();
 async function start(name){const m=document.getElementById("msg");m.style.display="block";m.textContent="Tirage...";
 const {data,error}=await supabase.rpc("start_miracle_draw",{p_universe:name});if(error){m.textContent=error.message;return;}sessionId=data[0]?.session_id;render(data);m.textContent="Choisis une carte : ce choix est définitif.";}
-function render(rows){const w=document.getElementById("cards");w.innerHTML="";w.classList.toggle("chosen-card",(rows||[]).length===1);rows.forEach(c=>{const d=document.createElement("div");d.className="card-item reveal";d.innerHTML=`<img class="card-img" src="${BOTM.imagePath(c)}"><div class="meta"><b>${c.file_name.replace(/\.[^.]+$/,"")}</b><div class="rarity">${BOTM.rarityLabel(c.rarity)}</div></div>`;const b=document.createElement("button");b.className="btn gold";b.textContent="Choisir";b.onclick=()=>choose(c.card_id);d.appendChild(b);w.appendChild(d)});}
-async function choose(cardId){const {data,error}=await supabase.rpc("choose_miracle_card",{p_session_id:sessionId,p_card_id:cardId});const m=document.getElementById("msg");if(error){m.textContent=error.message;return;}render(data);document.querySelectorAll("#cards button").forEach(b=>b.remove());m.textContent="Carte ajoutée à ta collection !";await BOTM.refreshHeader();}
+function render(rows){
+  const overlay=document.getElementById("miracle-reveal-overlay");
+  const w=document.getElementById("miracle-overlay-cards");
+  const title=document.getElementById("miracle-reveal-title");
+  document.getElementById("cards").innerHTML="";
+  w.innerHTML="";
+  const chosen=(rows||[]).length===1;
+  w.classList.toggle("chosen-card",chosen);
+  title.textContent=chosen?"Carte obtenue !":"Choisis une carte";
+  (rows||[]).forEach(c=>{
+    const d=document.createElement("div");d.className="card-item reveal";
+    d.innerHTML=`<img class="card-img" src="${BOTM.imagePath(c)}"><div class="meta"><b>${c.file_name.replace(/\.[^.]+$/,"")}</b><div class="rarity">${BOTM.rarityLabel(c.rarity)}</div></div>`;
+    if(!chosen){const b=document.createElement("button");b.className="btn gold";b.textContent="Choisir";b.onclick=()=>choose(c.card_id);d.appendChild(b);}
+    w.appendChild(d);
+  });
+  overlay.classList.add("active");
+  overlay.setAttribute("aria-hidden","false");
+  if(!chosen){
+    overlay.classList.remove("flash");
+    void overlay.offsetWidth;
+    overlay.classList.add("flash");
+  }
+}
+async function choose(cardId){const {data,error}=await supabase.rpc("choose_miracle_card",{p_session_id:sessionId,p_card_id:cardId});const m=document.getElementById("msg");if(error){m.textContent=error.message;return;}render(data);document.querySelectorAll("#miracle-overlay-cards button").forEach(b=>b.remove());m.textContent="Carte ajoutée à ta collection !";await BOTM.refreshHeader();}
 </script></body></html>
