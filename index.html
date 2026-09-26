@@ -334,33 +334,29 @@
 
 <style>
 
-/* BOTM — pictogrammes monochromes des modes de jeu */
-.botm-mode-icon{
-  width:1.08em;
-  height:1.08em;
-  display:block;
-  overflow:visible;
+/* BOTM — icônes violettes unifiées */
+.botm-icon-svg{width:1em;height:1em;display:block;overflow:visible}
+.botm-icon-svg path,.botm-icon-svg rect,.botm-icon-svg circle{
+  fill:none;stroke:currentColor;stroke-width:1.85;stroke-linecap:round;stroke-linejoin:round
 }
-.botm-mode-icon path,
-.botm-mode-icon rect,
-.botm-mode-icon circle{
-  fill:none;
-  stroke:currentColor;
-  stroke-width:1.8;
-  stroke-linecap:round;
-  stroke-linejoin:round;
+.side-nav .botm-mode-symbol{color:#b36cff;display:flex;align-items:center;justify-content:center}
+.side-nav .botm-mode-symbol .botm-icon-svg{width:20px;height:20px;filter:drop-shadow(0 0 4px rgba(157,77,255,.48))}
+.feature-icon .botm-icon-svg{width:25px;height:25px;color:#c47aff;filter:drop-shadow(0 0 5px rgba(172,79,255,.55))}
+
+/* Discord : simple filigrane, sans modifier le contenu ni la disposition du bloc */
+.welcome-panel{position:relative;overflow:hidden}
+.welcome-panel::after{
+  content:"";
+  position:absolute;
+  right:18px;
+  bottom:-18px;
+  width:150px;
+  height:150px;
+  opacity:.14;
+  pointer-events:none;
+  background:center/contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 127.14 96.36'%3E%3Cpath fill='%238b5cf6' d='M107.7 8.07A105.15 105.15 0 0 0 81.47 0a72.06 72.06 0 0 0-3.36 6.83 97.68 97.68 0 0 0-29.11 0A72.37 72.37 0 0 0 45.64 0 105.89 105.89 0 0 0 19.39 8.09C2.79 32.65-1.71 56.6.54 80.21a105.73 105.73 0 0 0 32.17 16.15 77.7 77.7 0 0 0 6.89-9.05 68.42 68.42 0 0 1-10.85-5.18c.91-.66 1.8-1.34 2.66-2.03a75.57 75.57 0 0 0 64.32 0c.87.71 1.76 1.39 2.66 2.03a68.68 68.68 0 0 1-10.87 5.19 77 77 0 0 0 6.89 9.04 105.25 105.25 0 0 0 32.19-16.14c2.64-27.38-4.51-51.11-18.9-72.15ZM42.45 65.69C36.18 65.69 31 59.93 31 52.86s5.06-12.85 11.43-12.85 11.54 5.78 11.43 12.85c0 7.07-5.06 12.83-11.41 12.83Zm42.24 0c-6.27 0-11.43-5.76-11.43-12.83S78.32 40 84.69 40s11.54 5.78 11.43 12.85c0 7.08-5.06 12.84-11.43 12.84Z'/%3E%3C/svg%3E");
 }
-.sidebar .side-nav .botm-mode-symbol{
-  color:#a98cff;
-  display:flex !important;
-  align-items:center;
-  justify-content:center;
-}
-.feature-icon .botm-mode-icon{
-  width:23px;
-  height:23px;
-  color:#a98cff;
-}
+.welcome-panel>*{position:relative;z-index:1}
 </style>
 </head>
 
@@ -387,16 +383,16 @@
       <a class="active" href="/BOTM_2.0/index.html"><span>⌂</span> Accueil</a>
       <a href="/BOTM_2.0/collection.html"><span>▱</span> Collection</a>
       <a href="/BOTM_2.0/catalogue.html"><span>▦</span> Catalogue</a>
-      <a href="/BOTM_2.0/jeu.html"><span>⚔</span> Combat</a>
-      <a href="/BOTM_2.0/survivor.html"><span class="botm-mode-symbol"><svg class="botm-mode-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 19.5 9 8.5l3 5 2-3.5 7.5 9.5H2.5Z"/><path d="m7.4 11.2 1.6-2.7 1.7 2.8-1.2-.4-.9 1.1-1.2-.8Z"/></svg></span> Survivor Valley</a>
-      <a href="/BOTM_2.0/autoroute.html"><span class="botm-mode-symbol"><svg class="botm-mode-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.3 21h7.4L14 3h-4L8.3 21Z"/><path d="M12 5v3M12 11v3M12 17v2"/></svg></span> Autoroute de la Fortune</a>
-      <a href="/BOTM_2.0/ascension.html"><span class="botm-mode-symbol"><svg class="botm-mode-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21 9.2 3M17 21 14.8 3M8.6 7h6.8M8.1 11h7.8M7.6 15h8.8M7.1 19h9.8"/></svg></span> L’Ascension</a>
-      <a href="/BOTM_2.0/roulette.html"><span class="botm-mode-symbol"><svg class="botm-mode-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M7 5V3h10v2M7 9h10v7H7z"/><path d="M10 12h4M12 10v4"/><circle cx="8" cy="18" r=".8"/><circle cx="12" cy="18" r=".8"/><circle cx="16" cy="18" r=".8"/></svg></span> Roulette du Multivers</a>
-      <a href="/BOTM_2.0/duel-lobby.html"><span class="botm-mode-symbol"><svg class="botm-mode-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 4 15 15M19 4 4 19M4 4l3 1-2 2-1-3ZM20 4l-3 1 2 2 1-3ZM3 18l3 3M21 18l-3 3"/></svg></span> Duel PvP</a>
-      <a href="/BOTM_2.0/boutique.html"><span>◆</span> Boutique</a>
-      <a href="/BOTM_2.0/booster.html"><span>✦</span> Boosters</a>
-      <a href="/BOTM_2.0/pioche.html"><span>★</span> Pioche Miracle</a>
-      <a href="/BOTM_2.0/echanges.html"><span>⇄</span> Échanges</a>
+      <a href="/BOTM_2.0/jeu.html"><span class="botm-mode-symbol"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 4 15 15M19 4 4 19M4 4l3 1-2 2-1-3ZM20 4l-3 1 2 2 1-3ZM3 18l3 3M21 18l-3 3"/></svg></span> Combat</a>
+      <a href="/BOTM_2.0/survivor.html"><span class="botm-mode-symbol"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 19.5 8.8 8.7l3.1 5.1 2.1-3.5 7.5 9.2h-19Z"/><path d="m7.2 11.4 1.6-2.7 1.8 3-1.2-.5-.9 1.1-1.3-.9Z"/></svg></span> Survivor Valley</a>
+      <a href="/BOTM_2.0/autoroute.html"><span class="botm-mode-symbol"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 21h9L14.6 3H9.4L7.5 21Z"/><path d="M12 4.5V8M12 11v3M12 17v2.5"/></svg></span> Autoroute de la Fortune</a>
+      <a href="/BOTM_2.0/ascension.html"><span class="botm-mode-symbol"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21 9.2 3M17 21 14.8 3M8.7 7h6.6M8.2 11h7.6M7.7 15h8.6M7.2 19h9.6"/></svg></span> L’Ascension</a>
+      <a href="/BOTM_2.0/roulette.html"><span class="botm-mode-symbol"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M8 6V4h8v2M7 9h10v7H7z"/><path d="M9 11.5h6M10 14h4"/><circle cx="8" cy="18" r=".6"/><circle cx="12" cy="18" r=".6"/><circle cx="16" cy="18" r=".6"/></svg></span> Roulette du Multivers</a>
+      <a href="/BOTM_2.0/duel-lobby.html"><span class="botm-mode-symbol"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 4 15 15M19 4 4 19M4 4l3 1-2 2-1-3ZM20 4l-3 1 2 2 1-3ZM3 18l3 3M21 18l-3 3"/></svg></span> Duel PvP</a>
+      <a href="/BOTM_2.0/boutique.html"><span class="botm-mode-symbol"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 7 7-7 11-7-11 7-7Z"/><path d="m5 10 7 2 7-2M12 12v9"/></svg></span> Boutique</a>
+      <a href="/BOTM_2.0/booster.html"><span class="botm-mode-symbol"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="6" width="11" height="14" rx="1.8" transform="rotate(-8 10.5 13)"/><rect x="9" y="4" width="10" height="14" rx="1.8" transform="rotate(7 14 11)"/></svg></span> Boosters</a>
+      <a href="/BOTM_2.0/pioche.html"><span class="botm-mode-symbol"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8c.7 5.7 3.5 8.5 9.2 9.2-5.7.7-8.5 3.5-9.2 9.2-.7-5.7-3.5-8.5-9.2-9.2 5.7-.7 8.5-3.5 9.2-9.2Z"/></svg></span> Pioche Miracle</a>
+      <a href="/BOTM_2.0/echanges.html"><span class="botm-mode-symbol"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15M16 5l3 3-3 3M20 16H5M8 13l-3 3 3 3"/></svg></span> Échanges</a>
       <a href="/BOTM_2.0/communaute.html"><span>●</span> Communauté</a>
       <a href="/BOTM_2.0/profil.html"><span>👤</span> Mon profil</a>
       <a href="/BOTM_2.0/messages.html"><span>✉</span> Messages</a>
@@ -461,52 +457,52 @@
 
     <section class="feature-grid feature-scroll">
       <a class="feature-card combat-mode" href="/BOTM_2.0/jeu.html">
-        <div class="feature-icon">⚔</div>
+        <div class="feature-icon"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 4 15 15M19 4 4 19M4 4l3 1-2 2-1-3ZM20 4l-3 1 2 2 1-3ZM3 18l3 3M21 18l-3 3"/></svg></div>
         <div><h3>Combat de stats</h3><p>Trois cartes. Trois manches. Une statistique tirée au hasard à chaque duel.</p></div>
         <span class="feature-link">Combattre →</span>
       </a>
       <a class="feature-card shop" href="/BOTM_2.0/boutique.html">
-        <div class="feature-icon">◆</div>
+        <div class="feature-icon"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 7 7-7 11-7-11 7-7Z"/><path d="m5 10 7 2 7-2M12 12v9"/></svg></div>
         <div><h3>Boutique</h3><p>Dépense tes points et récupère de nouvelles cartes.</p></div>
         <span class="feature-link">Accéder →</span>
       </a>
       <a class="feature-card survivor-mode" href="/BOTM_2.0/survivor.html">
-        <div class="feature-icon"><svg class="botm-mode-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 19.5 9 8.5l3 5 2-3.5 7.5 9.5H2.5Z"/><path d="m7.4 11.2 1.6-2.7 1.7 2.8-1.2-.4-.9 1.1-1.2-.8Z"/></svg></div>
+        <div class="feature-icon"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 19.5 8.8 8.7l3.1 5.1 2.1-3.5 7.5 9.2h-19Z"/><path d="m7.2 11.4 1.6-2.7 1.8 3-1.2-.5-.9 1.1-1.3-.9Z"/></svg></div>
         <div><h3>Survivor Valley</h3><p>Trois survivants face à sept adversaires. Chaque sacrifice peut ouvrir la voie au suivant.</p></div>
         <span class="feature-link">Entrer dans la vallée →</span>
       </a>
       <a class="feature-card booster" href="/BOTM_2.0/booster.html">
-        <div class="feature-icon">✦</div>
+        <div class="feature-icon"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="6" width="11" height="14" rx="1.8" transform="rotate(-8 10.5 13)"/><rect x="9" y="4" width="10" height="14" rx="1.8" transform="rotate(7 14 11)"/></svg></div>
         <div><h3>Boosters</h3><p>Choisis ton univers et découvre quatre nouvelles cartes.</p></div>
         <span class="feature-link">Ouvrir un booster →</span>
       </a>
       <a class="feature-card fortune-mode" href="/BOTM_2.0/autoroute.html">
-        <div class="feature-icon"><svg class="botm-mode-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.3 21h7.4L14 3h-4L8.3 21Z"/><path d="M12 5v3M12 11v3M12 17v2"/></svg></div>
+        <div class="feature-icon"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 21h9L14.6 3H9.4L7.5 21Z"/><path d="M12 4.5V8M12 11v3M12 17v2.5"/></svg></div>
         <div><h3>Autoroute de la Fortune</h3><p>Dix péages, trois routes à chaque étape et quatre utilisations maximum par carte.</p></div>
         <span class="feature-link">Prendre la route →</span>
       </a>
       <a class="feature-card miracle" href="/BOTM_2.0/pioche.html">
-        <div class="feature-icon">★</div>
+        <div class="feature-icon"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8c.7 5.7 3.5 8.5 9.2 9.2-5.7.7-8.5 3.5-9.2 9.2-.7-5.7-3.5-8.5-9.2-9.2 5.7-.7 8.5-3.5 9.2-9.2Z"/></svg></div>
         <div><h3>Pioche Miracle</h3><p>Trois cartes sont révélées. Une seule rejoindra ta collection.</p></div>
         <span class="feature-link">Jouer →</span>
       </a>
       <a class="feature-card ascension-mode" href="/BOTM_2.0/ascension.html">
-        <div class="feature-icon"><svg class="botm-mode-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21 9.2 3M17 21 14.8 3M8.6 7h6.8M8.1 11h7.8M7.6 15h8.8M7.1 19h9.8"/></svg></div>
+        <div class="feature-icon"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21 9.2 3M17 21 14.8 3M8.7 7h6.6M8.2 11h7.6M7.7 15h8.6M7.2 19h9.6"/></svg></div>
         <div><h3>L’Ascension</h3><p>Six échelons. Une seule carte. Atteins le sommet et remporte jusqu’à 120 points.</p></div>
         <span class="feature-link">Grimper →</span>
       </a>
       <a class="feature-card trades" href="/BOTM_2.0/echanges.html">
-        <div class="feature-icon">⇄</div>
+        <div class="feature-icon"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15M16 5l3 3-3 3M20 16H5M8 13l-3 3 3 3"/></svg></div>
         <div><h3>Échanges</h3><p>Propose tes cartes et négocie avec les autres joueurs.</p></div>
         <span class="feature-link">Voir les échanges →</span>
       </a>
       <a class="feature-card duel-mode" href="/BOTM_2.0/duel-lobby.html">
-        <div class="feature-icon"><svg class="botm-mode-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 4 15 15M19 4 4 19M4 4l3 1-2 2-1-3ZM20 4l-3 1 2 2 1-3ZM3 18l3 3M21 18l-3 3"/></svg></div>
+        <div class="feature-icon"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 4 15 15M19 4 4 19M4 4l3 1-2 2-1-3ZM20 4l-3 1 2 2 1-3ZM3 18l3 3M21 18l-3 3"/></svg></div>
         <div><h3>Duel PvP</h3><p>Prépare ton deck de 40 cartes, défie un joueur et impose ta stratégie sur sept lignes.</p></div>
         <span class="feature-link">Entrer dans l’arène →</span>
       </a>
       <a class="feature-card roulette-mode" href="/BOTM_2.0/roulette.html">
-        <div class="feature-icon"><svg class="botm-mode-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M7 5V3h10v2M7 9h10v7H7z"/><path d="M10 12h4M12 10v4"/><circle cx="8" cy="18" r=".8"/><circle cx="12" cy="18" r=".8"/><circle cx="16" cy="18" r=".8"/></svg></div>
+        <div class="feature-icon"><svg class="botm-icon-svg" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M8 6V4h8v2M7 9h10v7H7z"/><path d="M9 11.5h6M10 14h4"/><circle cx="8" cy="18" r=".6"/><circle cx="12" cy="18" r=".6"/><circle cx="16" cy="18" r=".6"/></svg></div>
         <div><h3>Roulette du Multivers</h3><p>Choisis ta carte, défie le hasard et décide quand encaisser avant de tout perdre.</p></div>
         <span class="feature-link">Tenter ma chance →</span>
       </a>
