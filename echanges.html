@@ -38,6 +38,8 @@
     .builder-fields label{display:flex;flex-direction:column;gap:5px;font-size:.85rem}
     .builder-fields input{width:100%;box-sizing:border-box;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:inherit}
     .builder-summary{margin-top:10px;font-size:.85rem}
+    .trade-filters{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 12px}
+    .trade-filters select{min-width:150px}
     @media(max-width:850px){.trade-layout{grid-template-columns:1fr}.trade-card{grid-template-columns:90px 1fr}.trade-card>img{width:90px}.builder-fields{grid-template-columns:1fr}}
   </style>
 </head>
@@ -66,6 +68,17 @@
     <div class="panel">
       <h2 style="margin-top:0">Proposer une carte</h2>
       <p class="muted">Choisis une carte de ta collection à mettre sur le marché. Un exemplaire est alors réservé pour cet échange.</p>
+      <div class="trade-filters">
+        <select id="my-universe" class="btn"><option value="">Tous les univers</option></select>
+        <select id="my-rarity" class="btn">
+          <option value="">Toutes les raretés</option>
+          <option value="commune">Commune</option>
+          <option value="rare">Rare</option>
+          <option value="super_rare">Super Rare</option>
+          <option value="tres_rare">Très Rare</option>
+          <option value="ultra_rare">Ultra Rare</option>
+        </select>
+      </div>
       <div id="mycards" class="my-card-picker"></div>
       <button id="create" class="btn gold" style="width:100%;margin-top:14px" disabled>Mettre cette carte à l'échange</button>
     </div>
@@ -74,6 +87,17 @@
       <div class="nav" style="justify-content:space-between">
         <h2 style="margin:0">Offres disponibles</h2>
         <button id="refresh" class="btn">↻ Actualiser</button>
+      </div>
+      <div class="trade-filters">
+        <select id="market-universe" class="btn"><option value="">Tous les univers</option></select>
+        <select id="market-rarity" class="btn">
+          <option value="">Toutes les raretés</option>
+          <option value="commune">Commune</option>
+          <option value="rare">Rare</option>
+          <option value="super_rare">Super Rare</option>
+          <option value="tres_rare">Très Rare</option>
+          <option value="ultra_rare">Ultra Rare</option>
+        </select>
       </div>
       <div id="market"></div>
     </div>
@@ -86,8 +110,18 @@ const session = await BOTM.requireAuth();
 const uid = session.user.id;
 
 let myCollection = [];
+let marketListings = [];
 let selectedListingCardId = null;
 const offerDrafts = new Map();
+
+function fillUniverseFilter(select, rows, getCard){
+  const current = select.value;
+  const universes = [...new Set(rows.map(row => getCard(row)?.universe).filter(Boolean))]
+    .sort((a,b) => a.localeCompare(b,"fr"));
+  select.innerHTML = '<option value="">Tous les univers</option>';
+  universes.forEach(universe => select.add(new Option(universe, universe)));
+  if(universes.includes(current)) select.value = current;
+}
 
 const msg = document.getElementById("msg");
 function showMsg(text, error=false){
@@ -102,20 +136,29 @@ function draftFor(listingId){
   return offerDrafts.get(listingId);
 }
 
-async function loadMyCards(){
-  myCollection = await BOTM.collection();
+function renderMyCards(){
   const wrap = document.getElementById("mycards");
+  const universe = document.getElementById("my-universe").value;
+  const rarity = document.getElementById("my-rarity").value;
+
+  const filtered = myCollection.filter(row => {
+    const c = row.cards;
+    return c &&
+      (!universe || c.universe === universe) &&
+      (!rarity || c.rarity === rarity);
+  });
+
   wrap.innerHTML = "";
 
-  myCollection.forEach(row => {
+  filtered.forEach(row => {
     const c = row.cards;
     const d = document.createElement("div");
-    d.className = "pick-card";
+    d.className = "pick-card" + (Number(selectedListingCardId) === Number(c.id) ? " selected" : "");
     d.dataset.id = c.id;
     d.innerHTML = `
       <img src="${BOTM.imagePath(c)}">
       <b>${esc(cardName(c))}</b>
-      <div class="muted">${esc(BOTM.rarityLabel(c.rarity))} • ×${row.quantity}</div>
+      <div class="muted">${esc(c.universe)} • ${esc(BOTM.rarityLabel(c.rarity))} • ×${row.quantity}</div>
     `;
     d.onclick = () => {
       selectedListingCardId = c.id;
@@ -126,7 +169,13 @@ async function loadMyCards(){
     wrap.appendChild(d);
   });
 
-  if(!myCollection.length) wrap.innerHTML = '<div class="muted">Aucune carte disponible.</div>';
+  if(!filtered.length) wrap.innerHTML = '<div class="muted">Aucune carte ne correspond à ces filtres.</div>';
+}
+
+async function loadMyCards(){
+  myCollection = await BOTM.collection();
+  fillUniverseFilter(document.getElementById("my-universe"), myCollection, row => row.cards);
+  renderMyCards();
 }
 
 document.getElementById("create").onclick = async () => {
@@ -265,6 +314,17 @@ function buildOfferBuilder(listingId, holder){
   const d = draftFor(listingId);
   holder.innerHTML = `
     <div class="builder-title">Composer mon offre <span class="muted">(maximum 5 cartes)</span></div>
+    <div class="trade-filters">
+      <select class="builder-universe btn"><option value="">Tous les univers</option></select>
+      <select class="builder-rarity btn">
+        <option value="">Toutes les raretés</option>
+        <option value="commune">Commune</option>
+        <option value="rare">Rare</option>
+        <option value="super_rare">Super Rare</option>
+        <option value="tres_rare">Très Rare</option>
+        <option value="ultra_rare">Ultra Rare</option>
+      </select>
+    </div>
     <div class="builder-cards"></div>
     <div class="builder-fields">
       <label>💠 Points
@@ -283,10 +343,22 @@ function buildOfferBuilder(listingId, holder){
 
   const grid = holder.querySelector(".builder-cards");
   const summary = holder.querySelector(".builder-summary");
+  const builderUniverse = holder.querySelector(".builder-universe");
+  const builderRarity = holder.querySelector(".builder-rarity");
+  fillUniverseFilter(builderUniverse, myCollection, row => row.cards);
 
   function renderCards(){
     grid.innerHTML = "";
-    myCollection.forEach(r => {
+    const universe = builderUniverse.value;
+    const rarity = builderRarity.value;
+    const filtered = myCollection.filter(r => {
+      const c = r.cards;
+      return c &&
+        (!universe || c.universe === universe) &&
+        (!rarity || c.rarity === rarity);
+    });
+
+    filtered.forEach(r => {
       const c = r.cards;
       const selectedCount = d.cards.filter(id => Number(id) === Number(c.id)).length;
       const el = document.createElement("div");
@@ -330,6 +402,10 @@ function buildOfferBuilder(listingId, holder){
       }
       grid.appendChild(el);
     });
+
+    if(!filtered.length){
+      grid.innerHTML = '<div class="muted">Aucune carte ne correspond à ces filtres.</div>';
+    }
   }
 
   function updateSummary(){
@@ -340,6 +416,8 @@ function buildOfferBuilder(listingId, holder){
     summary.textContent = `${d.cards.length}/5 carte(s) • ${pts.toLocaleString("fr-FR")} point(s)${mir ? " • 1 pioche miracle" : ""}`;
   }
 
+  builderUniverse.onchange = renderCards;
+  builderRarity.onchange = renderCards;
   holder.querySelector(".offer-points").oninput = updateSummary;
   holder.querySelector(".offer-miracle").onchange = updateSummary;
   holder.querySelector(".send-offer").onclick = () => { updateSummary(); submitOffer(listingId); };
@@ -349,15 +427,17 @@ function buildOfferBuilder(listingId, holder){
   updateSummary();
 }
 
-async function loadMarket(){
+function renderMarket(){
   const market = document.getElementById("market");
-  market.innerHTML = '<div class="muted">Chargement...</div>';
-
-  const { data, error } = await supabase.rpc("get_trade_market");
-  if(error){ market.innerHTML = `<div class="muted">${esc(error.message)}</div>`; return; }
+  const universe = document.getElementById("market-universe").value;
+  const rarity = document.getElementById("market-rarity").value;
+  const filtered = marketListings.filter(l =>
+    (!universe || l.universe === universe) &&
+    (!rarity || l.rarity === rarity)
+  );
 
   market.innerHTML = "";
-  (data || []).forEach(l => {
+  filtered.forEach(l => {
     const box = document.createElement("div");
     box.className = "trade-card";
     box.innerHTML = `
@@ -406,10 +486,29 @@ async function loadMarket(){
     market.appendChild(box);
   });
 
-  if(!(data||[]).length){
+  if(!filtered.length){
     market.innerHTML = '<div class="muted">Aucune carte n’est actuellement proposée à l’échange.</div>';
   }
 }
+
+}
+
+async function loadMarket(){
+  const market = document.getElementById("market");
+  market.innerHTML = '<div class="muted">Chargement...</div>';
+
+  const { data, error } = await supabase.rpc("get_trade_market");
+  if(error){ market.innerHTML = `<div class="muted">${esc(error.message)}</div>`; return; }
+
+  marketListings = data || [];
+  fillUniverseFilter(document.getElementById("market-universe"), marketListings, row => row);
+  renderMarket();
+}
+
+document.getElementById("my-universe").onchange = renderMyCards;
+document.getElementById("my-rarity").onchange = renderMyCards;
+document.getElementById("market-universe").onchange = renderMarket;
+document.getElementById("market-rarity").onchange = renderMarket;
 
 document.getElementById("refresh").onclick = async () => {
   offerDrafts.clear();
