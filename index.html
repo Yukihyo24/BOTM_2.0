@@ -483,10 +483,10 @@
     </section>
     <section class="home-bottom-grid">
       <div class="home-panel welcome-panel">
-        <div class="panel-kicker">Ton espace</div>
-        <h3>Ta collection, ton multivers.</h3>
-        <p id="welcomeText">Chargement de ton profil...</p>
-        <a href="/BOTM_2.0/collection.html" class="text-link">Voir toute ma collection →</a>
+        <div class="panel-kicker">Discord</div>
+        <h3>Rejoins le serveur Discord de <b>BOTM</b></h3>
+        <p>Tu y retrouveras <b>le règlement</b>, un espace pour <b>signaler les bugs</b> et un salon pour <b>proposer tes idées et suggestions</b>.</p>
+        <a href="https://discord.gg/fSutVEvEA7" class="text-link" target="_blank" rel="noopener noreferrer">Rejoindre le Discord →</a>
       </div>
 
       <div class="home-panel bonus-panel">
@@ -551,12 +551,6 @@ if (session) {
   if (!p.starter_claimed) {
     location.href = "/BOTM_2.0/starter.html";
   }
-
-  document.getElementById("welcomeText").innerHTML = `
-    Tu disposes actuellement de
-    <b>${Number(p.points || 0).toLocaleString("fr-FR")} points</b>.
-    Continue d'ouvrir, collectionner, vendre et échanger tes cartes.
-  `;
 
   if (p.role === "admin") {
     document.getElementById("admin-link").style.display = "";
