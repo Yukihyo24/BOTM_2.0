@@ -113,6 +113,22 @@ body{overflow-x:hidden}.panel{min-height:720px;position:relative;overflow:hidden
     #miracle-overlay-cards .miracle-card-visual{max-width:174px}
   }
 
+
+  #miracle-reveal-close{
+    display:none;
+    margin-top:22px;
+    padding:11px 22px;
+    border:1px solid rgba(255,255,255,.35);
+    border-radius:10px;
+    background:rgba(10,16,48,.92);
+    color:#fff;
+    font:inherit;
+    font-weight:700;
+    cursor:pointer;
+  }
+  #miracle-reveal-close:hover{background:rgba(24,34,78,.98)}
+  #miracle-reveal-overlay.result-done #miracle-reveal-close{display:inline-flex}
+
 </style>
 </head><body><div class="app">
 <div class="topbar"><div class="brand"><img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png"><div><h1>✨ Pioche Miracle</h1></div></div><span class="badge">✨ <span data-miracles></span></span></div>
@@ -125,6 +141,7 @@ body{overflow-x:hidden}.panel{min-height:720px;position:relative;overflow:hidden
   <div id="miracle-reveal-stage">
     <div id="miracle-reveal-title">Choisis une carte</div>
     <div id="miracle-overlay-cards" class="reveal-wrap"></div>
+    <button id="miracle-reveal-close" type="button">Fermer</button>
   </div>
 </div>
 <script type="module">
@@ -147,6 +164,7 @@ function render(rows){
   const chosen=(rows||[]).length===1;
   w.classList.toggle("chosen-card",chosen);
   title.textContent=chosen?"Carte obtenue !":"Choisis une carte";
+  overlay.classList.toggle("result-done",chosen);
   (rows||[]).forEach(c=>{
     const d=document.createElement("div");d.className="card-item reveal";
     d.innerHTML=`<div class="miracle-card-visual"><img class="card-img" src="${BOTM.imagePath(c)}"><img class="badge-rarete" src="assets/raretes/${c.rarity}.png" alt="${BOTM.rarityLabel(c.rarity)}"></div><div class="meta"><b>${c.file_name.replace(/\.[^.]+$/,"")}</b><div class="rarity">${BOTM.rarityLabel(c.rarity)}</div></div>`;
@@ -161,5 +179,11 @@ function render(rows){
     overlay.classList.add("flash");
   }
 }
+document.getElementById("miracle-reveal-close").onclick=()=>{
+  const overlay=document.getElementById("miracle-reveal-overlay");
+  overlay.classList.remove("active","flash","result-done");
+  overlay.setAttribute("aria-hidden","true");
+};
+
 async function choose(cardId){const {data,error}=await supabase.rpc("choose_miracle_card",{p_session_id:sessionId,p_card_id:cardId});const m=document.getElementById("msg");if(error){m.textContent=error.message;return;}render(data);document.querySelectorAll("#miracle-overlay-cards button").forEach(b=>b.remove());m.textContent="Carte ajoutée à ta collection !";await BOTM.refreshHeader();}
 </script></body></html>
