@@ -6,12 +6,34 @@
   <title>Boosters - BOTM</title>
   <link rel="stylesheet" href="/BOTM_2.0/styles.css">
 <style>
-.booster-carousel{position:relative;height:570px;max-width:1000px;margin:8px auto 16px;overflow:hidden;user-select:none;touch-action:pan-y}
-.booster-track{position:absolute;inset:0}.booster-choice{position:absolute;left:50%;top:50%;width:270px;border:0;padding:0;background:transparent;cursor:pointer;transform-origin:center;transition:transform .35s ease,opacity .35s ease,filter .35s ease}
-.booster-choice img{display:block;width:100%;height:auto;pointer-events:none;filter:drop-shadow(0 18px 28px rgba(0,0,0,.48))}.booster-choice.is-center img{filter:drop-shadow(0 20px 34px rgba(105,78,255,.42))}
-.booster-arrow{position:absolute;z-index:30;top:50%;transform:translateY(-50%);width:52px;height:52px;border-radius:50%;border:1px solid rgba(128,116,255,.45);background:rgba(8,13,42,.84);color:#fff;font-size:30px;cursor:pointer}
-.booster-arrow.prev{left:14px}.booster-arrow.next{right:14px}.booster-universe-name{text-align:center;font-size:1.15rem;font-weight:800;margin:-2px 0 15px}
-@media(max-width:700px){.booster-carousel{height:440px}.booster-choice{width:205px}.booster-arrow{width:44px;height:44px;font-size:24px}.booster-arrow.prev{left:2px}.booster-arrow.next{right:2px}}
+body{overflow-x:hidden}
+.panel{position:relative;min-height:760px;overflow:hidden}
+.booster-carousel{position:relative;height:535px;max-width:1450px;margin:0 auto 6px;overflow:hidden;user-select:none;touch-action:pan-y}
+.booster-track{position:absolute;inset:0}
+.booster-choice{position:absolute;left:50%;top:50%;width:315px;border:0;padding:0;background:transparent;cursor:pointer;transform-origin:center;transition:transform .42s cubic-bezier(.2,.75,.2,1),opacity .42s ease,filter .42s ease}
+.booster-choice img{display:block;width:100%;height:auto;pointer-events:none;filter:drop-shadow(0 20px 34px rgba(0,0,0,.52))}
+.booster-choice.is-center img{filter:drop-shadow(0 22px 38px rgba(89,83,255,.52))}
+.booster-arrow{position:absolute;z-index:30;top:50%;transform:translateY(-50%);width:58px;height:58px;border-radius:50%;border:1px solid rgba(128,116,255,.48);background:rgba(8,13,42,.9);color:#fff;font-size:34px;cursor:pointer;box-shadow:0 0 28px rgba(79,70,229,.22)}
+.booster-arrow.prev{left:26px}.booster-arrow.next{right:26px}
+.booster-universe-name{width:max-content;min-width:145px;margin:-4px auto 22px;padding:12px 22px;text-align:center;font-size:1.25rem;font-weight:900;background:rgba(7,11,39,.72);border:1px solid rgba(112,104,255,.15)}
+#open{display:block;margin:0 auto}
+.booster-flash{position:fixed;inset:0;z-index:9000;background:#fff;opacity:0;pointer-events:none}
+.booster-flash.fire{animation:boosterFlash .9s ease-out forwards}
+@keyframes boosterFlash{0%{opacity:0}22%{opacity:1}48%{opacity:.96}100%{opacity:0}}
+.booster-reveal-overlay{position:fixed;inset:0;z-index:8990;display:none;align-items:center;justify-content:center;padding:90px 30px 40px;background:radial-gradient(circle at 50% 43%,rgba(91,71,255,.28),rgba(5,8,28,.94) 52%,rgba(2,4,17,.98));backdrop-filter:blur(7px)}
+.booster-reveal-overlay.show{display:flex}
+.booster-reveal-stage{position:relative;width:min(1420px,96vw);min-height:560px;display:flex;align-items:center;justify-content:center}
+.booster-reveal-stage .reveal-wrap{width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;align-items:center}
+.booster-reveal-stage .card-item{margin:0;opacity:0;transform:translateY(42px) scale(.78);animation:cardBurst .62s cubic-bezier(.16,.8,.25,1) forwards}
+.booster-reveal-stage .card-img{width:100%;max-height:68vh;object-fit:contain;filter:drop-shadow(0 22px 30px rgba(0,0,0,.52))}
+.booster-reveal-stage .meta{text-align:center}
+@keyframes cardBurst{to{opacity:1;transform:translateY(0) scale(1)}}
+.reveal-close{position:absolute;right:0;top:-55px;z-index:2;border:1px solid rgba(255,255,255,.22);background:rgba(8,13,42,.88);color:white;border-radius:999px;padding:10px 18px;font-weight:800;cursor:pointer}
+#msg.reveal-message{position:fixed;z-index:9010;left:50%;bottom:28px;transform:translateX(-50%);width:max-content;max-width:90vw}
+@media(max-width:900px){
+ .booster-carousel{height:455px}.booster-choice{width:235px}.booster-arrow{width:46px;height:46px;font-size:27px}.booster-arrow.prev{left:4px}.booster-arrow.next{right:4px}
+ .booster-reveal-overlay{padding:75px 18px 28px;overflow:auto;align-items:flex-start}.booster-reveal-stage{min-height:auto}.booster-reveal-stage .reveal-wrap{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.booster-reveal-stage .card-img{max-height:none}
+}
 </style></head>
 <body>
 <div class="app">
@@ -34,6 +56,13 @@
     <button id="open" class="btn gold" disabled>Ouvrir ce booster</button>
     <div id="msg" class="notice" style="display:none"></div>
     <div id="cards" class="reveal-wrap"></div>
+    <div id="booster-flash" class="booster-flash"></div>
+    <div id="booster-reveal-overlay" class="booster-reveal-overlay">
+      <div class="booster-reveal-stage">
+        <button type="button" id="reveal-close" class="reveal-close">Fermer ✕</button>
+        <div id="reveal-cards" class="reveal-wrap"></div>
+      </div>
+    </div>
     <audio id="audio" src="/BOTM_2.0/booster.mp3" preload="auto"></audio>
   </div>
 </div>
@@ -54,6 +83,16 @@ let carouselIndex=0,boosterButtons=[];
 const openBtn = document.getElementById("open");
 const msg = document.getElementById("msg");
 const status = document.getElementById("status");
+const flash = document.getElementById("booster-flash");
+const revealOverlay = document.getElementById("booster-reveal-overlay");
+const revealCards = document.getElementById("reveal-cards");
+const revealClose = document.getElementById("reveal-close");
+revealClose.onclick = () => {
+  revealOverlay.classList.remove("show");
+  revealCards.innerHTML = "";
+  msg.classList.remove("reveal-message");
+  msg.style.display = "none";
+};
 
 async function refreshAvailability() {
   const p = await BOTM.profile();
@@ -72,7 +111,7 @@ async function refreshAvailability() {
 }
 
 function circularOffset(i,c,n){let o=i-c;if(o>n/2)o-=n;if(o<-n/2)o+=n;return o}
-function renderCarousel(){const no=boosterCount<=0;boosterButtons.forEach((b,i)=>{const o=circularOffset(i,carouselIndex,boosterButtons.length),d=Math.abs(o);if(d>2){b.style.opacity="0";b.style.pointerEvents="none";b.style.zIndex="0";return}b.style.transform=`translate(-50%,-50%) translateX(${o*235}px) scale(${d===0?1:d===1?.72:.52})`;b.style.opacity=String(no?.35:d===0?1:d===1?.62:.25);b.style.zIndex=String(10-d);b.style.filter=d===0?"none":"saturate(.72)";b.style.pointerEvents=no?"none":"auto";b.classList.toggle("is-center",d===0)});selected=boosterUniverses[carouselIndex];boosterName.textContent=selected;openBtn.disabled=busy||no}
+function renderCarousel(){const no=boosterCount<=0;boosterButtons.forEach((b,i)=>{const o=circularOffset(i,carouselIndex,boosterButtons.length),d=Math.abs(o);if(d>2){b.style.opacity="0";b.style.pointerEvents="none";b.style.zIndex="0";return}b.style.transform=`translate(-50%,-50%) translateX(${o*330}px) scale(${d===0?1:d===1?.73:.48})`;b.style.opacity=String(no?.35:d===0?1:d===1?.62:.20);b.style.zIndex=String(10-d);b.style.filter=d===0?"none":"saturate(.72)";b.style.pointerEvents=no?"none":"auto";b.classList.toggle("is-center",d===0)});selected=boosterUniverses[carouselIndex];boosterName.textContent=selected;openBtn.disabled=busy||no}
 function moveCarousel(step){if(busy)return;carouselIndex=(carouselIndex+step+boosterUniverses.length)%boosterUniverses.length;renderCarousel()}
 boosterUniverses.forEach((name,index)=>{const b=document.createElement("button");b.type="button";b.className="booster-choice";b.title=name;const img=document.createElement("img");img.src=`/BOTM_2.0/assets/boosters/${name}.png`;img.alt=`Booster ${name}`;b.appendChild(img);b.onclick=()=>{if(busy||index===carouselIndex)return;carouselIndex=index;renderCarousel()};boosterTrack.appendChild(b);boosterButtons.push(b)});
 prevBtn.onclick=()=>moveCarousel(-1);nextBtn.onclick=()=>moveCarousel(1);
@@ -113,24 +152,31 @@ openBtn.onclick = async () => {
     return;
   }
 
-  const wrap = document.getElementById("cards");
-  wrap.innerHTML = "";
+  document.getElementById("cards").innerHTML = "";
+  revealCards.innerHTML = "";
 
-  (data || []).forEach((c, i) => {
-    setTimeout(() => {
+  // Éclair blanc, puis les cartes apparaissent au-dessus de la page.
+  flash.classList.remove("fire");
+  void flash.offsetWidth;
+  flash.classList.add("fire");
+
+  setTimeout(() => {
+    revealOverlay.classList.add("show");
+    (data || []).forEach((c, i) => {
       const d = document.createElement("div");
-      d.className = "card-item reveal";
+      d.className = "card-item";
+      d.style.animationDelay = `${i * 150}ms`;
       d.innerHTML = `
         <img class="card-img" src="${BOTM.imagePath(c)}">
         <div class="meta">
           <b>${c.file_name.replace(/\.[^.]+$/, "")}</b>
           <div class="rarity">${BOTM.rarityLabel(c.rarity)}</div>
         </div>`;
-      wrap.appendChild(d);
-    }, i * 140);
-  });
-
-  msg.textContent = "4 cartes ajoutées à ta collection.";
+      revealCards.appendChild(d);
+    });
+    msg.classList.add("reveal-message");
+    msg.textContent = "4 cartes ajoutées à ta collection.";
+  }, 430);
   busy = false;
   await refreshAvailability();
 };
