@@ -67,6 +67,52 @@ body{overflow-x:hidden}.panel{min-height:720px;position:relative;overflow:hidden
     #miracle-overlay-cards .card-img{max-width:174px}
   }
 
+
+  /* Badge de rareté identique au principe utilisé sur les boosters */
+  #miracle-overlay-cards .miracle-card-visual{
+    position:relative;
+    width:100%;
+    max-width:204px;
+    margin:0 auto;
+  }
+  #miracle-overlay-cards .miracle-card-visual .card-img{
+    width:100%;max-width:none;margin:0;display:block;
+  }
+  #miracle-overlay-cards .badge-rarete{
+    position:absolute;
+    right:8px;
+    bottom:8px;
+    width:42px;
+    height:42px;
+    object-fit:contain;
+    z-index:5;
+    pointer-events:none;
+    animation:miracleRarityPop .58s .28s cubic-bezier(.2,.9,.25,1.25) both;
+  }
+  #miracle-overlay-cards .badge-rarete[src*="ultra_rare"]{
+    filter:drop-shadow(0 0 9px #6fffff);
+  }
+  #miracle-overlay-cards .badge-rarete[src*="tres_rare"],
+  #miracle-overlay-cards .badge-rarete[src*="super_rare"]{
+    filter:drop-shadow(0 0 9px #ffff51);
+  }
+  #miracle-overlay-cards .badge-rarete[src*="rare"],
+  #miracle-overlay-cards .badge-rarete[src*="commune"]{
+    filter:drop-shadow(0 0 8px #4b69a0);
+  }
+  @keyframes miracleRarityPop{
+    0%{opacity:0;transform:scale(0) rotate(-18deg)}
+    70%{opacity:1;transform:scale(1.18) rotate(3deg)}
+    100%{opacity:1;transform:scale(1) rotate(0)}
+  }
+  @media(max-width:700px){
+    #miracle-overlay-cards .miracle-card-visual{max-width:164px}
+    #miracle-overlay-cards .badge-rarete{width:34px;height:34px;right:6px;bottom:6px}
+  }
+  @media(max-width:520px){
+    #miracle-overlay-cards .miracle-card-visual{max-width:174px}
+  }
+
 </style>
 </head><body><div class="app">
 <div class="topbar"><div class="brand"><img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png"><div><h1>✨ Pioche Miracle</h1></div></div><span class="badge">✨ <span data-miracles></span></span></div>
@@ -103,7 +149,7 @@ function render(rows){
   title.textContent=chosen?"Carte obtenue !":"Choisis une carte";
   (rows||[]).forEach(c=>{
     const d=document.createElement("div");d.className="card-item reveal";
-    d.innerHTML=`<img class="card-img" src="${BOTM.imagePath(c)}"><div class="meta"><b>${c.file_name.replace(/\.[^.]+$/,"")}</b><div class="rarity">${BOTM.rarityLabel(c.rarity)}</div></div>`;
+    d.innerHTML=`<div class="miracle-card-visual"><img class="card-img" src="${BOTM.imagePath(c)}"><img class="badge-rarete" src="assets/raretes/${c.rarity}.png" alt="${BOTM.rarityLabel(c.rarity)}"></div><div class="meta"><b>${c.file_name.replace(/\.[^.]+$/,"")}</b><div class="rarity">${BOTM.rarityLabel(c.rarity)}</div></div>`;
     if(!chosen){const b=document.createElement("button");b.className="btn gold";b.textContent="Choisir";b.onclick=()=>choose(c.card_id);d.appendChild(b);}
     w.appendChild(d);
   });
