@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Deck Titan - BOTM</title>
+<link rel="stylesheet" href="/BOTM_2.0/styles.css">
+<style>
+.titan-deck-wrap{max-width:1400px;margin:0 auto;padding:24px}
+.titan-head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.titan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:12px}
+.titan-card{position:relative;border:1px solid rgba(139,92,246,.28);border-radius:14px;background:rgba(12,16,35,.72);padding:8px;cursor:pointer;transition:.16s}
+.titan-card:hover{transform:translateY(-2px);border-color:#8b5cf6}
+.titan-card.selected{border:2px solid #a78bfa;box-shadow:0 0 0 2px rgba(139,92,246,.18)}
+.titan-card img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:9px;display:block}
+.titan-card-name{font-weight:800;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.titan-card-meta{font-size:.78rem;opacity:.72;margin-top:2px}
+.titan-order{position:absolute;top:14px;right:14px;width:29px;height:29px;border-radius:50%;background:#7c3aed;color:white;display:grid;place-items:center;font-weight:900}
+.deck-status{font-weight:900;font-size:1.05rem}
+.deck-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.filter-row{display:flex;gap:10px;margin:14px 0 18px;flex-wrap:wrap}
+.filter-row input,.filter-row select{background:#0d1227;color:#fff;border:1px solid rgba(139,92,246,.3);border-radius:10px;padding:10px 12px}
+#msg{margin:12px 0}
+@media(max-width:700px){.titan-deck-wrap{padding:14px}.titan-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<div class="titan-deck-wrap">
+  <div class="titan-head">
+    <div>
+      <a class="btn" href="/BOTM_2.0/index.html">← Accueil</a>
+      <h1>Deck Raids Titans</h1>
+      <p class="muted">Sélectionne exactement 20 cartes différentes. Ce deck sera utilisé pour tes essais contre les Titans.</p>
+    </div>
+    <div class="deck-actions">
+      <span id="count" class="deck-status">0 / 20</span>
+      <button id="save" class="btn gold" disabled>Enregistrer le deck</button>
+    </div>
+  </div>
+
+  <div class="filter-row">
+    <input id="search" type="search" placeholder="Rechercher une carte…">
+    <select id="universe"><option value="">Tous les univers</option></select>
+  </div>
+
+  <div id="msg" class="notice" style="display:none"></div>
+  <div id="cards" class="titan-grid"></div>
+</div>
+
+<script type="module">
+import { BOTM, supabase } from "/BOTM_2.0/app.js";
+await BOTM.requireAuth();
+
+const cardsEl=document.getElementById("cards");
+const countEl=document.getElementById("count");
+const saveBtn=document.getElementById("save");
+const msg=document.getElementById("msg");
+const search=document.getElementById("search");
+const universe=document.getElementById("universe");
+
+let collection=[];
+let selected=[];
+
+const {data,error}=await supabase.rpc("get_titan_deck_builder");
+if(error){
+  msg.style.display="block";
+  msg.textContent=error.message;
+  throw error;
+}
+collection=data?.collection||[];
+selected=(data?.deck||[]).map(c=>Number(c.id));
+
+[...new Set(collection.map(c=>c.universe))].sort().forEach(u=>{
+  const o=document.createElement("option");o.value=u;o.textContent=u;universe.appendChild(o);
+});
+
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+function nameOf(c){return String(c.file_name||"").replace(/\.[^.]+$/,"");}
+
+function refreshStatus(){
+  countEl.textContent=`${selected.length} / 20`;
+  saveBtn.disabled=selected.length!==20;
+}
+
+function toggle(id){
+  id=Number(id);
+  const pos=selected.indexOf(id);
+  if(pos>=0) selected.splice(pos,1);
+  else{
+    if(selected.length>=20){
+      msg.style.display="block";msg.textContent="Ton deck contient déjà 20 cartes.";return;
+    }
+    selected.push(id);
+  }
+  msg.style.display="none";
+  render();
+}
+
+function render(){
+  const q=search.value.trim().toLowerCase();
+  const u=universe.value;
+  const shown=collection.filter(c=>(!u||c.universe===u)&&(!q||nameOf(c).toLowerCase().includes(q)));
+  cardsEl.innerHTML=shown.map(c=>{
+    const pos=selected.indexOf(Number(c.id));
+    return `<div class="titan-card ${pos>=0?"selected":""}" data-id="${c.id}">
+      ${pos>=0?`<div class="titan-order">${pos+1}</div>`:""}
+      <img src="${BOTM.imagePath(c)}" alt="${esc(nameOf(c))}">
+      <div class="titan-card-name">${esc(nameOf(c))}</div>
+      <div class="titan-card-meta">${esc(c.universe)} · ${esc(BOTM.rarityLabel(c.rarity))}</div>
+    </div>`;
+  }).join("");
+  cardsEl.querySelectorAll(".titan-card").forEach(el=>el.onclick=()=>toggle(el.dataset.id));
+  refreshStatus();
+}
+
+search.oninput=render;
+universe.onchange=render;
+
+saveBtn.onclick=async()=>{
+  saveBtn.disabled=true;
+  msg.style.display="block";msg.textContent="Enregistrement…";
+  const {data,error}=await supabase.rpc("save_titan_deck",{p_card_ids:selected});
+  if(error){msg.textContent=error.message;refreshStatus();return;}
+  msg.textContent="Deck Titan enregistré : 20 / 20 cartes.";
+  refreshStatus();
+};
+
+render();
+</script>
+</body>
+</html>
