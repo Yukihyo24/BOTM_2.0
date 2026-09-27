@@ -5,6 +5,25 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Boutique - BOTM</title>
   <link rel="stylesheet" href="/BOTM_2.0/styles.css">
+
+<style>
+  /* Boutique — objets permanents compacts */
+  #specials{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:16px;
+  }
+
+  #specials .shop-item{
+    min-width:0;
+  }
+
+  @media (max-width:650px){
+    #specials{
+      grid-template-columns:1fr;
+    }
+  }
+</style>
 </head>
 <body>
 <div class="app">
@@ -33,7 +52,6 @@
     <h2 class="section-title">Objets permanents</h2>
     <p class="muted">
       Le booster coûte 2 000 points et la Pioche Miracle 1 000 points.
-      Ces deux objets ont un stock illimité.
     </p>
     <div id="specials" class="shop-grid"></div>
   </div>
@@ -77,15 +95,15 @@ function itemCard(item) {
   let stockText = "";
 
   if (item.item_type === "booster") {
-    visual = `<div class="shop-big-icon">🎁</div>`;
+    visual = "";
     title = "Booster";
     subtitle = "4 cartes aléatoires";
-    stockText = "Stock illimité";
+    stockText = "";
   } else if (item.item_type === "miracle") {
-    visual = `<div class="shop-big-icon">✨</div>`;
+    visual = "";
     title = "Pioche Miracle";
     subtitle = "3 cartes proposées, 1 conservée";
-    stockText = "Stock illimité";
+    stockText = "";
   } else {
     const c = item.cards;
     visual = `<img class="card-img" src="${BOTM.imagePath(c)}" alt="">`;
