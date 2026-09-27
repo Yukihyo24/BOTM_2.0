@@ -33,6 +33,174 @@ button,a{font:inherit}.page{max-width:1450px;margin:auto;padding:20px}.top{displ
 .modal{position:fixed;inset:0;z-index:50;background:rgba(2,5,14,.82);backdrop-filter:blur(8px);display:grid;place-items:center;padding:20px}.modalbox{width:min(560px,100%);padding:28px;text-align:center}.modalbox h2{font-size:2rem;margin:0 0 8px}.rewards{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:18px 0}.reward{padding:12px 15px;border:1px solid var(--line);border-radius:14px;background:#11192e;font-weight:900}.reward-card{width:180px;margin:14px auto}.toast{position:fixed;right:18px;bottom:18px;z-index:80;background:#151e35;border:1px solid var(--line);border-radius:12px;padding:12px 15px;box-shadow:0 12px 35px #0008}
 @media(max-width:900px){.universe-grid{grid-template-columns:repeat(2,1fr)}.chapter{grid-template-columns:1fr}.boss{border-left:0;border-top:1px solid var(--line)}.steps{grid-template-columns:repeat(5,1fr)}.boss-fight-grid{grid-template-columns:1fr}.boss-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:560px){.page{padding:12px}.universe-grid{grid-template-columns:1fr}.route-shell{padding:14px 10px}.chapter{padding:14px}.steps{gap:6px}.cards,.boss-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.top .sub{display:none}}
+
+/* ===== PHASE 5.1 — carte de progression façon parcours + combat sans scroll ===== */
+#routeView .route-shell{
+  min-height:calc(100vh - 125px);
+  padding:22px 18px 28px;
+  background:
+    radial-gradient(circle at 50% 100%,rgba(47,129,181,.22),transparent 38%),
+    linear-gradient(180deg,#07111f,#0a1b2d 48%,#0c2a3d);
+}
+#routeView .route{
+  width:min(760px,100%);
+  margin:0 auto;
+  gap:0;
+  padding:28px 0 40px;
+}
+#routeView .chapter{
+  display:block;
+  min-height:430px;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  overflow:visible;
+  box-shadow:none;
+}
+#routeView .chapter.locked{opacity:.46}
+#routeView .chapter.done{opacity:.9}
+#routeView .chapter-title{
+  width:max-content;
+  max-width:90%;
+  margin:0 auto 22px;
+  padding:8px 15px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:999px;
+  background:rgba(5,12,25,.82);
+  position:relative;
+  z-index:5;
+}
+#routeView .chapter-title h3{font-size:.92rem}
+#routeView .steps{
+  position:relative;
+  display:block;
+  height:300px;
+  width:min(620px,94%);
+  margin:0 auto;
+}
+#routeView .steps:before{
+  content:"";
+  position:absolute;
+  inset:14px 8%;
+  background:
+    linear-gradient(27deg,transparent 48%,rgba(104,146,207,.78) 49%,rgba(104,146,207,.78) 51%,transparent 52%) 0 0/25% 34%,
+    linear-gradient(-27deg,transparent 48%,rgba(104,146,207,.78) 49%,rgba(104,146,207,.78) 51%,transparent 52%) 12.5% 17%/25% 34%;
+  opacity:.55;
+  pointer-events:none;
+}
+#routeView .step{
+  position:absolute;
+  width:58px;height:58px;max-width:none;aspect-ratio:auto;
+  clip-path:polygon(25% 6%,75% 6%,100% 50%,75% 94%,25% 94%,0 50%);
+  border:0;border-radius:0;
+  background:linear-gradient(145deg,#27354d,#10182a);
+  box-shadow:0 6px 0 #050b15,0 0 0 2px #50617d inset,0 10px 20px #0008;
+  z-index:3;
+}
+#routeView .step.done{background:linear-gradient(145deg,#1c7c66,#124c43);box-shadow:0 6px 0 #071712,0 0 0 2px #59d9b5 inset}
+#routeView .step.current{background:linear-gradient(145deg,#6d8dff,#384cbd);box-shadow:0 6px 0 #111946,0 0 0 3px #dbe3ff inset,0 0 26px #7389ff}
+#routeView .step:nth-child(1){left:8%;bottom:5%}
+#routeView .step:nth-child(2){left:30%;bottom:20%}
+#routeView .step:nth-child(3){left:56%;bottom:10%}
+#routeView .step:nth-child(4){left:77%;bottom:28%}
+#routeView .step:nth-child(5){left:58%;bottom:45%}
+#routeView .step:nth-child(6){left:34%;bottom:38%}
+#routeView .step:nth-child(7){left:13%;bottom:55%}
+#routeView .step:nth-child(8){left:31%;bottom:72%}
+#routeView .step:nth-child(9){left:57%;bottom:65%}
+#routeView .step:nth-child(10){left:75%;bottom:82%}
+#routeView .boss{
+  width:260px;height:150px;
+  margin:-24px auto 12px;
+  border:0;
+  border-radius:18px;
+  background:radial-gradient(ellipse at center,rgba(93,111,211,.24),transparent 68%);
+  position:relative;
+}
+#routeView .boss:after{
+  content:"";
+  position:absolute;left:50%;bottom:-30px;width:2px;height:35px;
+  background:rgba(104,146,207,.7);transform:translateX(-50%);
+}
+#routeView .boss img{max-height:135px;max-width:220px}
+#routeView .boss-name{bottom:-12px}
+#routeView .boss.ready:before{top:-18px}
+#routeView .boss.defeated:after{
+  content:"✓";left:auto;bottom:auto;right:8px;top:6px;width:32px;height:32px;
+  background:var(--green);
+}
+
+/* Le combat d'étape tient entièrement dans la hauteur de l'écran */
+#stageView{
+  height:calc(100vh - 100px);
+  min-height:560px;
+  padding:12px 18px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+#stageView.hidden{display:none!important}
+#stageView .combat-top{margin-bottom:8px;min-height:42px}
+#stageView .statbox{padding:7px 10px;margin-bottom:8px}
+#stageView .statbox strong{font-size:1.12rem}
+#stageView #stageCards{
+  flex:1;
+  min-height:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+}
+#stageView #stageCards .card{
+  height:min(61vh,590px);
+  width:auto;
+  max-width:31%;
+  padding:6px;
+}
+#stageView #stageCards .card img{
+  height:calc(100% - 38px);
+  width:auto;
+  max-width:100%;
+  aspect-ratio:auto;
+  object-fit:contain;
+  margin:auto;
+}
+#stageView .enemy-reveal{
+  position:absolute;
+  right:28px;
+  bottom:22px;
+  margin:0;
+  pointer-events:none;
+}
+#stageView .enemy-reveal:empty{display:none}
+#stageView .enemy-reveal .card{
+  width:135px;
+  background:rgba(9,14,28,.96);
+}
+#stageView .result{
+  position:absolute;
+  left:50%;
+  bottom:14px;
+  transform:translateX(-50%);
+  margin:0;
+  z-index:5;
+  width:min(520px,55vw);
+  padding:8px 12px;
+}
+@media(max-width:700px){
+  #stageView{height:calc(100vh - 82px);min-height:500px;padding:8px}
+  #stageView #stageCards{gap:6px}
+  #stageView #stageCards .card{height:min(54vh,470px);max-width:33%}
+  #stageView #stageCards .card b{font-size:.75rem}
+  #stageView #stageCards .card .rar{font-size:.6rem}
+  #stageView .enemy-reveal .card{width:92px}
+  #stageView .result{width:72vw;font-size:.8rem}
+  #routeView .chapter{min-height:390px}
+  #routeView .steps{height:270px}
+  #routeView .step{width:48px;height:48px}
+}
+
 </style>
 </head>
 <body>
@@ -137,7 +305,7 @@ async function openCampaign(universe){
   await checkReward();
 }
 function renderRoute(){
-  const bosses=progress.bosses||[];
+  const bosses=[...(progress.bosses||[])].reverse();
   $("#route").innerHTML=bosses.map(b=>{
     const past=b.order<progress.boss_order;
     const current=b.order===progress.boss_order;
