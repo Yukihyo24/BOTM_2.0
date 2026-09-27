@@ -180,6 +180,31 @@ body{min-height:100vh}
 }
 </style>
 
+
+<style>
+/* Redimensionnement uniforme des illustrations de Titans */
+@media (min-width:851px){
+  #bossPanel .boss-art{
+    flex:0 0 245px !important;
+    height:245px !important;
+    min-height:245px !important;
+    padding:10px 18px !important;
+    overflow:hidden !important;
+  }
+
+  #bossPanel .boss-art #bossImage{
+    display:block !important;
+    width:auto !important;
+    height:auto !important;
+    max-width:68% !important;
+    max-height:225px !important;
+    object-fit:contain !important;
+    object-position:center !important;
+    margin:auto !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="rt">
