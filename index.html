@@ -563,6 +563,60 @@
 }
 </style>
 
+
+<style>
+/* BOTM — Guide du débutant */
+.guide-open-btn{
+  width:100%;margin-top:8px;border:1px solid rgba(232,184,61,.28);border-radius:11px;
+  background:rgba(232,184,61,.07);color:#e8c96a;padding:10px 11px;
+  font:inherit;font-weight:800;cursor:pointer;text-align:left
+}
+.guide-open-btn:hover{background:rgba(232,184,61,.13);color:#fff}
+.guide-overlay{
+  position:fixed;inset:0;z-index:12000;display:none;align-items:center;justify-content:center;
+  padding:18px;background:rgba(3,6,20,.82);backdrop-filter:blur(8px)
+}
+.guide-overlay.open{display:flex}
+.guide-modal{
+  position:relative;width:min(760px,96vw);max-height:min(780px,92vh);overflow:auto;
+  border:1px solid rgba(139,92,246,.30);border-radius:22px;
+  background:linear-gradient(145deg,#101735,#090e24);box-shadow:0 30px 90px rgba(0,0,0,.58);
+  padding:26px
+}
+.guide-close{
+  position:absolute;right:16px;top:14px;width:38px;height:38px;border:0;border-radius:50%;
+  background:rgba(255,255,255,.06);color:#fff;font-size:22px;cursor:pointer
+}
+.guide-kicker{color:#9d85ff;text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;font-weight:900}
+.guide-modal h2{margin:7px 45px 8px 0;font-size:clamp(1.65rem,4vw,2.4rem)}
+.guide-intro{margin:0 0 18px;color:#aeb6d6;line-height:1.55}
+.guide-steps{display:grid;gap:10px}
+.guide-step{
+  display:grid;grid-template-columns:46px minmax(0,1fr);gap:12px;padding:13px;
+  border:1px solid rgba(139,92,246,.14);border-radius:14px;background:rgba(255,255,255,.025)
+}
+.guide-step-icon{
+  width:46px;height:46px;display:grid;place-items:center;border-radius:13px;
+  background:rgba(139,92,246,.13);font-size:1.35rem
+}
+.guide-step h3{margin:1px 0 4px;font-size:.98rem}
+.guide-step p{margin:0;color:#9fa8c9;font-size:.86rem;line-height:1.45}
+.guide-route{
+  margin:16px 0 0;padding:14px;border:1px solid rgba(232,184,61,.22);border-radius:14px;
+  background:rgba(232,184,61,.06);color:#e9d38b;text-align:center;font-weight:800
+}
+.guide-actions{display:flex;gap:10px;margin-top:16px}
+.guide-actions a,.guide-actions button{
+  flex:1;border:0;border-radius:12px;padding:11px 14px;text-align:center;text-decoration:none;
+  font:inherit;font-weight:900;cursor:pointer
+}
+.guide-primary{background:linear-gradient(135deg,#6f50e7,#9563ff);color:#fff}
+.guide-secondary{background:rgba(255,255,255,.06);color:#cbd2ea}
+@media(max-width:560px){
+  .guide-modal{padding:21px 15px}.guide-actions{flex-direction:column}
+}
+</style>
+
 </head>
 
 <body class="home-page">
@@ -597,6 +651,7 @@
       <a href="/BOTM_2.0/raids-titans.html"><span>🏟️</span> Raids Titans</a>
       <a href="/BOTM_2.0/campagne.html"><span>🗺️</span> Campagne</a>
       <a href="/BOTM_2.0/succes.html"><span>🏆</span> Succès</a>
+      <button class="guide-open-btn" id="openBeginnerGuide" type="button">❓ Guide du débutant</button>
       <a href="/BOTM_2.0/boutique.html"><span>💰</span> Boutique</a>
       <a href="/BOTM_2.0/booster.html"><span>🎁</span> Boosters</a>
       <a href="/BOTM_2.0/pioche.html"><span>✨</span> Pioche Miracle</a>
@@ -764,6 +819,49 @@
   </main>
 </div>
 
+<div class="guide-overlay" id="beginnerGuide" aria-hidden="true">
+  <div class="guide-modal" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+    <button class="guide-close" id="closeBeginnerGuide" type="button" aria-label="Fermer">×</button>
+    <div class="guide-kicker">Premiers pas dans BOTM</div>
+    <h2 id="guideTitle">👋 Bienvenue dans le Multivers !</h2>
+    <p class="guide-intro">Quelques étapes suffisent pour prendre tes marques. Tu pourras ensuite explorer les différents modes à ton rythme.</p>
+
+    <div class="guide-steps">
+      <div class="guide-step">
+        <div class="guide-step-icon">🃏</div>
+        <div><h3>1. Découvre ta collection</h3><p>Après avoir récupéré tes cartes de départ, retrouve toutes tes cartes dans <b>Collection</b>. Chaque carte possède quatre statistiques : Physique, Pouvoirs, Vitesse et Valeur.</p></div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-icon">🎁</div>
+        <div><h3>2. Agrandis ta collection</h3><p>Un <b>Booster</b> te donne 4 cartes. Une <b>Pioche Miracle</b> révèle 3 cartes et te permet d’en conserver une.</p></div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-icon">🗡️</div>
+        <div><h3>3. Commence par le Combat de stats</h3><p>C’est le moyen le plus simple de découvrir le fonctionnement des statistiques avant de te lancer dans les autres modes de jeu.</p></div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-icon">💠</div>
+        <div><h3>4. Gagne des points</h3><p>Joue, progresse et reviens régulièrement sur BOTM pour gagner des points. Tu peux ensuite les dépenser dans la <b>Boutique</b>.</p></div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-icon">🏆</div>
+        <div><h3>5. Surveille tes Succès</h3><p>Tes actions peuvent débloquer des Succès. Consulte la page <b>Succès</b> pour suivre leur progression et récupérer les récompenses obtenues.</p></div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-step-icon">🌌</div>
+        <div><h3>6. Explore le reste du Multivers</h3><p>Survivor Valley, Ascension, Roulette, Autoroute de la Fortune, Duel PvP, Raids Titans et Campagne t’attendent lorsque tu voudras aller plus loin.</p></div>
+      </div>
+    </div>
+
+    <div class="guide-route">Collection → Booster / Pioche → Combat → Succès → À toi d’explorer !</div>
+    <div class="guide-actions">
+      <a class="guide-primary" href="/BOTM_2.0/collection.html">Voir ma collection →</a>
+      <button class="guide-secondary" id="finishBeginnerGuide" type="button">J’ai compris !</button>
+    </div>
+  </div>
+</div>
+
+
 <script type="module">
 import { BOTM, supabase } from "/BOTM_2.0/app.js";
 
@@ -803,6 +901,8 @@ if (session) {
 
   if (!p.starter_claimed) {
     location.href = "/BOTM_2.0/starter.html";
+  } else if (!localStorage.getItem("botm_beginner_guide_seen")) {
+    setTimeout(showBeginnerGuide, 450);
   }
 
   if (p.role === "admin") {
@@ -815,6 +915,31 @@ if (session) {
 
   await BOTM.refreshHeader();
 }
+
+
+
+// ===== Guide du débutant =====
+const beginnerGuide=document.getElementById("beginnerGuide");
+const openBeginnerGuide=document.getElementById("openBeginnerGuide");
+const closeBeginnerGuide=document.getElementById("closeBeginnerGuide");
+const finishBeginnerGuide=document.getElementById("finishBeginnerGuide");
+
+function showBeginnerGuide(){
+  beginnerGuide.classList.add("open");
+  beginnerGuide.setAttribute("aria-hidden","false");
+  document.body.style.overflow="hidden";
+}
+function hideBeginnerGuide(markSeen=false){
+  beginnerGuide.classList.remove("open");
+  beginnerGuide.setAttribute("aria-hidden","true");
+  document.body.style.overflow="";
+  if(markSeen) localStorage.setItem("botm_beginner_guide_seen","1");
+}
+openBeginnerGuide?.addEventListener("click",showBeginnerGuide);
+closeBeginnerGuide?.addEventListener("click",()=>hideBeginnerGuide(false));
+finishBeginnerGuide?.addEventListener("click",()=>hideBeginnerGuide(true));
+beginnerGuide?.addEventListener("click",e=>{if(e.target===beginnerGuide)hideBeginnerGuide(false)});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&beginnerGuide?.classList.contains("open"))hideBeginnerGuide(false)});
 
 
 // ===== Succès : synchronisation + notification =====
