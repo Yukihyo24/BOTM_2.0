@@ -164,7 +164,19 @@ function render(){
     (!u||c.universe===u) &&
     (!r||c.rarity===r) &&
     (!q||nameOf(c).toLowerCase().includes(q))
-  );
+  ).sort((a,b)=>{
+    const aPos=selected.indexOf(Number(a.id));
+    const bPos=selected.indexOf(Number(b.id));
+    const aSelected=aPos>=0;
+    const bSelected=bPos>=0;
+
+    // Les cartes du deck apparaissent toujours en premier,
+    // dans l'ordre actuel du deck.
+    if(aSelected && bSelected) return aPos-bPos;
+    if(aSelected) return -1;
+    if(bSelected) return 1;
+    return 0;
+  });
   cardsEl.innerHTML=shown.map(c=>{
     const pos=selected.indexOf(Number(c.id));
     return `<div class="titan-card ${pos>=0?"selected":""}" data-id="${c.id}">
