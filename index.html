@@ -812,8 +812,7 @@
         <div class="panel-kicker">Bonus de connexion</div>
         <h3>Reviens régulièrement.</h3>
         <div class="bonus-lines">
-          <div><span>Quotidien</span><b>+250 points</b></div>
-          <div><span>Hebdomadaire</span><b>+1 booster · +2 Pioches Miracle</b></div>
+          <div><span>Quotidien</span><b>+250 points · +1 booster · +2 Pioches Miracle</b></div>
         </div>
       </div>
 
@@ -887,11 +886,11 @@ if (session) {
   } else {
     const reward = rewards?.[0];
 
-    if (reward?.daily_claimed || reward?.weekly_claimed) {
+    if (reward?.daily_claimed) {
       const parts = [];
 
-      if (reward.daily_claimed) parts.push("💠 +250 points");
-      if (reward.weekly_claimed) {
+      if (reward.daily_claimed) {
+        parts.push("💠 +250 points");
         parts.push("🎁 +1 booster");
         parts.push("✨ +2 Pioches Miracle");
       }
