@@ -82,11 +82,11 @@ button,a{font:inherit}.page{max-width:1450px;margin:auto;padding:20px}.top{displ
 #routeView .steps:before{
   content:"";
   position:absolute;
-  inset:14px 8%;
+  inset:10px 7%;
   background:
-    linear-gradient(27deg,transparent 48%,rgba(104,146,207,.78) 49%,rgba(104,146,207,.78) 51%,transparent 52%) 0 0/25% 34%,
-    linear-gradient(-27deg,transparent 48%,rgba(104,146,207,.78) 49%,rgba(104,146,207,.78) 51%,transparent 52%) 12.5% 17%/25% 34%;
-  opacity:.55;
+    radial-gradient(circle,rgba(164,190,236,.9) 0 2.4px,transparent 2.8px) 0 0/15px 15px;
+  opacity:.72;
+  clip-path:polygon(0 82%,18% 67%,39% 78%,62% 53%,38% 42%,15% 55%,31% 25%,56% 34%,78% 12%,100% 22%,100% 31%,78% 21%,57% 43%,32% 34%,17% 64%,39% 51%,62% 62%,82% 38%,100% 48%,100% 58%,81% 48%,62% 72%,39% 61%,18% 76%,0 91%);
   pointer-events:none;
 }
 #routeView .step{
@@ -168,15 +168,16 @@ button,a{font:inherit}.page{max-width:1450px;margin:auto;padding:20px}.top{displ
 }
 #stageView .enemy-reveal{
   position:absolute;
-  right:28px;
-  bottom:22px;
+  right:34px;
+  bottom:34px;
   margin:0;
   pointer-events:none;
 }
 #stageView .enemy-reveal:empty{display:none}
 #stageView .enemy-reveal .card{
-  width:135px;
-  background:rgba(9,14,28,.96);
+  width:min(235px,24vw);
+  background:rgba(9,14,28,.98);
+  box-shadow:0 12px 40px rgba(0,0,0,.65),0 0 24px rgba(139,92,246,.22);
 }
 #stageView .result{
   position:absolute;
@@ -194,7 +195,7 @@ button,a{font:inherit}.page{max-width:1450px;margin:auto;padding:20px}.top{displ
   #stageView #stageCards .card{height:min(54vh,470px);max-width:33%}
   #stageView #stageCards .card b{font-size:.75rem}
   #stageView #stageCards .card .rar{font-size:.6rem}
-  #stageView .enemy-reveal .card{width:92px}
+  #stageView .enemy-reveal .card{width:min(160px,31vw)}
   #stageView .result{width:72vw;font-size:.8rem}
   #routeView .chapter{min-height:390px}
   #routeView .steps{height:270px}
@@ -305,7 +306,7 @@ async function openCampaign(universe){
   await checkReward();
 }
 function renderRoute(){
-  const bosses=[...(progress.bosses||[])].reverse();
+  const bosses=[...(progress.bosses||[])];
   $("#route").innerHTML=bosses.map(b=>{
     const past=b.order<progress.boss_order;
     const current=b.order===progress.boss_order;
@@ -360,10 +361,10 @@ async function playStage(cardId){
       if(data.stage_won) toast(`Étape réussie : +${data.reward_points} points`);
       else toast("Étape perdue — tu peux la recommencer.");
       await openCampaign(currentUniverse);
-    },1200);
+    },2600);
   }else{
     stageState=data.next_round;
-    setTimeout(renderStage,1100);
+    setTimeout(renderStage,2600);
   }
 }
 
