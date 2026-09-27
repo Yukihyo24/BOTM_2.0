@@ -41,6 +41,14 @@
   <div class="filter-row">
     <input id="search" type="search" placeholder="Rechercher une carte…">
     <select id="universe"><option value="">Tous les univers</option></select>
+    <select id="rarity">
+      <option value="">Toutes les raretés</option>
+      <option value="commune">Commune</option>
+      <option value="rare">Rare</option>
+      <option value="super_rare">Super Rare</option>
+      <option value="tres_rare">Très Rare</option>
+      <option value="ultra_rare">Ultra Rare</option>
+    </select>
   </div>
 
   <div id="msg" class="notice" style="display:none"></div>
@@ -57,6 +65,7 @@ const saveBtn=document.getElementById("save");
 const msg=document.getElementById("msg");
 const search=document.getElementById("search");
 const universe=document.getElementById("universe");
+const rarity=document.getElementById("rarity");
 
 let collection=[];
 let selected=[];
@@ -99,7 +108,12 @@ function toggle(id){
 function render(){
   const q=search.value.trim().toLowerCase();
   const u=universe.value;
-  const shown=collection.filter(c=>(!u||c.universe===u)&&(!q||nameOf(c).toLowerCase().includes(q)));
+  const r=rarity.value;
+  const shown=collection.filter(c=>
+    (!u||c.universe===u) &&
+    (!r||c.rarity===r) &&
+    (!q||nameOf(c).toLowerCase().includes(q))
+  );
   cardsEl.innerHTML=shown.map(c=>{
     const pos=selected.indexOf(Number(c.id));
     return `<div class="titan-card ${pos>=0?"selected":""}" data-id="${c.id}">
@@ -115,6 +129,7 @@ function render(){
 
 search.oninput=render;
 universe.onchange=render;
+rarity.onchange=render;
 
 saveBtn.onclick=async()=>{
   saveBtn.disabled=true;
