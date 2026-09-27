@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Raids Titans - BOTM</title>
+<link rel="stylesheet" href="/BOTM_2.0/styles.css">
+<style>
+:root{--rt-violet:#8b5cf6;--rt-blue:#5b8cff;--rt-bg:#0b1022;--rt-panel:rgba(15,21,45,.88)}
+body{min-height:100vh}
+.rt{max-width:1450px;margin:0 auto;padding:22px}
+.rt-top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.rt-actions{display:flex;gap:10px;flex-wrap:wrap}
+.rt-panel{background:linear-gradient(145deg,rgba(22,28,59,.94),rgba(10,14,31,.94));border:1px solid rgba(139,92,246,.24);border-radius:20px;box-shadow:0 18px 55px rgba(0,0,0,.28)}
+.boss{display:grid;grid-template-columns:minmax(260px,430px) 1fr;overflow:hidden}
+.boss-art{min-height:500px;display:grid;place-items:center;background:radial-gradient(circle at 50% 42%,rgba(139,92,246,.22),transparent 55%)}
+.boss-art img{max-width:94%;max-height:480px;object-fit:contain;filter:drop-shadow(0 20px 28px rgba(0,0,0,.48))}
+.boss-info{padding:34px;display:flex;flex-direction:column;justify-content:center}
+.eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:.75rem;opacity:.65;font-weight:800}
+.boss-info h1{font-size:clamp(2rem,5vw,4.3rem);margin:5px 0 2px}
+.universe{font-weight:800;color:#b9a7ff;margin-bottom:24px}
+.hp-row{display:flex;justify-content:space-between;gap:10px;font-weight:800;margin-bottom:8px}
+.hpbar{height:25px;border-radius:999px;background:#080b18;border:1px solid rgba(255,255,255,.12);overflow:hidden}
+.hpfill{height:100%;width:0;background:linear-gradient(90deg,#6d5dfc,#a855f7);transition:width .45s ease}
+.hptext{text-align:center;font-weight:900;margin-top:9px}
+.status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0}
+.statbox{padding:14px;border-radius:14px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07)}
+.statbox small{display:block;opacity:.62;margin-bottom:5px}.statbox strong{font-size:1.08rem}
+.attack{font-size:1.05rem;padding:13px 22px}
+.attack:disabled{opacity:.45;cursor:not-allowed}
+#message{margin-top:12px}
+.empty{padding:60px 25px;text-align:center}
+.combat{margin-top:18px;padding:25px;display:none}
+.combat.show{display:block}
+.round-head{text-align:center;margin-bottom:20px}
+.round-head h2{margin:5px 0}
+.stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:12px 0}
+.stat-pill{padding:9px 16px;border-radius:999px;background:rgba(139,92,246,.15);border:1px solid rgba(167,139,250,.4);font-weight:900}
+.requirement{text-align:center;font-weight:800;margin:10px 0 20px}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;max-width:980px;margin:0 auto}
+.raid-card{position:relative;padding:8px;border-radius:16px;background:rgba(7,10,24,.7);border:2px solid transparent;cursor:pointer;transition:.18s}
+.raid-card:hover{transform:translateY(-3px);border-color:rgba(139,92,246,.55)}
+.raid-card.selected{border-color:#a78bfa;box-shadow:0 0 25px rgba(139,92,246,.26)}
+.raid-card img{display:block;width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:10px}
+.card-name{font-weight:900;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-values{font-size:.8rem;opacity:.72;margin-top:3px}
+.pickmark{position:absolute;right:15px;top:15px;width:31px;height:31px;border-radius:50%;display:none;place-items:center;background:#8b5cf6;color:white;font-weight:900}
+.raid-card.selected .pickmark{display:grid}
+.validate-wrap{text-align:center;margin-top:22px}
+.result{text-align:center;margin:18px auto 0;max-width:720px;padding:16px;border-radius:14px;background:rgba(139,92,246,.09);display:none}
+.result.show{display:block}
+.damage{font-size:1.65rem;font-weight:950}
+@media(max-width:850px){.boss{grid-template-columns:1fr}.boss-art{min-height:320px}.boss-art img{max-height:310px}.boss-info{padding:22px}.cards{grid-template-columns:repeat(2,1fr)}.status-grid{grid-template-columns:1fr}.rt{padding:12px}}
+</style>
+</head>
+<body>
+<div class="rt">
+  <div class="rt-top">
+    <a class="btn" href="/BOTM_2.0/index.html">← Accueil</a>
+    <div class="rt-actions">
+      <a class="btn" href="/BOTM_2.0/titan-deck.html">🃏 Modifier mon deck Titan</a>
+    </div>
+  </div>
+
+  <section id="bossPanel" class="rt-panel boss" style="display:none">
+    <div class="boss-art"><img id="bossImage" alt=""></div>
+    <div class="boss-info">
+      <div class="eyebrow">Raid Titan en cours</div>
+      <h1 id="bossName">Titan</h1>
+      <div id="bossUniverse" class="universe"></div>
+
+      <div class="hp-row"><span>PV DU TITAN</span><span id="hpPercent">100 %</span></div>
+      <div class="hpbar"><div id="hpFill" class="hpfill"></div></div>
+      <div id="hpText" class="hptext"></div>
+
+      <div class="status-grid">
+        <div class="statbox"><small>Temps restant</small><strong id="timeLeft">--</strong></div>
+        <div class="statbox"><small>Essais</small><strong id="attempts">-- / 5</strong><div id="recharge" class="muted"></div></div>
+        <div class="statbox"><small>Deck Titan</small><strong id="deckState">-- / 20</strong></div>
+      </div>
+
+      <button id="attackBtn" class="btn gold attack">⚔️ Attaquer le Titan</button>
+      <div id="message" class="notice" style="display:none"></div>
+    </div>
+  </section>
+
+  <section id="emptyPanel" class="rt-panel empty" style="display:none">
+    <h1>Aucun Titan actif</h1>
+    <p id="emptyText" class="muted">Aucun Raid Titan n'est disponible actuellement.</p>
+  </section>
+
+  <section id="combatPanel" class="rt-panel combat">
+    <div class="round-head">
+      <div class="eyebrow">Tentative en cours</div>
+      <h2 id="roundTitle">Round 1 / 3</h2>
+      <div class="stats"><span id="stat1" class="stat-pill"></span><span id="stat2" class="stat-pill"></span></div>
+    </div>
+    <div id="requirement" class="requirement"></div>
+    <div id="roundCards" class="cards"></div>
+    <div class="validate-wrap"><button id="validateBtn" class="btn gold" disabled>Valider mes cartes</button></div>
+    <div id="roundResult" class="result"></div>
+  </section>
+</div>
+
+<script type="module">
+import {BOTM,supabase} from "/BOTM_2.0/app.js";
+await BOTM.requireAuth();
+
+const $=id=>document.getElementById(id);
+let raid=null,attemptId=null,currentRound=null,selected=[],busy=false;
+let timer=null;
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+function cardName(c){return String(c.file_name||"").replace(/\.[^.]+$/,"");}
+function n(v){return Number(v||0).toLocaleString("fr-FR");}
+function dateMs(v){const d=new Date(v);return Number.isNaN(d.getTime())?null:d.getTime();}
+function bossPath(path){if(!path)return "";if(/^https?:\/\//i.test(path))return path;return new URL(String(path).replace(/^\/+/,""),location.origin+"/BOTM_2.0/").href;}
+
+function countdown(target){
+  const ms=dateMs(target);
+  if(!ms)return "--";
+  const d=Math.max(0,ms-Date.now());
+  const h=Math.floor(d/3600000),m=Math.floor((d%3600000)/60000),s=Math.floor((d%60000)/1000);
+  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+
+function startClock(){
+  clearInterval(timer);
+  const tick=()=>{
+    if(raid?.active)$("timeLeft").textContent=countdown(raid.ends_at);
+    if(raid?.next_recharge_at && Number(raid.attempts)<5)
+      $("recharge").textContent=`Prochain essai : ${countdown(raid.next_recharge_at)}`;
+    else $("recharge").textContent="";
+  };
+  tick();timer=setInterval(tick,1000);
+}
+
+function updateBossHp(current,max){
+  current=Number(current||0);max=Number(max||1);
+  const pct=Math.max(0,Math.min(100,(current/max)*100));
+  $("hpFill").style.width=pct+"%";
+  $("hpPercent").textContent=pct.toLocaleString("fr-FR",{maximumFractionDigits:1})+" %";
+  $("hpText").textContent=`${n(current)} / ${n(max)} PV`;
+}
+
+function showMessage(text){
+  $("message").style.display="block";$("message").textContent=text;
+}
+function hideMessage(){$("message").style.display="none";}
+
+function refreshAttackButton(){
+  if(!raid?.active)return;
+  const ready=Boolean(raid.deck_ready);
+  const attempts=Number(raid.attempts||0);
+  $("attackBtn").disabled=busy || !ready || (attempts<=0 && !attemptId);
+  if(!ready)showMessage("Ton deck Titan doit contenir 20 cartes avant de pouvoir attaquer.");
+  else if(attempts<=0 && !attemptId)showMessage("Tu n'as plus d'essai disponible pour le moment.");
+  else hideMessage();
+}
+
+async function loadLobby(){
+  const {data,error}=await supabase.rpc("get_titan_raid_status");
+  if(error){$("emptyPanel").style.display="block";$("emptyText").textContent=error.message;return;}
+  raid=data||{};
+  if(!raid.active){
+    $("bossPanel").style.display="none";$("emptyPanel").style.display="block";
+    $("emptyText").textContent=raid.paused
+      ? `Les Raids Titans sont actuellement en pause${raid.pause_ends_at?` jusqu'au ${new Date(raid.pause_ends_at).toLocaleString("fr-FR")}`:""}.`
+      :"Aucun Raid Titan n'est disponible actuellement.";
+    return;
+  }
+  $("emptyPanel").style.display="none";$("bossPanel").style.display="grid";
+  $("bossName").textContent=raid.name||"Titan";
+  $("bossUniverse").textContent=raid.universe||"";
+  $("bossImage").src=bossPath(raid.image_path);
+  $("bossImage").alt=raid.name||"Titan";
+  $("attempts").textContent=`${raid.attempts ?? 0} / ${raid.attempts_max ?? 5}`;
+  $("deckState").textContent=`${raid.deck_count ?? 0} / 20`;
+  updateBossHp(raid.current_hp,raid.max_hp);
+  startClock();
+  refreshAttackButton();
+
+  const {data:open,error:openError}=await supabase.rpc("get_open_titan_attempt");
+  if(!openError && open?.open){
+    attemptId=open.attempt_id;
+    renderRound(open.round);
+    $("attackBtn").textContent="⚔️ Reprendre ma tentative";
+    $("attackBtn").disabled=false;
+  }
+}
+
+function statValue(c,stat){
+  const key={"Physique":"physique","Pouvoirs":"pouvoirs","Vitesse":"vitesse"}[stat];
+  return Number(c?.[key]||0);
+}
+
+function renderRound(round){
+  if(!round)return;
+  currentRound=round;selected=[];
+  $("combatPanel").classList.add("show");
+  $("roundTitle").textContent=`Round ${round.round_number} / 3`;
+  $("stat1").textContent=round.stat_1;
+  $("stat2").textContent=round.stat_2;
+  $("requirement").textContent=`Sélectionne exactement ${round.required_cards} carte${Number(round.required_cards)>1?"s":""} parmi les 4 proposées.`;
+  $("roundResult").classList.remove("show");
+  $("roundResult").innerHTML="";
+  $("validateBtn").disabled=true;
+  $("validateBtn").textContent="Valider mes cartes";
+
+  $("roundCards").innerHTML=(round.cards||[]).map(c=>`
+    <div class="raid-card" data-id="${c.id}">
+      <div class="pickmark">✓</div>
+      <img src="${BOTM.imagePath(c)}" alt="${esc(cardName(c))}">
+      <div class="card-name">${esc(cardName(c))}</div>
+      <div class="card-values">${esc(round.stat_1)} ${statValue(c,round.stat_1)} · ${esc(round.stat_2)} ${statValue(c,round.stat_2)} · Valeur ${n(c.valeur)}</div>
+    </div>`).join("");
+
+  $("roundCards").querySelectorAll(".raid-card").forEach(el=>{
+    el.onclick=()=>{
+      if(busy)return;
+      const id=Number(el.dataset.id),i=selected.indexOf(id);
+      if(i>=0)selected.splice(i,1);
+      else{
+        if(selected.length>=Number(currentRound.required_cards))return;
+        selected.push(id);
+      }
+      $("roundCards").querySelectorAll(".raid-card").forEach(x=>x.classList.toggle("selected",selected.includes(Number(x.dataset.id))));
+      $("validateBtn").disabled=selected.length!==Number(currentRound.required_cards);
+    };
+  });
+  $("combatPanel").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+$("attackBtn").onclick=async()=>{
+  if(busy)return;
+  if(attemptId && currentRound){$("combatPanel").scrollIntoView({behavior:"smooth"});return;}
+  busy=true;refreshAttackButton();
+  const {data,error}=await supabase.rpc("start_titan_attempt");
+  busy=false;
+  if(error){showMessage(error.message);refreshAttackButton();return;}
+  attemptId=data.attempt_id;
+  if(!data.resumed && data.attempts_left!==undefined){
+    raid.attempts=data.attempts_left;
+    raid.next_recharge_at=data.next_recharge_at;
+    $("attempts").textContent=`${raid.attempts} / 5`;
+  }
+  $("attackBtn").textContent="⚔️ Tentative en cours";
+  renderRound(data.round);
+  refreshAttackButton();
+};
+
+$("validateBtn").onclick=async()=>{
+  if(busy || !attemptId || !currentRound)return;
+  busy=true;$("validateBtn").disabled=true;$("validateBtn").textContent="Calcul des dégâts…";
+  const {data,error}=await supabase.rpc("play_titan_round",{p_attempt_id:attemptId,p_card_ids:selected});
+  busy=false;
+  if(error){$("roundResult").classList.add("show");$("roundResult").textContent=error.message;$("validateBtn").disabled=false;$("validateBtn").textContent="Valider mes cartes";return;}
+
+  updateBossHp(data.titan_current_hp,data.titan_max_hp);
+  raid.current_hp=data.titan_current_hp;raid.max_hp=data.titan_max_hp;
+  $("roundResult").classList.add("show");
+  $("roundResult").innerHTML=`<div>Round ${data.round_number} terminé</div><div class="damage">⚔️ ${n(data.round_damage)} dégâts</div><div class="muted">Total de la tentative : ${n(data.attempt_total_damage)}</div>`;
+
+  if(data.titan_defeated){
+    attemptId=null;currentRound=null;
+    $("validateBtn").style.display="none";
+    $("roundResult").innerHTML+=`<h2>🏆 Titan vaincu !</h2>`;
+    $("attackBtn").disabled=true;
+    clearInterval(timer);
+    return;
+  }
+
+  if(data.attempt_completed){
+    attemptId=null;currentRound=null;
+    $("validateBtn").style.display="none";
+    $("roundResult").innerHTML+=`<h3>Tentative terminée</h3>`;
+    setTimeout(async()=>{
+      $("combatPanel").classList.remove("show");
+      $("validateBtn").style.display="";
+      $("attackBtn").textContent="⚔️ Attaquer le Titan";
+      await loadLobby();
+    },2200);
+    return;
+  }
+
+  setTimeout(()=>renderRound(data.next_round),1300);
+};
+
+await loadLobby();
+</script>
+</body>
+</html>
