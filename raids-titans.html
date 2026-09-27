@@ -205,6 +205,26 @@ body{min-height:100vh}
 }
 </style>
 
+
+<style>
+/* Phase 6 — récupération des récompenses */
+.reward-overlay{position:fixed;inset:0;z-index:1000;background:rgba(2,5,15,.88);backdrop-filter:blur(8px);display:none;place-items:center;padding:20px}
+.reward-overlay.show{display:grid}
+.reward-box{width:min(620px,94vw);max-height:90vh;overflow:auto;background:linear-gradient(180deg,#151a35,#0b1024);border:1px solid rgba(255,255,255,.14);border-radius:24px;padding:24px;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.55)}
+.reward-box h2{margin:5px 0 6px;font-size:clamp(24px,4vw,38px)}
+.reward-sub{opacity:.72;margin-bottom:18px}
+.reward-items{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}
+.reward-item{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px 8px;font-weight:800}
+.reward-item b{display:block;font-size:22px;margin-top:4px}
+.reward-card{display:none;margin:18px auto 0;padding:14px;border-radius:18px;background:rgba(139,92,246,.12);border:1px solid rgba(192,68,255,.4)}
+.reward-card.show{display:block}
+.reward-card img{display:block;max-height:310px;max-width:230px;width:auto;margin:10px auto;border-radius:12px}
+.reward-actions{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+.reward-actions .btn{min-width:180px}
+.reward-note{font-size:13px;opacity:.68;margin-top:10px}
+@media(max-width:560px){.reward-items{grid-template-columns:1fr}.reward-box{padding:18px}}
+</style>
+
 </head>
 <body>
 <div class="rt">
@@ -257,6 +277,22 @@ body{min-height:100vh}
   </div>
 </div>
 
+
+<div id="rewardOverlay" class="reward-overlay">
+  <div class="reward-box">
+    <div class="eyebrow">Récompense Raid Titan</div>
+    <h2 id="rewardTitle">🎁 Récompense disponible</h2>
+    <div id="rewardSub" class="reward-sub"></div>
+    <div id="rewardItems" class="reward-items"></div>
+    <div id="rewardBonusCard" class="reward-card"></div>
+    <div id="rewardNote" class="reward-note"></div>
+    <div class="reward-actions">
+      <button id="claimRewardBtn" class="btn gold">🎁 Récupérer mes récompenses</button>
+      <button id="closeRewardBtn" class="btn" style="display:none">Fermer</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import {BOTM,supabase} from "/BOTM_2.0/app.js";
 await BOTM.requireAuth();
@@ -268,6 +304,71 @@ let timer=null;
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
 function cardName(c){return String(c.file_name||"").replace(/\.[^.]+$/,"");}
 function n(v){return Number(v||0).toLocaleString("fr-FR");}
+
+let pendingReward=null;
+
+function rewardItemsHtml(r){
+  const items=[];
+  if(Number(r.points)>0) items.push(`<div class="reward-item">💰 Points<b>${n(r.points)}</b></div>`);
+  if(Number(r.boosters)>0) items.push(`<div class="reward-item">🎁 Booster<b>× ${n(r.boosters)}</b></div>`);
+  if(Number(r.miracle_draws)>0) items.push(`<div class="reward-item">✨ Pioche Miracle<b>× ${n(r.miracle_draws)}</b></div>`);
+  return items.join("");
+}
+
+async function checkTitanReward(){
+  const {data,error}=await supabase.rpc("get_titan_pending_reward");
+  if(error){console.error("Récompense Titan :",error);return;}
+  if(!data?.pending)return;
+  pendingReward=data;
+  $("rewardTitle").textContent=data.reward_type==="victory"?"🏆 Titan vaincu !":"⏱️ Raid Titan terminé";
+  $("rewardSub").textContent=`${data.titan_name} · ${data.titan_universe}`;
+  $("rewardItems").innerHTML=rewardItemsHtml(data);
+  $("rewardBonusCard").classList.remove("show");
+  $("rewardBonusCard").innerHTML="";
+  $("rewardNote").textContent=data.reward_type==="victory"
+    ?"Une carte de l'univers du Titan peut également être gagnée avec 3 % de chance."
+    :`Dégâts collectifs : ${n(data.collective_damage)} PV`;
+  $("claimRewardBtn").style.display="";
+  $("claimRewardBtn").disabled=false;
+  $("claimRewardBtn").textContent="🎁 Récupérer mes récompenses";
+  $("closeRewardBtn").style.display="none";
+  $("rewardOverlay").classList.add("show");
+}
+
+$("claimRewardBtn").onclick=async()=>{
+  if(!pendingReward)return;
+  const btn=$("claimRewardBtn");
+  btn.disabled=true;btn.textContent="Récupération…";
+  const {data,error}=await supabase.rpc("claim_titan_reward",{p_raid_id:pendingReward.raid_id});
+  if(error){btn.disabled=false;btn.textContent="🎁 Récupérer mes récompenses";$("rewardNote").textContent=error.message;return;}
+
+  $("rewardTitle").textContent="🎉 Récompenses récupérées !";
+  $("rewardItems").innerHTML=rewardItemsHtml(data);
+
+  if(data.bonus_card){
+    const c=data.bonus_card;
+    $("rewardBonusCard").classList.add("show");
+    $("rewardBonusCard").innerHTML=`
+      <div class="eyebrow">✨ Carte bonus obtenue !</div>
+      <img src="${BOTM.imagePath(c)}" alt="${esc(cardName(c))}">
+      <strong>${esc(cardName(c))}</strong>
+      <div class="muted">${esc(BOTM.rarityLabel(c.rarity))} · ${esc(c.universe)}</div>`;
+    $("rewardNote").textContent="Les 3 % ont réussi : la carte a été ajoutée à ta collection.";
+  }else{
+    $("rewardBonusCard").classList.remove("show");
+    $("rewardNote").textContent=data.reward_type==="victory"
+      ?"Pas de carte bonus cette fois-ci."
+      :"Récompense ajoutée à ton profil.";
+  }
+
+  btn.style.display="none";
+  $("closeRewardBtn").style.display="";
+  pendingReward=null;
+  try{await BOTM.refreshHeader();}catch(e){}
+};
+
+$("closeRewardBtn").onclick=()=>{$("rewardOverlay").classList.remove("show");};
+
 function dateMs(v){const d=new Date(v);return Number.isNaN(d.getTime())?null:d.getTime();}
 function bossPath(path){if(!path)return "";if(/^https?:\/\//i.test(path))return path;return new URL(String(path).replace(/^\/+/,""),location.origin+"/BOTM_2.0/").href;}
 
@@ -455,6 +556,7 @@ $("validateBtn").onclick=async()=>{
 };
 
 await loadLobby();
+await checkTitanReward();
 </script>
 </body>
 </html>
