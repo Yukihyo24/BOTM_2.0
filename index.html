@@ -350,6 +350,33 @@
 .welcome-panel>*{position:relative;z-index:1}
 </style>
 
+
+<style>
+/* BOTM — Titan actif sur l'accueil. Le chat conserve sa place à droite. */
+.titan-home-hero{grid-template-columns:minmax(0,1.35fr) minmax(320px,.65fr)!important}
+.home-titan-card{position:relative;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,36%);align-items:stretch;overflow:hidden;text-decoration:none;color:inherit;border-radius:inherit}
+.home-titan-copy{position:relative;z-index:2;padding:30px 12px 28px 34px;display:flex;flex-direction:column;justify-content:center}
+.home-titan-copy h2{margin:5px 0 2px;font-size:clamp(2rem,4vw,3.5rem);line-height:.95}
+.home-titan-universe{opacity:.68;font-weight:700;margin-bottom:18px}
+.home-titan-hp-head{display:flex;justify-content:space-between;gap:12px;font-size:.76rem;font-weight:900;letter-spacing:.08em}
+.home-titan-hp{height:15px;margin:7px 0;border-radius:999px;overflow:hidden;background:rgba(3,6,18,.88);border:1px solid rgba(255,255,255,.16)}
+.home-titan-hp>div{height:100%;width:0;background:linear-gradient(90deg,#5b5dfc,#8b5cf6,#c044ff);transition:width .5s ease;box-shadow:0 0 12px rgba(139,92,246,.65)}
+.home-titan-hp-text{font-size:.78rem;opacity:.78;text-align:right}
+.home-titan-bottom{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:18px}
+.home-titan-bottom strong{color:#b99cff}
+.home-titan-art{min-width:0;display:grid;place-items:center;padding:18px 22px 18px 4px}
+.home-titan-art img{display:block;width:auto;height:auto;max-width:100%;max-height:245px;object-fit:contain}
+.home-titan-card.is-empty .home-titan-art{display:none}
+.home-titan-card.is-empty{grid-template-columns:1fr}
+@media(max-width:760px){
+ .titan-home-hero{grid-template-columns:1fr!important}
+ .home-titan-card{grid-template-columns:minmax(0,1fr) 130px;min-height:270px}
+ .home-titan-copy{padding:24px 8px 24px 22px}
+ .home-titan-art{padding:12px 12px 12px 0}
+ .home-titan-art img{max-height:210px}
+}
+</style>
+
 </head>
 
 <body class="home-page">
@@ -418,19 +445,27 @@
     <div id="reward" class="reward-banner" style="display:none"></div>
     <div id="duelNotification" class="duel-notification-banner" role="status" aria-live="polite"></div>
 
-    <section class="hero-panel">
-      <div class="hero-copy">
-        <div class="eyebrow">Le multivers t'attend</div>
-        <h2>Collectionne.<br><span>Échange.</span><br>Joue.</h2>
-        <p>Construis ta collection à travers tous tes univers et affronte le Multivers dans les modes de jeu BOTM.</p>
-        <a class="primary-cta" href="/BOTM_2.0/collection.html">
-          Découvrir ma collection <span>→</span>
-        </a>
-      </div>
-
-      <div class="hero-mark" aria-hidden="true">
-        <img src="/BOTM_2.0/assets/botm-logo-mark.png" alt="">
-      </div>
+    <section class="hero-panel titan-home-hero">
+      <a class="home-titan-card" id="homeTitanCard" href="/BOTM_2.0/raids-titans.html">
+        <div class="home-titan-copy">
+          <div class="eyebrow">⚔️ Raid Titan en cours</div>
+          <h2 id="homeTitanName">Chargement…</h2>
+          <div id="homeTitanUniverse" class="home-titan-universe"></div>
+          <div class="home-titan-hp-head">
+            <span>PV DU TITAN</span>
+            <b id="homeTitanPercent">--</b>
+          </div>
+          <div class="home-titan-hp"><div id="homeTitanHpFill"></div></div>
+          <div id="homeTitanHpText" class="home-titan-hp-text">-- / -- PV</div>
+          <div class="home-titan-bottom">
+            <span>⏱️ <b id="homeTitanTime">--:--:--</b></span>
+            <strong>Combattre →</strong>
+          </div>
+        </div>
+        <div class="home-titan-art">
+          <img id="homeTitanImage" alt="">
+        </div>
+      </a>
 
       <div class="hero-motto hero-chat-frame">
         <div class="home-live-chat">
@@ -582,6 +617,54 @@ if (session) {
 }
 
 
+
+
+
+// ===== Raid Titan sur l'accueil =====
+let homeTitanRaid=null;
+let homeTitanTimer=null;
+function homeTitanN(v){return Number(v||0).toLocaleString("fr-FR");}
+function homeTitanPath(path){
+  if(!path)return "";
+  if(/^https?:\/\//i.test(path))return path;
+  return new URL(String(path).replace(/^\/+/,""),location.origin+"/BOTM_2.0/").href;
+}
+function homeTitanCountdown(target){
+  const ms=new Date(target).getTime();
+  if(!Number.isFinite(ms))return "--:--:--";
+  const d=Math.max(0,ms-Date.now());
+  const h=Math.floor(d/3600000),m=Math.floor((d%3600000)/60000),sec=Math.floor((d%60000)/1000);
+  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
+}
+async function loadHomeTitan(){
+  const card=document.getElementById("homeTitanCard");
+  if(!card)return;
+  const {data,error}=await supabase.rpc("get_titan_raid_status");
+  if(error){console.warn("Raid Titan accueil :",error);return;}
+  homeTitanRaid=data||{};
+  if(!homeTitanRaid.active){
+    card.classList.add("is-empty");
+    document.getElementById("homeTitanName").textContent=homeTitanRaid.paused?"Raids Titans en pause":"Aucun Titan actif";
+    document.getElementById("homeTitanUniverse").textContent=homeTitanRaid.paused?"Le prochain Titan apparaîtra après la pause.":"Reviens bientôt pour le prochain Raid Titan.";
+    document.querySelector(".home-titan-hp-head").style.display="none";
+    document.querySelector(".home-titan-hp").style.display="none";
+    document.getElementById("homeTitanHpText").style.display="none";
+    document.querySelector(".home-titan-bottom").style.display="none";
+    return;
+  }
+  const max=Number(homeTitanRaid.max_hp||1),cur=Number(homeTitanRaid.current_hp||0);
+  const pct=Math.max(0,Math.min(100,cur/max*100));
+  document.getElementById("homeTitanName").textContent=homeTitanRaid.name||"Titan";
+  document.getElementById("homeTitanUniverse").textContent=homeTitanRaid.universe||"";
+  document.getElementById("homeTitanPercent").textContent=pct.toLocaleString("fr-FR",{maximumFractionDigits:1})+" %";
+  document.getElementById("homeTitanHpFill").style.width=pct+"%";
+  document.getElementById("homeTitanHpText").textContent=`${homeTitanN(cur)} / ${homeTitanN(max)} PV`;
+  const img=document.getElementById("homeTitanImage");
+  img.src=homeTitanPath(homeTitanRaid.image_path);img.alt=homeTitanRaid.name||"Titan";
+  const tick=()=>document.getElementById("homeTitanTime").textContent=homeTitanCountdown(homeTitanRaid.ends_at);
+  tick();clearInterval(homeTitanTimer);homeTitanTimer=setInterval(tick,1000);
+}
+await loadHomeTitan();
 
 
 // ===== Notifications Duel =====
