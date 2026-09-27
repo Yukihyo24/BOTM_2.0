@@ -27,7 +27,7 @@ button,a{font:inherit}.page{max-width:1450px;margin:auto;padding:20px}.top{displ
 .enemy-reveal{display:flex;justify-content:center;margin-top:15px}.enemy-reveal .card{width:min(210px,50vw);cursor:default}
 
 /* Boss fight */
-.boss-fight-grid{display:grid;grid-template-columns:330px 1fr;gap:20px}.boss-side{text-align:center;padding:18px}.boss-side img{max-width:100%;height:250px;object-fit:contain}.hphead{display:flex;justify-content:space-between;gap:10px;font-size:.78rem;font-weight:900}.hpbar{height:20px;border:2px solid rgba(255,255,255,.14);border-radius:999px;overflow:hidden;background:#050915;margin:7px 0}.hpfill{height:100%;background:linear-gradient(90deg,#5b5dfc,#8b5cf6,#c044ff);transition:width .45s}.boss-cards{grid-template-columns:repeat(4,minmax(0,190px));max-height:550px;overflow:auto;padding:5px}.boss-cards .card img{aspect-ratio:2/3}.damage{font-size:1.25rem;font-weight:950;color:#d8c9ff}
+.boss-fight-grid{display:grid;grid-template-columns:330px 1fr;gap:20px}.boss-side{text-align:center;padding:18px}.boss-side img{max-width:100%;height:250px;object-fit:contain}.hphead{display:flex;justify-content:space-between;gap:10px;font-size:.78rem;font-weight:900}.hpbar{height:20px;border:2px solid rgba(255,255,255,.14);border-radius:999px;overflow:hidden;background:#050915;margin:7px 0}.hpfill{height:100%;background:linear-gradient(90deg,#5b5dfc,#8b5cf6,#c044ff);transition:width .45s}.boss-cards{grid-template-columns:repeat(4,minmax(0,170px));max-height:550px;overflow:auto;padding:5px}.boss-cards .card img{aspect-ratio:2/3}.damage{font-size:1.25rem;font-weight:950;color:#d8c9ff}
 
 /* Modal */
 .modal{position:fixed;inset:0;z-index:50;background:rgba(2,5,14,.82);backdrop-filter:blur(8px);display:grid;place-items:center;padding:20px}.modalbox{width:min(560px,100%);padding:28px;text-align:center}.modalbox h2{font-size:2rem;margin:0 0 8px}.rewards{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:18px 0}.reward{padding:12px 15px;border:1px solid var(--line);border-radius:14px;background:#11192e;font-weight:900}.reward-card{width:180px;margin:14px auto}.toast{position:fixed;right:18px;bottom:18px;z-index:80;background:#151e35;border:1px solid var(--line);border-radius:12px;padding:12px 15px;box-shadow:0 12px 35px #0008}
@@ -254,8 +254,9 @@ button,a{font:inherit}.page{max-width:1450px;margin:auto;padding:20px}.top{displ
 }
 
 
-/* ===== PHASE 5.4 — chemin corrigé : 1 -> ... -> 9 -> 10 -> Boss ===== */
+/* ===== CORRECTIF 5.5 : tracé 1 -> 10 -> Boss ===== */
 #routeView .steps{height:350px}
+#routeView .steps:before{display:none!important}
 #routeView .step:nth-child(1){left:9%;top:3%;bottom:auto}
 #routeView .step:nth-child(2){left:31%;top:13%;bottom:auto}
 #routeView .step:nth-child(3){left:58%;top:9%;bottom:auto}
@@ -266,7 +267,7 @@ button,a{font:inherit}.page{max-width:1450px;margin:auto;padding:20px}.top{displ
 #routeView .step:nth-child(8){left:34%;top:69%;bottom:auto}
 #routeView .step:nth-child(9){left:59%;top:65%;bottom:auto}
 #routeView .step:nth-child(10){left:76%;top:84%;bottom:auto}
-#routeView .boss{margin:8px auto 12px}
+#routeView .boss{margin:12px auto 12px}
 
 </style>
 </head>
