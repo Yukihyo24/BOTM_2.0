@@ -567,11 +567,12 @@
 <style>
 /* BOTM — Guide du débutant */
 .guide-open-btn{
-  width:100%;margin-top:8px;border:1px solid rgba(232,184,61,.28);border-radius:11px;
-  background:rgba(232,184,61,.07);color:#e8c96a;padding:10px 11px;
-  font:inherit;font-weight:800;cursor:pointer;text-align:left
+  width:100%;display:flex;align-items:center;gap:11px;min-height:42px;
+  padding:9px 11px;border:0;border-radius:11px;background:transparent;
+  color:#c6cce5;font:inherit;font-weight:700;cursor:pointer;text-align:left
 }
-.guide-open-btn:hover{background:rgba(232,184,61,.13);color:#fff}
+.guide-open-btn:hover{background:rgba(139,92,246,.14);color:#fff}
+.guide-open-btn span{width:24px;text-align:center}
 .guide-overlay{
   position:fixed;inset:0;z-index:12000;display:none;align-items:center;justify-content:center;
   padding:18px;background:rgba(3,6,20,.82);backdrop-filter:blur(8px)
@@ -639,26 +640,26 @@
     </a>
 
     <nav class="side-nav">
+      <button class="guide-open-btn" id="openBeginnerGuide" type="button"><span>❓</span> Guide débutant</button>
       <a class="active" href="/BOTM_2.0/index.html"><span>🏠</span> Accueil</a>
+      <a href="/BOTM_2.0/profil.html"><span>👤</span> Profil</a>
+      <a href="/BOTM_2.0/messages.html"><span>✉️</span> Messages</a>
+      <a href="/BOTM_2.0/communaute.html"><span>👥</span> Communauté</a>
       <a href="/BOTM_2.0/collection.html"><span>🃏</span> Collection</a>
       <a href="/BOTM_2.0/catalogue.html"><span>📚</span> Catalogue</a>
-      <a href="/BOTM_2.0/jeu.html"><span>🗡️</span> Combat</a>
-      <a href="/BOTM_2.0/survivor.html"><span>🏔️</span> Survivor Valley</a>
-      <a href="/BOTM_2.0/autoroute.html"><span>🏎️</span> Autoroute de la Fortune</a>
-      <a href="/BOTM_2.0/ascension.html"><span>🪜</span> L’Ascension</a>
-      <a href="/BOTM_2.0/roulette.html"><span>🎰</span> Roulette du Multivers</a>
-      <a href="/BOTM_2.0/duel-lobby.html"><span>🆚</span> Duel PvP</a>
-      <a href="/BOTM_2.0/raids-titans.html"><span>🏟️</span> Raids Titans</a>
-      <a href="/BOTM_2.0/campagne.html"><span>🗺️</span> Campagne</a>
       <a href="/BOTM_2.0/succes.html"><span>🏆</span> Succès</a>
-      <button class="guide-open-btn" id="openBeginnerGuide" type="button">❓ Guide du débutant</button>
+      <a href="/BOTM_2.0/echanges.html"><span>🔄</span> Échanges</a>
       <a href="/BOTM_2.0/boutique.html"><span>💰</span> Boutique</a>
       <a href="/BOTM_2.0/booster.html"><span>🎁</span> Boosters</a>
       <a href="/BOTM_2.0/pioche.html"><span>✨</span> Pioche Miracle</a>
-      <a href="/BOTM_2.0/echanges.html"><span>🔄</span> Échanges</a>
-      <a href="/BOTM_2.0/communaute.html"><span>👥</span> Communauté</a>
-      <a href="/BOTM_2.0/profil.html"><span>👤</span> Mon profil</a>
-      <a href="/BOTM_2.0/messages.html"><span>✉️</span> Messages</a>
+      <a href="/BOTM_2.0/duel-lobby.html"><span>🆚</span> Duel PvP</a>
+      <a href="/BOTM_2.0/campagne.html"><span>🗺️</span> Campagne</a>
+      <a href="/BOTM_2.0/raids-titans.html"><span>🏟️</span> Raids Titans</a>
+      <a href="/BOTM_2.0/jeu.html"><span>🗡️</span> Combat</a>
+      <a href="/BOTM_2.0/survivor.html"><span>🏔️</span> Survivor Valley</a>
+      <a href="/BOTM_2.0/ascension.html"><span>🪜</span> L’Ascension</a>
+      <a href="/BOTM_2.0/autoroute.html"><span>🏎️</span> Autoroute de la Fortune</a>
+      <a href="/BOTM_2.0/roulette.html"><span>🎰</span> Roulette</a>
       <a id="admin-link" href="/BOTM_2.0/admin.html" style="display:none"><span>⚙️</span> Administration</a>
     </nav>
 
@@ -728,64 +729,75 @@
     </section>
 
     <section class="feature-grid feature-scroll">
-      <a class="feature-card combat-mode" href="/BOTM_2.0/jeu.html">
-        <div class="feature-icon">🗡️</div>
-        <div><h3>Combat de stats</h3><p>Trois cartes. Trois manches. Une statistique tirée au hasard à chaque duel.</p></div>
-        <span class="feature-link">Combattre →</span>
-      </a>
-      <a class="feature-card shop" href="/BOTM_2.0/boutique.html">
-        <div class="feature-icon">💰</div>
-        <div><h3>Boutique</h3><p>Dépense tes points et récupère de nouvelles cartes.</p></div>
-        <span class="feature-link">Accéder →</span>
-      </a>
-      <a class="feature-card survivor-mode" href="/BOTM_2.0/survivor.html">
-        <div class="feature-icon">🏔️</div>
-        <div><h3>Survivor Valley</h3><p>Trois survivants face à sept adversaires. Chaque sacrifice peut ouvrir la voie au suivant.</p></div>
-        <span class="feature-link">Entrer dans la vallée →</span>
-      </a>
-      <a class="feature-card booster" href="/BOTM_2.0/booster.html">
-        <div class="feature-icon">🎁</div>
-        <div><h3>Boosters</h3><p>Choisis ton univers et découvre quatre nouvelles cartes.</p></div>
-        <span class="feature-link">Ouvrir un booster →</span>
-      </a>
-      <a class="feature-card fortune-mode" href="/BOTM_2.0/autoroute.html">
-        <div class="feature-icon">🏎️</div>
-        <div><h3>Autoroute de la Fortune</h3><p>Dix péages, trois routes à chaque étape et quatre utilisations maximum par carte.</p></div>
-        <span class="feature-link">Prendre la route →</span>
-      </a>
-      <a class="feature-card miracle" href="/BOTM_2.0/pioche.html">
-        <div class="feature-icon">✨</div>
-        <div><h3>Pioche Miracle</h3><p>Trois cartes sont révélées. Une seule rejoindra ta collection.</p></div>
-        <span class="feature-link">Jouer →</span>
-      </a>
-      <a class="feature-card ascension-mode" href="/BOTM_2.0/ascension.html">
-        <div class="feature-icon">🪜</div>
-        <div><h3>L’Ascension</h3><p>Six échelons. Une seule carte. Atteins le sommet et remporte jusqu’à 120 points.</p></div>
-        <span class="feature-link">Grimper →</span>
-      </a>
-      <a class="feature-card trades" href="/BOTM_2.0/echanges.html">
-        <div class="feature-icon">🔄</div>
-        <div><h3>Échanges</h3><p>Propose tes cartes et négocie avec les autres joueurs.</p></div>
-        <span class="feature-link">Voir les échanges →</span>
-      </a>
-      <a class="feature-card duel-mode" href="/BOTM_2.0/duel-lobby.html">
-        <div class="feature-icon">🆚</div>
-        <div><h3>Duel PvP</h3><p>Prépare ton deck de 40 cartes, défie un joueur et impose ta stratégie sur sept lignes.</p></div>
-        <span class="feature-link">Entrer dans l’arène →</span>
-      </a>
-      <a class="feature-card titan-mode" href="/BOTM_2.0/raids-titans.html">
-        <div class="feature-icon">🏟️</div>
-        <div><h3>Raids Titans</h3><p>Prépare ton deck Titan et unis tes dégâts à ceux des autres joueurs pour abattre le Titan actif.</p></div>
-        <span class="feature-link">Affronter le Titan →</span>
+      <a class="feature-card community-mode" href="/BOTM_2.0/communaute.html">
+        <div class="feature-icon">👥</div>
+        <div><h3>Communauté</h3><p>Retrouve les autres joueurs et découvre l’activité de la communauté BOTM.</p></div>
+        <span class="feature-link">Découvrir →</span>
       </a>
       <a class="feature-card campaign-mode" href="/BOTM_2.0/campagne.html">
         <div class="feature-icon">🗺️</div>
         <div><h3>Campagne</h3><p>Progresse dans chaque univers, franchis les étapes et affronte les Boss pour débloquer la suite.</p></div>
         <span class="feature-link">Commencer l’aventure →</span>
       </a>
+      <a class="feature-card titan-mode" href="/BOTM_2.0/raids-titans.html">
+        <div class="feature-icon">🏟️</div>
+        <div><h3>Raids Titans</h3><p>Prépare ton deck Titan et unis tes dégâts à ceux des autres joueurs pour abattre le Titan actif.</p></div>
+        <span class="feature-link">Affronter le Titan →</span>
+      </a>
+      <a class="feature-card combat-mode" href="/BOTM_2.0/jeu.html">
+        <div class="feature-icon">🗡️</div>
+        <div><h3>Combat de stats</h3><p>Trois cartes. Trois manches. Une statistique tirée au hasard à chaque duel.</p></div>
+        <span class="feature-link">Combattre →</span>
+      </a>
+      <a class="feature-card duel-mode" href="/BOTM_2.0/duel-lobby.html">
+        <div class="feature-icon">🆚</div>
+        <div><h3>Duels PvP</h3><p>Prépare ton deck de 40 cartes, défie un joueur et impose ta stratégie sur sept lignes.</p></div>
+        <span class="feature-link">Entrer dans l’arène →</span>
+      </a>
+      <a class="feature-card ascension-mode" href="/BOTM_2.0/ascension.html">
+        <div class="feature-icon">🪜</div>
+        <div><h3>Ascension</h3><p>Six échelons. Une seule carte. Atteins le sommet et remporte jusqu’à 120 points.</p></div>
+        <span class="feature-link">Grimper →</span>
+      </a>
+      <a class="feature-card fortune-mode" href="/BOTM_2.0/autoroute.html">
+        <div class="feature-icon">🏎️</div>
+        <div><h3>Autoroute</h3><p>Dix péages, trois routes à chaque étape et quatre utilisations maximum par carte.</p></div>
+        <span class="feature-link">Prendre la route →</span>
+      </a>
+
+      <a class="feature-card shop" href="/BOTM_2.0/boutique.html">
+        <div class="feature-icon">💰</div>
+        <div><h3>Boutique</h3><p>Dépense tes points et récupère de nouvelles cartes.</p></div>
+        <span class="feature-link">Accéder →</span>
+      </a>
+      <a class="feature-card booster" href="/BOTM_2.0/booster.html">
+        <div class="feature-icon">🎁</div>
+        <div><h3>Booster</h3><p>Choisis ton univers et découvre quatre nouvelles cartes.</p></div>
+        <span class="feature-link">Ouvrir un booster →</span>
+      </a>
+      <a class="feature-card miracle" href="/BOTM_2.0/pioche.html">
+        <div class="feature-icon">✨</div>
+        <div><h3>Pioche Miracle</h3><p>Trois cartes sont révélées. Une seule rejoindra ta collection.</p></div>
+        <span class="feature-link">Jouer →</span>
+      </a>
+      <a class="feature-card trades" href="/BOTM_2.0/echanges.html">
+        <div class="feature-icon">🔄</div>
+        <div><h3>Échanges</h3><p>Propose tes cartes et négocie avec les autres joueurs.</p></div>
+        <span class="feature-link">Voir les échanges →</span>
+      </a>
+      <a class="feature-card success-mode" href="/BOTM_2.0/succes.html">
+        <div class="feature-icon">🏆</div>
+        <div><h3>Succès</h3><p>Suis ta progression, accomplis les objectifs et récupère les récompenses débloquées.</p></div>
+        <span class="feature-link">Voir mes succès →</span>
+      </a>
+      <a class="feature-card survivor-mode" href="/BOTM_2.0/survivor.html">
+        <div class="feature-icon">🏔️</div>
+        <div><h3>Survivor Valley</h3><p>Trois survivants face à sept adversaires. Chaque sacrifice peut ouvrir la voie au suivant.</p></div>
+        <span class="feature-link">Entrer dans la vallée →</span>
+      </a>
       <a class="feature-card roulette-mode" href="/BOTM_2.0/roulette.html">
         <div class="feature-icon">🎰</div>
-        <div><h3>Roulette du Multivers</h3><p>Choisis ta carte, défie le hasard et décide quand encaisser avant de tout perdre.</p></div>
+        <div><h3>Roulette</h3><p>Choisis ta carte, défie le hasard et décide quand encaisser avant de tout perdre.</p></div>
         <span class="feature-link">Tenter ma chance →</span>
       </a>
     </section>
