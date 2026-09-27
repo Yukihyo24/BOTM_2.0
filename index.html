@@ -407,6 +407,129 @@
 }
 </style>
 
+
+<style>
+/* === Bloc accueil Raid + Chat — disposition du schéma utilisateur === */
+.hero-panel.titan-home-hero{
+  position:relative !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,43%) minmax(0,57%) !important;
+  align-items:stretch !important;
+  gap:0 !important;
+  min-height:390px !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  isolation:isolate;
+}
+
+/* Logo BOTM fondu dans LE FOND du bloc complet */
+.hero-panel.titan-home-hero::before{
+  content:"" !important;
+  position:absolute !important;
+  z-index:0 !important;
+  left:50% !important;
+  top:50% !important;
+  width:620px !important;
+  max-width:55% !important;
+  aspect-ratio:1 !important;
+  transform:translate(-50%,-50%) !important;
+  background:center/contain no-repeat url("/BOTM_2.0/assets/botm-logo-mark.png") !important;
+  opacity:.075 !important;
+  pointer-events:none !important;
+}
+
+/* RAID : véritable moitié gauche du grand bandeau */
+.home-titan-card{
+  position:relative !important;
+  z-index:1 !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,58%) minmax(120px,42%) !important;
+  align-items:center !important;
+  width:100% !important;
+  height:100% !important;
+  min-width:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  overflow:hidden !important;
+}
+.home-titan-copy{
+  align-self:stretch !important;
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:center !important;
+  min-width:0 !important;
+  padding:34px 6px 30px 38px !important;
+}
+.home-titan-copy h2{
+  margin:8px 0 3px !important;
+  font-size:clamp(2.7rem,4vw,4rem) !important;
+  line-height:.92 !important;
+}
+.home-titan-universe{margin-bottom:24px !important}
+.home-titan-art{
+  align-self:center !important;
+  display:grid !important;
+  place-items:center !important;
+  min-width:0 !important;
+  width:100% !important;
+  height:260px !important;
+  padding:8px 22px 8px 0 !important;
+  overflow:hidden !important;
+}
+.home-titan-art img{
+  display:block !important;
+  width:auto !important;
+  height:auto !important;
+  max-width:100% !important;
+  max-height:225px !important;
+  object-fit:contain !important;
+  object-position:center !important;
+}
+
+/* CHAT : panneau à droite, avec marge interne comme sur le schéma */
+.hero-motto.hero-chat-frame{
+  position:relative !important;
+  z-index:1 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:100% !important;
+  height:100% !important;
+  min-width:0 !important;
+  padding:40px 38px 40px 18px !important;
+  margin:0 !important;
+  border:0 !important;
+  background:transparent !important;
+}
+.hero-motto.hero-chat-frame .home-live-chat{
+  width:100% !important;
+  height:100% !important;
+  min-height:300px !important;
+  max-height:310px !important;
+  margin:0 !important;
+}
+
+/* Mobile : les deux blocs repassent l'un sous l'autre */
+@media(max-width:760px){
+  .hero-panel.titan-home-hero{
+    grid-template-columns:1fr !important;
+    min-height:0 !important;
+  }
+  .home-titan-card{
+    grid-template-columns:minmax(0,60%) minmax(110px,40%) !important;
+    min-height:300px !important;
+  }
+  .home-titan-copy{padding:26px 6px 24px 22px !important}
+  .home-titan-copy h2{font-size:2.5rem !important}
+  .home-titan-art{height:220px !important;padding-right:12px !important}
+  .home-titan-art img{max-height:190px !important}
+  .hero-motto.hero-chat-frame{padding:12px 18px 24px !important}
+  .hero-motto.hero-chat-frame .home-live-chat{min-height:280px !important}
+}
+</style>
+
 </head>
 
 <body class="home-page">
