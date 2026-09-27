@@ -351,7 +351,7 @@ async function openEditor(){
     .eq("user_id",me).gt("quantity",0);
   if(error){alert(error.message);return}
   const owned=(cards||[]).map(x=>x.cards).filter(Boolean);
-  const universes=[...new Set(owned.map(c=>c.universe))].sort();
+  const universes=["Catch","DBZ","Naruto","One Piece","Pokemon","Super Heros","Television","Jeux-Videos","Animes Divers"];
   editor.innerHTML=`
     <div class="social-panel" style="margin-top:20px">
       <h2>Modifier mon profil</h2>
