@@ -202,6 +202,57 @@ button,a{font:inherit}.page{max-width:1450px;margin:auto;padding:20px}.top{displ
   #routeView .step{width:48px;height:48px}
 }
 
+
+/* ===== PHASE 5.3 — ordre 1 -> 10 vers le Boss + liaison pointillée ===== */
+#routeView .steps{
+  height:330px;
+}
+#routeView .steps:before{display:none}
+
+/* Étape 1 en haut = la plus éloignée ; étape 10 en bas = la plus proche du Boss */
+#routeView .step:nth-child(1){left:10%;top:3%;bottom:auto}
+#routeView .step:nth-child(2){left:31%;top:13%;bottom:auto}
+#routeView .step:nth-child(3){left:57%;top:8%;bottom:auto}
+#routeView .step:nth-child(4){left:77%;top:25%;bottom:auto}
+#routeView .step:nth-child(5){left:59%;top:39%;bottom:auto}
+#routeView .step:nth-child(6){left:34%;top:34%;bottom:auto}
+#routeView .step:nth-child(7){left:13%;top:52%;bottom:auto}
+#routeView .step:nth-child(8){left:31%;top:66%;bottom:auto}
+#routeView .step:nth-child(9){left:57%;top:61%;bottom:auto}
+#routeView .step:nth-child(10){left:73%;top:80%;bottom:auto}
+
+/* SVG de liaison placé derrière les étapes */
+#routeView .step-dotted-path{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  overflow:visible;
+  pointer-events:none;
+  z-index:1;
+}
+#routeView .step-dotted-path polyline{
+  fill:none;
+  stroke:rgba(174,196,235,.88);
+  stroke-width:3;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  stroke-dasharray:2 10;
+  vector-effect:non-scaling-stroke;
+}
+#routeView .step-dotted-path .to-boss{
+  stroke:rgba(174,196,235,.88);
+  stroke-width:3;
+  stroke-linecap:round;
+  stroke-dasharray:2 10;
+}
+#routeView .boss{
+  margin:-6px auto 12px;
+}
+@media(max-width:700px){
+  #routeView .steps{height:290px}
+}
+
 </style>
 </head>
 <body>
@@ -319,8 +370,12 @@ function renderRoute(){
       const n=i+1, done=past||n<=stages, active=current&&n===stages+1&&!bossReady;
       return `<button class="step ${done?"done":active?"current":"locked"}" ${active?`data-stage="${n}"`:""}>${done?"✓":n}</button>`;
     }).join("");
+    const dottedPath=`<svg class="step-dotted-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points="14,12 35,22 61,17 81,34 63,48 38,43 17,61 35,75 61,70 77,89"/>
+      <line class="to-boss" x1="77" y1="89" x2="50" y2="104"/>
+    </svg>`;
     return `<article class="chapter ${cls}">
-      <div><div class="chapter-title"><h3>Palier ${b.order} — ${esc(b.name)}</h3><span class="status">${status}</span></div><div class="steps">${nodes}</div></div>
+      <div><div class="chapter-title"><h3>Palier ${b.order} — ${esc(b.name)}</h3><span class="status">${status}</span></div><div class="steps">${dottedPath}${nodes}</div></div>
       <div class="boss ${past?"defeated":bossReady?"ready":""}" ${bossReady?`data-boss="${b.order}"`:""}>
         <img src="${bossPath(b.image_path)}" alt="${esc(b.name)}"><span class="boss-name">${esc(b.name)} • ${fmt(b.max_hp)} PV</span>
       </div>
