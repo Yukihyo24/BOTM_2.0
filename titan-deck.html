@@ -23,6 +23,57 @@
 #msg{margin:12px 0}
 @media(max-width:700px){.titan-deck-wrap{padding:14px}.titan-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
+
+<style>
+/* Mise en avant nette des cartes actuellement sélectionnées */
+.titan-card.selected{
+  border:3px solid #a78bfa !important;
+  background:linear-gradient(180deg,rgba(139,92,246,.28),rgba(12,16,35,.92)) !important;
+  box-shadow:
+    0 0 0 3px rgba(139,92,246,.22),
+    0 0 24px rgba(139,92,246,.55) !important;
+  transform:translateY(-4px) scale(1.025);
+}
+.titan-card.selected::before{
+  content:"✓ SÉLECTIONNÉE";
+  position:absolute;
+  z-index:4;
+  top:10px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:6px 9px;
+  border-radius:999px;
+  background:rgba(91,63,196,.96);
+  border:1px solid rgba(255,255,255,.38);
+  color:#fff;
+  font-size:.68rem;
+  font-weight:950;
+  letter-spacing:.05em;
+  white-space:nowrap;
+  box-shadow:0 5px 16px rgba(0,0,0,.4);
+}
+.titan-card.selected::after{
+  content:"✓";
+  position:absolute;
+  z-index:5;
+  right:9px;
+  bottom:9px;
+  width:31px;
+  height:31px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:#8b5cf6;
+  color:#fff;
+  border:2px solid #fff;
+  font-weight:1000;
+  box-shadow:0 4px 14px rgba(0,0,0,.45);
+}
+.titan-card.selected img{
+  filter:brightness(1.08) saturate(1.08);
+}
+</style>
+
 </head>
 <body>
 <div class="titan-deck-wrap">
