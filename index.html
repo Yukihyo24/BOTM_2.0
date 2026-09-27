@@ -538,6 +538,31 @@
 }
 </style>
 
+
+<style>
+/* BOTM — notification Succès */
+.achievement-notification-banner{
+  display:none;align-items:center;justify-content:space-between;gap:14px;
+  margin:0 0 16px;padding:14px 16px;
+  border:1px solid rgba(232,184,61,.48);border-radius:15px;
+  background:linear-gradient(135deg,rgba(126,82,15,.30),rgba(13,19,48,.96));
+  box-shadow:0 12px 35px rgba(0,0,0,.20)
+}
+.achievement-notification-banner.show{display:flex}
+.achievement-notification-banner .an-copy{display:flex;gap:11px;align-items:center;min-width:0}
+.achievement-notification-banner .an-icon{font-size:1.55rem}
+.achievement-notification-banner b,.achievement-notification-banner span{display:block}
+.achievement-notification-banner span{color:#c9c4dc;font-size:.9rem;margin-top:2px}
+.achievement-notification-banner a{
+  flex:0 0 auto;border:0;border-radius:10px;padding:9px 12px;
+  font:inherit;font-weight:800;text-decoration:none;background:#b98927;color:#fff
+}
+@media(max-width:650px){
+  .achievement-notification-banner{align-items:flex-start;flex-direction:column}
+  .achievement-notification-banner a{width:100%;text-align:center}
+}
+</style>
+
 </head>
 
 <body class="home-page">
@@ -571,6 +596,7 @@
       <a href="/BOTM_2.0/duel-lobby.html"><span>🆚</span> Duel PvP</a>
       <a href="/BOTM_2.0/raids-titans.html"><span>🏟️</span> Raids Titans</a>
       <a href="/BOTM_2.0/campagne.html"><span>🗺️</span> Campagne</a>
+      <a href="/BOTM_2.0/succes.html"><span>🏆</span> Succès</a>
       <a href="/BOTM_2.0/boutique.html"><span>💰</span> Boutique</a>
       <a href="/BOTM_2.0/booster.html"><span>🎁</span> Boosters</a>
       <a href="/BOTM_2.0/pioche.html"><span>✨</span> Pioche Miracle</a>
@@ -607,6 +633,7 @@
 
     <div id="reward" class="reward-banner" style="display:none"></div>
     <div id="duelNotification" class="duel-notification-banner" role="status" aria-live="polite"></div>
+    <div id="achievementNotification" class="achievement-notification-banner" role="status" aria-live="polite"></div>
 
     <section class="hero-panel titan-home-hero">
       <a class="home-titan-card" id="homeTitanCard" href="/BOTM_2.0/raids-titans.html">
@@ -787,6 +814,57 @@ if (session) {
   });
 
   await BOTM.refreshHeader();
+}
+
+
+// ===== Succès : synchronisation + notification =====
+async function syncAchievementsHome(){
+  for(const rpc of ["sync_my_achievements","sync_my_achievements_phase4","sync_my_achievements_phase5"]){
+    const {error}=await supabase.rpc(rpc);
+    if(error) console.warn(`Synchronisation Succès (${rpc}) :`,error);
+  }
+}
+
+function escapeAchievementText(value){
+  return String(value??"").replace(/[&<>"']/g,m=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
+}
+
+async function loadAchievementNotification(){
+  const box=document.getElementById("achievementNotification");
+  if(!box)return;
+
+  const {data,error}=await supabase.rpc("get_unclaimed_achievements");
+  if(error){
+    console.warn("Notifications Succès :",error);
+    return;
+  }
+
+  const rows=Array.isArray(data)?data:[];
+  if(!rows.length){
+    box.classList.remove("show");
+    box.innerHTML="";
+    return;
+  }
+
+  const a=rows[0];
+  const count=rows.length;
+  box.innerHTML=`
+    <div class="an-copy">
+      <div class="an-icon">🏆</div>
+      <div>
+        <b>Succès débloqué : ${escapeAchievementText(a.title)}</b>
+        <span>${escapeAchievementText(a.reward_label)}${count>1?` • ${count} récompenses à récupérer`:""}</span>
+      </div>
+    </div>
+    <a href="/BOTM_2.0/succes.html">Voir mes succès →</a>`;
+  box.classList.add("show");
+}
+
+if(session){
+  await syncAchievementsHome();
+  await loadAchievementNotification();
 }
 
 
