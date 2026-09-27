@@ -130,6 +130,56 @@ body{min-height:100vh}
 }
 </style>
 
+
+<style>
+/* Ajustement final du bloc Titan :
+   - aucune découpe de l'illustration
+   - bloc gauche défilable si la hauteur du navigateur est insuffisante
+*/
+@media (min-width:851px){
+  #bossPanel{
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(139,92,246,.65) rgba(255,255,255,.05);
+  }
+  #bossPanel::-webkit-scrollbar{width:7px}
+  #bossPanel::-webkit-scrollbar-track{background:rgba(255,255,255,.04);border-radius:10px}
+  #bossPanel::-webkit-scrollbar-thumb{background:rgba(139,92,246,.65);border-radius:10px}
+
+  #bossPanel .boss-art{
+    flex:0 0 330px !important;
+    width:100% !important;
+    height:330px !important;
+    min-height:330px !important;
+    padding:12px 18px !important;
+    overflow:visible !important;
+    box-sizing:border-box !important;
+  }
+  #bossPanel .boss-art #bossImage{
+    display:block !important;
+    width:100% !important;
+    height:100% !important;
+    max-width:100% !important;
+    max-height:100% !important;
+    object-fit:contain !important;
+    object-position:center center !important;
+    margin:0 auto !important;
+  }
+  #bossPanel .boss-info{
+    flex:0 0 auto !important;
+    overflow:visible !important;
+    min-height:auto !important;
+    padding-bottom:18px !important;
+  }
+  #bossPanel #attackBtn{
+    flex:0 0 auto !important;
+    margin-top:8px !important;
+    margin-bottom:2px !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="rt">
