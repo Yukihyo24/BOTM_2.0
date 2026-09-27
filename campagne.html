@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Campagne — Battle of the Multiverse</title>
+<style>
+:root{--bg:#070b18;--panel:#10172a;--panel2:#151e35;--line:rgba(255,255,255,.10);--txt:#f6f7ff;--muted:#9aa7c2;--violet:#8b5cf6;--blue:#5b5dfc;--green:#35d39a;--gold:#f7c65d;--red:#ef5b70}
+*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 50% -10%,#20245b 0,#0b1022 34%,#070b18 72%);color:var(--txt);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+button,a{font:inherit}.page{max-width:1450px;margin:auto;padding:20px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}.back{color:#d8ddf1;text-decoration:none;border:1px solid var(--line);padding:10px 14px;border-radius:12px;background:#10172a}.top h1{margin:0;font-size:clamp(1.55rem,3vw,2.4rem)}.sub{color:var(--muted);font-size:.9rem}
+.panel{background:linear-gradient(180deg,rgba(20,29,52,.96),rgba(10,15,31,.97));border:1px solid var(--line);border-radius:22px;box-shadow:0 18px 50px rgba(0,0,0,.28)}
+.hidden{display:none!important}
+
+/* Choix univers */
+.universe-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.universe{position:relative;min-height:170px;padding:24px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,#18223d,#0c1225);color:white;text-align:left;cursor:pointer;overflow:hidden;transition:.2s}.universe:hover:not(.soon){transform:translateY(-3px);border-color:#8b5cf6;box-shadow:0 12px 30px rgba(91,93,252,.18)}.universe h2{font-size:1.6rem;margin:0 0 7px}.universe .tag{display:inline-flex;padding:6px 9px;border-radius:999px;background:rgba(139,92,246,.18);color:#cdbdff;font-size:.76rem;font-weight:900}.universe.soon{cursor:pointer;filter:saturate(.5);opacity:.68}.universe.soon:after{content:"À VENIR";position:absolute;right:15px;top:15px;background:#30384c;padding:6px 9px;border-radius:999px;font-size:.72rem;font-weight:950;letter-spacing:.05em}
+
+/* Carte de campagne */
+.campaign-head{display:grid;grid-template-columns:1fr auto;align-items:end;gap:16px;margin-bottom:14px}.campaign-head h2{font-size:2rem;margin:0}.campaign-head p{margin:4px 0 0;color:var(--muted)}.change{border:1px solid var(--line);background:#141d34;color:#fff;padding:10px 13px;border-radius:12px;cursor:pointer}
+.route-shell{position:relative;padding:26px 24px 32px;overflow:hidden}.route{display:flex;flex-direction:column;gap:22px;position:relative}.chapter{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:22px;align-items:center;min-height:190px;padding:20px;border:1px solid var(--line);border-radius:20px;background:rgba(11,17,34,.76);overflow:hidden}.chapter.locked{opacity:.42;filter:saturate(.45)}.chapter.done{border-color:rgba(53,211,154,.35)}.chapter.current{border-color:rgba(139,92,246,.65);box-shadow:0 0 0 2px rgba(139,92,246,.08),0 10px 35px rgba(91,93,252,.13)}
+.chapter-title{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:16px}.chapter-title h3{margin:0;font-size:1.12rem}.status{font-size:.72rem;font-weight:950;letter-spacing:.04em;padding:6px 9px;border-radius:999px;background:#252e45;color:#c4cce0}.current .status{background:rgba(139,92,246,.2);color:#d8c9ff}.done .status{background:rgba(53,211,154,.15);color:#82e8c1}
+.steps{display:grid;grid-template-columns:repeat(10,minmax(36px,1fr));gap:9px;align-items:center}.step{aspect-ratio:1;max-width:58px;width:100%;justify-self:center;border-radius:50%;border:2px solid #39445e;background:#11182b;color:#8f9bb4;display:grid;place-items:center;font-weight:950;position:relative;cursor:default}.step.done{background:#173d36;border-color:var(--green);color:#9af0d0}.step.current{cursor:pointer;background:linear-gradient(145deg,#7254e9,#4e52e8);border-color:#d7ceff;color:#fff;box-shadow:0 0 18px rgba(139,92,246,.55);animation:pulse 1.8s infinite}.step.locked{opacity:.55}.step.current:hover{transform:scale(1.08)}
+@keyframes pulse{50%{box-shadow:0 0 28px rgba(139,92,246,.8)}}
+.boss{height:150px;display:grid;grid-template-columns:1fr;place-items:center;position:relative;border-left:1px solid var(--line)}.boss img{max-height:120px;max-width:175px;object-fit:contain;filter:drop-shadow(0 12px 18px rgba(0,0,0,.5))}.boss-name{position:absolute;bottom:-2px;background:rgba(7,11,24,.88);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-weight:950;font-size:.8rem}.boss.ready{cursor:pointer}.boss.ready img{filter:drop-shadow(0 0 16px rgba(247,198,93,.55))}.boss.ready:before{content:"BOSS DÉBLOQUÉ";position:absolute;top:-5px;z-index:2;color:#ffe0a0;font-size:.7rem;font-weight:950;letter-spacing:.05em}.boss.defeated:after{content:"✓";position:absolute;right:12px;top:10px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--green);color:#07130f;font-weight:1000}
+
+/* Combat */
+.combat{padding:20px}.combat-top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:16px}.combat-top h2{margin:0}.score{font-weight:950;font-size:1.1rem}.statbox{text-align:center;padding:12px;border-radius:16px;background:#0c1327;border:1px solid var(--line);margin-bottom:18px}.statbox small{display:block;color:var(--muted);font-weight:800}.statbox strong{font-size:1.35rem}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,220px));justify-content:center;gap:16px}.card{position:relative;border:2px solid transparent;border-radius:16px;background:#10182d;padding:8px;cursor:pointer;color:#fff;transition:.18s}.card:hover{transform:translateY(-3px);border-color:#7b67e8}.card.selected{border-color:#b7a5ff;box-shadow:0 0 22px rgba(139,92,246,.45);transform:translateY(-4px)}.card img{display:block;width:100%;aspect-ratio:2/3;object-fit:contain;border-radius:11px}.card b{display:block;margin:7px 2px 1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.card .rar{color:var(--muted);font-size:.72rem}.actions{display:flex;justify-content:center;gap:12px;margin-top:18px}.primary{border:0;border-radius:12px;padding:12px 20px;background:linear-gradient(90deg,var(--blue),var(--violet));color:#fff;font-weight:950;cursor:pointer}.primary:disabled{opacity:.4;cursor:not-allowed}.secondary{border:1px solid var(--line);border-radius:12px;padding:12px 18px;background:#151e35;color:#fff;cursor:pointer}.result{text-align:center;margin:15px auto 0;max-width:680px;padding:12px;border-radius:14px;background:#0b1225;border:1px solid var(--line)}
+.enemy-reveal{display:flex;justify-content:center;margin-top:15px}.enemy-reveal .card{width:min(210px,50vw);cursor:default}
+
+/* Boss fight */
+.boss-fight-grid{display:grid;grid-template-columns:330px 1fr;gap:20px}.boss-side{text-align:center;padding:18px}.boss-side img{max-width:100%;height:250px;object-fit:contain}.hphead{display:flex;justify-content:space-between;gap:10px;font-size:.78rem;font-weight:900}.hpbar{height:20px;border:2px solid rgba(255,255,255,.14);border-radius:999px;overflow:hidden;background:#050915;margin:7px 0}.hpfill{height:100%;background:linear-gradient(90deg,#5b5dfc,#8b5cf6,#c044ff);transition:width .45s}.boss-cards{grid-template-columns:repeat(4,minmax(0,170px));max-height:550px;overflow:auto;padding:5px}.boss-cards .card img{aspect-ratio:2/3}.damage{font-size:1.25rem;font-weight:950;color:#d8c9ff}
+
+/* Modal */
+.modal{position:fixed;inset:0;z-index:50;background:rgba(2,5,14,.82);backdrop-filter:blur(8px);display:grid;place-items:center;padding:20px}.modalbox{width:min(560px,100%);padding:28px;text-align:center}.modalbox h2{font-size:2rem;margin:0 0 8px}.rewards{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:18px 0}.reward{padding:12px 15px;border:1px solid var(--line);border-radius:14px;background:#11192e;font-weight:900}.reward-card{width:180px;margin:14px auto}.toast{position:fixed;right:18px;bottom:18px;z-index:80;background:#151e35;border:1px solid var(--line);border-radius:12px;padding:12px 15px;box-shadow:0 12px 35px #0008}
+@media(max-width:900px){.universe-grid{grid-template-columns:repeat(2,1fr)}.chapter{grid-template-columns:1fr}.boss{border-left:0;border-top:1px solid var(--line)}.steps{grid-template-columns:repeat(5,1fr)}.boss-fight-grid{grid-template-columns:1fr}.boss-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:560px){.page{padding:12px}.universe-grid{grid-template-columns:1fr}.route-shell{padding:14px 10px}.chapter{padding:14px}.steps{gap:6px}.cards,.boss-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.top .sub{display:none}}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <a class="back" href="/BOTM_2.0/">← Accueil</a>
+    <div style="text-align:center"><h1>🗺️ Campagne</h1><div class="sub">Progresse dans chaque univers et affronte ses Boss.</div></div>
+    <div style="width:84px"></div>
+  </header>
+
+  <section id="selectView">
+    <div class="universe-grid" id="universeGrid"></div>
+  </section>
+
+  <section id="routeView" class="hidden">
+    <div class="campaign-head">
+      <div><h2 id="campaignTitle"></h2><p id="campaignInfo"></p></div>
+      <button class="change" id="changeUniverse">Changer d'univers</button>
+    </div>
+    <div class="panel route-shell"><div class="route" id="route"></div></div>
+  </section>
+
+  <section id="stageView" class="hidden panel combat">
+    <div class="combat-top"><button class="secondary" id="leaveStage">← Parcours</button><h2 id="stageTitle">Étape</h2><div class="score" id="stageScore">0 - 0</div></div>
+    <div class="statbox"><small>STAT DU ROUND</small><strong id="stageStat">—</strong></div>
+    <div class="cards" id="stageCards"></div>
+    <div class="enemy-reveal" id="enemyReveal"></div>
+    <div class="result hidden" id="stageResult"></div>
+  </section>
+
+  <section id="bossView" class="hidden">
+    <div class="boss-fight-grid">
+      <div class="panel boss-side">
+        <button class="secondary" id="leaveBoss">← Parcours</button>
+        <h2 id="fightBossName">Boss</h2>
+        <img id="fightBossImg" alt="">
+        <div class="hphead"><span>PV DU BOSS</span><span id="bossHpPct">100 %</span></div>
+        <div class="hpbar"><div class="hpfill" id="bossHpFill"></div></div>
+        <div id="bossHpText">—</div>
+        <div class="damage" id="bossDamage">0 dégâts</div>
+      </div>
+      <div class="panel combat">
+        <div class="combat-top"><h2 id="bossRoundTitle">Round 1/3</h2><div id="bossSelected">0 / 3 cartes</div></div>
+        <div class="statbox"><small>STATS DU ROUND</small><strong id="bossStats">—</strong></div>
+        <div class="cards boss-cards" id="bossCards"></div>
+        <div class="actions"><button class="primary" id="validateBoss" disabled>Valider mes 3 cartes</button></div>
+        <div class="result hidden" id="bossResult"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="modal hidden" id="soonModal"><div class="panel modalbox"><h2>À venir</h2><p id="soonText"></p><button class="primary" onclick="closeSoon()">Compris</button></div></div>
+<div class="modal hidden" id="rewardModal"><div class="panel modalbox"><h2>🏆 Boss vaincu !</h2><p id="rewardBoss"></p><div class="rewards" id="rewardList"></div><div id="rewardCard"></div><button class="primary" id="claimReward">Récupérer mes récompenses</button></div></div>
+
+<script type="module">
+import { BOTM, supabase } from "/BOTM_2.0/app.js";
+
+const $=s=>document.querySelector(s);
+let campaigns=[], currentUniverse=null, progress=null, stageState=null, bossState=null, bossSelection=new Set();
+
+const rarityLabel={commune:"Commune",rare:"Rare",super_rare:"Super Rare",tres_rare:"Très Rare",ultra_rare:"Ultra Rare"};
+const views=["selectView","routeView","stageView","bossView"];
+function show(id){views.forEach(v=>$("#"+v).classList.toggle("hidden",v!==id));}
+function imgPath(c){return BOTM.imagePath(c);}
+function bossPath(path){if(!path)return ""; if(/^https?:\/\//i.test(path))return path; return new URL(String(path).replace(/^\/+/,""),location.origin+"/BOTM_2.0/").href;}
+function cardName(c){return (c.character_name||c.file_name||"Carte").replace(/\.[^.]+$/,"");}
+function fmt(n){return Number(n||0).toLocaleString("fr-FR");}
+function toast(msg){let t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.append(t);setTimeout(()=>t.remove(),3200);}
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
+
+async function boot(){
+  const {data:{session}}=await supabase.auth.getSession();
+  if(!session){location.href="/BOTM_2.0/login.html";return;}
+  const {data,error}=await supabase.rpc("get_campaigns");
+  if(error){toast(error.message);return;}
+  campaigns=data||[]; renderUniverses();
+}
+function renderUniverses(){
+  $("#universeGrid").innerHTML=campaigns.map(c=>`
+    <button class="universe ${c.active?"":"soon"}" data-u="${esc(c.universe)}">
+      <span class="tag">${c.active?`${c.boss_count} Boss`:"Prochainement"}</span>
+      <h2>${esc(c.title)}</h2>
+      <div class="sub">${c.active?"Commencer / continuer la campagne":"Campagne en préparation"}</div>
+    </button>`).join("");
+  document.querySelectorAll(".universe").forEach(b=>b.onclick=()=>{
+    const c=campaigns.find(x=>x.universe===b.dataset.u);
+    if(!c.active){$("#soonText").textContent=`La campagne ${c.title} sera disponible prochainement.`;$("#soonModal").classList.remove("hidden");return;}
+    openCampaign(c.universe);
+  });
+}
+window.closeSoon=()=>$("#soonModal").classList.add("hidden");
+
+async function openCampaign(universe){
+  currentUniverse=universe;
+  const {data,error}=await supabase.rpc("get_campaign_progress",{p_universe:universe});
+  if(error){toast(error.message);return;}
+  progress=data;
+  $("#campaignTitle").textContent=`${progress.title} — Campagne`;
+  $("#campaignInfo").textContent=`Boss ${progress.boss_order} • ${progress.stages_completed}/10 étapes`;
+  renderRoute(); show("routeView");
+  await checkReward();
+}
+function renderRoute(){
+  const bosses=progress.bosses||[];
+  $("#route").innerHTML=bosses.map(b=>{
+    const past=b.order<progress.boss_order;
+    const current=b.order===progress.boss_order;
+    const future=b.order>progress.boss_order;
+    const stages=current?Number(progress.stages_completed||0):(past?10:0);
+    const bossReady=current&&stages>=Number(b.stage_count||10);
+    const cls=past?"done":current?"current":"locked";
+    const status=past?"TERMINÉ":current?(bossReady?"BOSS DÉBLOQUÉ":`${stages}/10`):"VERROUILLÉ";
+    const nodes=Array.from({length:Number(b.stage_count||10)},(_,i)=>{
+      const n=i+1, done=past||n<=stages, active=current&&n===stages+1&&!bossReady;
+      return `<button class="step ${done?"done":active?"current":"locked"}" ${active?`data-stage="${n}"`:""}>${done?"✓":n}</button>`;
+    }).join("");
+    return `<article class="chapter ${cls}">
+      <div><div class="chapter-title"><h3>Palier ${b.order} — ${esc(b.name)}</h3><span class="status">${status}</span></div><div class="steps">${nodes}</div></div>
+      <div class="boss ${past?"defeated":bossReady?"ready":""}" ${bossReady?`data-boss="${b.order}"`:""}>
+        <img src="${bossPath(b.image_path)}" alt="${esc(b.name)}"><span class="boss-name">${esc(b.name)} • ${fmt(b.max_hp)} PV</span>
+      </div>
+    </article>`;
+  }).join("");
+  document.querySelectorAll(".step.current").forEach(x=>x.onclick=startStage);
+  document.querySelectorAll(".boss.ready").forEach(x=>x.onclick=startBoss);
+}
+
+async function startStage(){
+  const {data,error}=await supabase.rpc("start_campaign_stage",{p_universe:currentUniverse});
+  if(error){toast(error.message);return;}
+  stageState=data; renderStage(); show("stageView");
+}
+function renderStage(){
+  $("#stageTitle").textContent=`Étape ${stageState.stage_number}/10 — Round ${stageState.round_number}/3`;
+  $("#stageScore").textContent=`${stageState.player_score} - ${stageState.enemy_score}`;
+  $("#stageStat").textContent=stageState.stat;
+  $("#enemyReveal").innerHTML=""; $("#stageResult").classList.add("hidden");
+  $("#stageCards").innerHTML=(stageState.player_cards||[]).map(c=>cardHTML(c)).join("");
+  document.querySelectorAll("#stageCards .card").forEach(el=>el.onclick=()=>playStage(Number(el.dataset.id)));
+}
+function cardHTML(c,selected=false){
+ return `<button class="card ${selected?"selected":""}" data-id="${c.id}">
+  <img src="${imgPath(c)}" alt=""><b>${esc(cardName(c))}</b><span class="rar">${rarityLabel[c.rarity]||esc(c.rarity)}</span>
+ </button>`;
+}
+async function playStage(cardId){
+  document.querySelectorAll("#stageCards .card").forEach(x=>x.disabled=true);
+  const {data,error}=await supabase.rpc("play_campaign_stage_round",{p_session_id:stageState.session_id,p_player_card_id:cardId});
+  if(error){toast(error.message);document.querySelectorAll("#stageCards .card").forEach(x=>x.disabled=false);return;}
+  $("#enemyReveal").innerHTML=cardHTML(data.enemy_card);
+  $("#stageResult").classList.remove("hidden");
+  const word=data.result==="win"?"Round gagné":data.result==="loss"?"Round perdu":"Égalité";
+  $("#stageResult").innerHTML=`<b>${word}</b> — ${data.player_value} contre ${data.enemy_value}`;
+  if(data.stage_completed){
+    setTimeout(async()=>{
+      if(data.stage_won) toast(`Étape réussie : +${data.reward_points} points`);
+      else toast("Étape perdue — tu peux la recommencer.");
+      await openCampaign(currentUniverse);
+    },1200);
+  }else{
+    stageState=data.next_round;
+    setTimeout(renderStage,1100);
+  }
+}
+
+async function startBoss(){
+  const {data,error}=await supabase.rpc("start_campaign_boss",{p_universe:currentUniverse});
+  if(error){toast(error.message);return;}
+  bossState=data; bossSelection.clear(); renderBoss(); show("bossView");
+}
+function renderBoss(){
+  $("#fightBossName").textContent=bossState.boss_name;
+  $("#fightBossImg").src=bossPath(bossState.boss_image_path);
+  updateBossHp(bossState.boss_current_hp,bossState.boss_max_hp);
+  $("#bossDamage").textContent=`${fmt(bossState.total_damage)} dégâts`;
+  $("#bossRoundTitle").textContent=`Round ${bossState.round.round_number}/3`;
+  $("#bossStats").textContent=`${bossState.round.stat_1} + ${bossState.round.stat_2}`;
+  bossSelection.clear(); updateBossSelected();
+  $("#bossResult").classList.add("hidden");
+  $("#bossCards").innerHTML=(bossState.cards||[]).map(c=>cardHTML(c)).join("");
+  document.querySelectorAll("#bossCards .card").forEach(el=>el.onclick=()=>toggleBossCard(el));
+}
+function updateBossHp(cur,max){
+  const pct=Math.max(0,Math.min(100,Number(cur)/Number(max)*100));
+  $("#bossHpPct").textContent=pct.toLocaleString("fr-FR",{maximumFractionDigits:1})+" %";
+  $("#bossHpFill").style.width=pct+"%"; $("#bossHpText").textContent=`${fmt(cur)} / ${fmt(max)} PV`;
+}
+function toggleBossCard(el){
+  const id=Number(el.dataset.id);
+  if(bossSelection.has(id)){bossSelection.delete(id);el.classList.remove("selected");}
+  else if(bossSelection.size<3){bossSelection.add(id);el.classList.add("selected");}
+  updateBossSelected();
+}
+function updateBossSelected(){
+  $("#bossSelected").textContent=`${bossSelection.size} / 3 cartes`;
+  $("#validateBoss").disabled=bossSelection.size!==3;
+}
+$("#validateBoss").onclick=async()=>{
+  $("#validateBoss").disabled=true;
+  const {data,error}=await supabase.rpc("play_campaign_boss_round",{p_attempt_id:bossState.attempt_id,p_card_ids:[...bossSelection]});
+  if(error){toast(error.message);updateBossSelected();return;}
+  updateBossHp(data.boss_current_hp,data.boss_max_hp);
+  $("#bossDamage").textContent=`${fmt(data.attempt_total_damage)} dégâts`;
+  $("#bossResult").classList.remove("hidden");
+  $("#bossResult").innerHTML=`<b>-${fmt(data.round_damage)} PV</b> infligés à ${esc(bossState.boss_name)}.`;
+  if(data.attempt_completed){
+    setTimeout(async()=>{
+      if(data.attempt_won){await checkReward(true);}
+      else{toast("Boss non vaincu après 3 rounds — nouvelle tentative nécessaire.");await openCampaign(currentUniverse);}
+    },1000);
+  }else{
+    bossState.boss_current_hp=data.boss_current_hp;
+    bossState.total_damage=data.attempt_total_damage;
+    bossState.round=data.next_round;
+    setTimeout(renderBoss,1000);
+  }
+};
+
+async function checkReward(force=false){
+  const {data,error}=await supabase.rpc("get_campaign_boss_reward",{p_universe:currentUniverse});
+  if(error){if(force)toast(error.message);return;}
+  if(!data?.pending)return;
+  $("#rewardBoss").textContent=`${data.boss_name} est vaincu. Voici ta récompense.`;
+  $("#rewardList").innerHTML=`<div class="reward">✨ ${data.miracle_draws} Pioches Miracle</div><div class="reward">🎁 ${data.boosters} Booster</div>`;
+  $("#rewardCard").innerHTML=data.card?`<div class="reward-card">${cardHTML(data.card)}</div>`:"";
+  $("#claimReward").dataset.id=data.reward_id;
+  $("#rewardModal").classList.remove("hidden");
+}
+$("#claimReward").onclick=async()=>{
+  const id=Number($("#claimReward").dataset.id); $("#claimReward").disabled=true;
+  const {data,error}=await supabase.rpc("claim_campaign_boss_reward",{p_reward_id:id});
+  if(error){toast(error.message);$("#claimReward").disabled=false;return;}
+  $("#rewardModal").classList.add("hidden"); $("#claimReward").disabled=false;
+  toast(data.campaign_finished?"Campagne disponible terminée !":`${data.next_boss_name} est maintenant débloqué.`);
+  await openCampaign(currentUniverse);
+};
+
+$("#changeUniverse").onclick=()=>{currentUniverse=null;show("selectView");};
+$("#leaveStage").onclick=()=>openCampaign(currentUniverse);
+$("#leaveBoss").onclick=()=>openCampaign(currentUniverse);
+
+await boot();
+</script>
+</body>
+</html>
