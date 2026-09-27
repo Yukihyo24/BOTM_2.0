@@ -377,6 +377,36 @@
 }
 </style>
 
+
+<style>
+/* Accueil Raids Titans — logo BOTM fondu conservé derrière le bandeau */
+.titan-home-hero{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+}
+.titan-home-hero::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  left:30%;
+  top:50%;
+  width:min(470px,42vw);
+  aspect-ratio:1;
+  transform:translate(-50%,-50%);
+  background:center/contain no-repeat url("/BOTM_2.0/assets/botm-logo-mark.png");
+  opacity:.075;
+  pointer-events:none;
+}
+.titan-home-hero > *{position:relative;z-index:1}
+.feature-card.titan-mode::after{
+  background:radial-gradient(circle,rgba(139,92,246,.52) 0%,rgba(91,93,252,.18) 45%,transparent 72%) !important;
+}
+@media(max-width:760px){
+  .titan-home-hero::before{left:50%;width:78vw;opacity:.055}
+}
+</style>
+
 </head>
 
 <body class="home-page">
@@ -408,6 +438,7 @@
       <a href="/BOTM_2.0/ascension.html"><span>🪜</span> L’Ascension</a>
       <a href="/BOTM_2.0/roulette.html"><span>🎰</span> Roulette du Multivers</a>
       <a href="/BOTM_2.0/duel-lobby.html"><span>🆚</span> Duel PvP</a>
+      <a href="/BOTM_2.0/raids-titans.html"><span>🏟️</span> Raids Titans</a>
       <a href="/BOTM_2.0/boutique.html"><span>💰</span> Boutique</a>
       <a href="/BOTM_2.0/booster.html"><span>🎁</span> Boosters</a>
       <a href="/BOTM_2.0/pioche.html"><span>✨</span> Pioche Miracle</a>
@@ -527,6 +558,11 @@
         <div class="feature-icon">🆚</div>
         <div><h3>Duel PvP</h3><p>Prépare ton deck de 40 cartes, défie un joueur et impose ta stratégie sur sept lignes.</p></div>
         <span class="feature-link">Entrer dans l’arène →</span>
+      </a>
+      <a class="feature-card titan-mode" href="/BOTM_2.0/raids-titans.html">
+        <div class="feature-icon">🏟️</div>
+        <div><h3>Raids Titans</h3><p>Prépare ton deck Titan et unis tes dégâts à ceux des autres joueurs pour abattre le Titan actif.</p></div>
+        <span class="feature-link">Affronter le Titan →</span>
       </a>
       <a class="feature-card roulette-mode" href="/BOTM_2.0/roulette.html">
         <div class="feature-icon">🎰</div>
