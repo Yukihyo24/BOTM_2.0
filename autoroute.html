@@ -4,7 +4,8 @@
 <style>
 .hw{width:min(1250px,95vw);margin:auto;padding:24px 0 60px}.top,.stats{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.top{align-items:center;margin-bottom:18px}.top h1{margin:0}.stats>div{flex:1;min-width:150px;text-align:center;padding:11px;border-radius:12px;background:#090f26;border:1px solid #283153}.stage{margin-top:15px;padding:24px;min-height:500px;border-radius:20px;background:#080e24;border:1px solid #293254}.center{text-align:center}.intro{padding:70px 15px}.intro h2{font-size:2rem}.mut{color:#96a1bf}.cards,.routes{display:flex;justify-content:center;gap:15px;flex-wrap:wrap}.card{width:210px;padding:7px;border-radius:15px;background:#070c20;border:2px solid #273151;color:inherit;text-align:center}.card img{width:100%;border-radius:10px;display:block}.card button{}.pick{cursor:pointer;transition:.2s}.pick:hover:not(:disabled){transform:translateY(-5px);border-color:#886cff}.pick.selected{border-color:#ffd267;box-shadow:0 0 20px #ffd26722}.pick:disabled{opacity:.35;cursor:not-allowed}.meta{padding:8px 3px}.meta b,.meta small{display:block}.meta small{color:#8995b5;margin-top:4px}.pill{display:inline-block!important;padding:5px 8px;margin-top:7px!important;border-radius:7px;background:#6f4dff22;color:#eeeaff!important;font-weight:bold}.section{text-align:center;margin:18px 0}.section h2{margin:5px}.action{margin-top:20px;text-align:center}.result{display:flex;justify-content:center;align-items:center;gap:25px;flex-wrap:wrap}.vs{text-align:center;font-size:1.4rem;font-weight:bold}.win{border-color:#62e9a0}.loss{border-color:#ff6e8c;opacity:.7}.reward{font-size:1.4rem;color:#ffd267;font-weight:bold;margin:18px}
 @media(max-width:650px){.card{width:min(260px,85vw)}}
-</style></head><body>
+</style><link rel="stylesheet" href="/BOTM_2.0/social.css">
+</head><body>
 <div class="hw"><header class="top"><div><h1>🛣️ Autoroute de la Fortune</h1><div class="mut">Dix péages. Trois routes. Un jackpot.</div></div>
 <div><a class="btn" href="/BOTM_2.0/index.html">← Menu</a> <span class="badge">💠 <span data-points>0</span> pts</span></div></header>
 <div class="stats"><div>Péage<br><b id="toll">0 / 10</b></div><div>Victoires<br><b id="wins">0 / 10</b></div><div>Essais disponibles<br><b id="attempts">5 / 5</b><br><small id="cooldown" class="mut"></small></div><div>Jackpot parfait<br><b>250 pts</b></div></div>
@@ -76,4 +77,5 @@ async function final(d){
   document.getElementById("again").onclick=()=>location.reload();
 }
 document.getElementById("start").onclick=start;
-</script></body></html>
+</script><script type="module" src="/BOTM_2.0/social.js"></script>
+</body></html>

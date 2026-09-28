@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Connexion - BOTM</title><link rel="stylesheet" href="/BOTM_2.0/styles.css"></head>
+<title>Connexion - BOTM</title><link rel="stylesheet" href="/BOTM_2.0/styles.css"><link rel="stylesheet" href="/BOTM_2.0/social.css">
+</head>
 <body><div class="app"><div class="form panel">
 <div class="brand"><img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png" alt="BOTM"><div><h1>Battle of the Multiverse</h1><div class="muted">Compte joueur</div></div></div>
 <hr>
@@ -56,4 +57,5 @@ document.getElementById("submit").onclick=async()=>{
 };
 const {data}=await supabase.auth.getSession();
 if(data.session) location.href="/BOTM_2.0/index.html";
-</script></body></html>
+</script><script type="module" src="/BOTM_2.0/social.js"></script>
+</body></html>

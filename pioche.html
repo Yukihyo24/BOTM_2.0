@@ -130,6 +130,7 @@ body{overflow-x:hidden}.panel{min-height:720px;position:relative;overflow:hidden
   #miracle-reveal-overlay.result-done #miracle-reveal-close{display:inline-flex}
 
 </style>
+<link rel="stylesheet" href="/BOTM_2.0/social.css">
 </head><body><div class="app">
 <div class="topbar"><div class="brand"><img src="https://i83.servimg.com/u/f83/19/48/18/17/logo10.png"><div><h1>✨ Pioche Miracle</h1></div></div><span class="badge">✨ <span data-miracles></span></span></div>
 <div class="nav"><a class="btn" href="index.html">← Menu</a></div><div class="panel">
@@ -186,4 +187,5 @@ document.getElementById("miracle-reveal-close").onclick=()=>{
 };
 
 async function choose(cardId){const {data,error}=await supabase.rpc("choose_miracle_card",{p_session_id:sessionId,p_card_id:cardId});const m=document.getElementById("msg");if(error){m.textContent=error.message;return;}render(data);document.querySelectorAll("#miracle-overlay-cards button").forEach(b=>b.remove());m.textContent="Carte ajoutée à ta collection !";await BOTM.refreshHeader();}
-</script></body></html>
+</script><script type="module" src="/BOTM_2.0/social.js"></script>
+</body></html>
