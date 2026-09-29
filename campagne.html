@@ -269,8 +269,27 @@ button,a{font:inherit}.page{max-width:1450px;margin:auto;padding:20px}.top{displ
 #routeView .step:nth-of-type(10){left:76%;top:84%;bottom:auto}
 #routeView .boss{margin:12px auto 12px}
 
+
+/* ===== Deck Campagne 15 cartes ===== */
+.deck-btn{margin-top:8px}
+.deck-modalbox{width:min(1180px,94vw);max-height:90vh;overflow:auto}
+.deck-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px}
+.deck-count{font-weight:900;font-size:1.05rem}
+.deck-count.ok{color:#7ef0c5}
+.deck-count.bad{color:#ff9cad}
+.deck-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:18px 0}
+.deck-card{position:relative;border:2px solid transparent;border-radius:16px;background:#091027;padding:8px;cursor:pointer;color:inherit;text-align:left}
+.deck-card img{width:100%;aspect-ratio:5/7;object-fit:cover;border-radius:11px;display:block}
+.deck-card.selected{border-color:#7ef0c5;box-shadow:0 0 0 2px rgba(126,240,197,.25),0 0 24px rgba(126,240,197,.18)}
+.deck-card .deck-check{position:absolute;right:12px;top:12px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#111a38;border:1px solid #6f7cab;font-weight:900}
+.deck-card.selected .deck-check{background:#2c9b78;border-color:#8affd5}
+.deck-card .deck-name{display:block;font-weight:800;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.deck-card .deck-rarity{font-size:.78rem;opacity:.7}
+.deck-actions{display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;padding:12px 0 2px;background:linear-gradient(transparent,#080d20 28%)}
+@media(max-width:850px){.deck-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:520px){.deck-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.deck-head{align-items:flex-start;flex-direction:column}}
+
 </style>
-<link rel="stylesheet" href="/BOTM_2.0/social.css">
 </head>
 <body>
 <div class="page">
@@ -286,7 +305,7 @@ button,a{font:inherit}.page{max-width:1450px;margin:auto;padding:20px}.top{displ
 
   <section id="routeView" class="hidden">
     <div class="campaign-head">
-      <div><h2 id="campaignTitle"></h2><p id="campaignInfo"></p></div>
+      <div><h2 id="campaignTitle"></h2><p id="campaignInfo"></p><button class="secondary deck-btn" id="openCampaignDeck">Deck de campagne — 0/15</button></div>
       <button class="change" id="changeUniverse">Changer d'univers</button>
     </div>
     <div class="panel route-shell"><div class="route" id="route"></div></div>
@@ -325,11 +344,29 @@ button,a{font:inherit}.page{max-width:1450px;margin:auto;padding:20px}.top{displ
 <div class="modal hidden" id="soonModal"><div class="panel modalbox"><h2>À venir</h2><p id="soonText"></p><button class="primary" onclick="closeSoon()">Compris</button></div></div>
 <div class="modal hidden" id="rewardModal"><div class="panel modalbox"><h2>🏆 Boss vaincu !</h2><p id="rewardBoss"></p><div class="rewards" id="rewardList"></div><div id="rewardCard"></div><button class="primary" id="claimReward">Récupérer mes récompenses</button></div></div>
 
+
+<div class="modal hidden" id="deckModal">
+  <div class="panel modalbox deck-modalbox">
+    <div class="deck-head">
+      <div>
+        <h2 id="deckTitle">Deck de campagne</h2>
+        <p>Sélectionne exactement 15 cartes de cet univers. Les cartes proposées pendant les étapes et les Boss seront tirées uniquement dans ce deck.</p>
+      </div>
+      <div class="deck-count bad" id="deckCount">0 / 15</div>
+    </div>
+    <div class="deck-grid" id="deckGrid"></div>
+    <div class="deck-actions">
+      <button class="secondary" id="closeCampaignDeck">Annuler</button>
+      <button class="primary" id="saveCampaignDeck" disabled>Enregistrer le deck</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { BOTM, supabase } from "/BOTM_2.0/app.js";
 
 const $=s=>document.querySelector(s);
-let campaigns=[], currentUniverse=null, progress=null, stageState=null, bossState=null, bossSelection=new Set();
+let campaigns=[], currentUniverse=null, progress=null, stageState=null, bossState=null, bossSelection=new Set(), campaignDeckSelection=new Set(), campaignDeckData=null;
 
 const rarityLabel={commune:"Commune",rare:"Rare",super_rare:"Super Rare",tres_rare:"Très Rare",ultra_rare:"Ultra Rare"};
 const views=["selectView","routeView","stageView","bossView"];
@@ -371,6 +408,7 @@ async function openCampaign(universe){
   $("#campaignTitle").textContent=`${progress.title} — Campagne`;
   $("#campaignInfo").textContent=`Boss ${progress.boss_order} • ${progress.stages_completed}/10 étapes`;
   renderRoute(); show("routeView");
+  await refreshCampaignDeckStatus();
   await checkReward();
 }
 function renderRoute(){
@@ -401,6 +439,70 @@ function renderRoute(){
   document.querySelectorAll(".step.current").forEach(x=>x.onclick=startStage);
   document.querySelectorAll(".boss.ready").forEach(x=>x.onclick=startBoss);
 }
+
+
+async function refreshCampaignDeckStatus(){
+  if(!currentUniverse)return;
+  const {data,error}=await supabase.rpc("get_campaign_deck",{p_universe:currentUniverse});
+  if(error){toast(error.message);return;}
+  campaignDeckData=data;
+  const count=Number(data?.valid_count??0);
+  const btn=$("#openCampaignDeck");
+  btn.textContent=`Deck de campagne — ${count}/15`;
+  btn.classList.toggle("primary",data?.valid===true);
+}
+
+async function openCampaignDeck(){
+  const {data,error}=await supabase.rpc("get_campaign_deck",{p_universe:currentUniverse});
+  if(error){toast(error.message);return;}
+  campaignDeckData=data;
+  campaignDeckSelection=new Set((data.cards||[]).filter(c=>c.selected).map(c=>Number(c.id)));
+  $("#deckTitle").textContent=`Deck ${currentUniverse} — 15 cartes`;
+  renderCampaignDeck();
+  $("#deckModal").classList.remove("hidden");
+}
+
+function renderCampaignDeck(){
+  const cards=campaignDeckData?.cards||[];
+  const n=campaignDeckSelection.size;
+  $("#deckCount").textContent=`${n} / 15`;
+  $("#deckCount").classList.toggle("ok",n===15);
+  $("#deckCount").classList.toggle("bad",n!==15);
+  $("#saveCampaignDeck").disabled=n!==15;
+  $("#deckGrid").innerHTML=cards.map(c=>{
+    const selected=campaignDeckSelection.has(Number(c.id));
+    return `<button class="deck-card ${selected?"selected":""}" data-id="${c.id}">
+      <span class="deck-check">${selected?"✓":"+"}</span>
+      <img src="${imgPath(c)}" alt="${esc(cardName(c))}">
+      <span class="deck-name">${esc(cardName(c))}</span>
+      <span class="deck-rarity">${esc(rarityLabel[c.rarity]||c.rarity)}</span>
+    </button>`;
+  }).join("");
+  document.querySelectorAll("#deckGrid .deck-card").forEach(el=>el.onclick=()=>{
+    const id=Number(el.dataset.id);
+    if(campaignDeckSelection.has(id)) campaignDeckSelection.delete(id);
+    else{
+      if(campaignDeckSelection.size>=15){toast("Le deck contient déjà 15 cartes.");return;}
+      campaignDeckSelection.add(id);
+    }
+    renderCampaignDeck();
+  });
+}
+
+$("#openCampaignDeck").onclick=openCampaignDeck;
+$("#closeCampaignDeck").onclick=()=>$("#deckModal").classList.add("hidden");
+$("#saveCampaignDeck").onclick=async()=>{
+  if(campaignDeckSelection.size!==15)return;
+  $("#saveCampaignDeck").disabled=true;
+  const {error}=await supabase.rpc("save_campaign_deck",{
+    p_universe:currentUniverse,
+    p_card_ids:[...campaignDeckSelection]
+  });
+  if(error){toast(error.message);renderCampaignDeck();return;}
+  $("#deckModal").classList.add("hidden");
+  toast("Deck de campagne enregistré : 15/15.");
+  await refreshCampaignDeckStatus();
+};
 
 async function startStage(){
   const {data,error}=await supabase.rpc("start_campaign_stage",{p_universe:currentUniverse});
@@ -518,6 +620,5 @@ $("#leaveBoss").onclick=()=>openCampaign(currentUniverse);
 
 await boot();
 </script>
-<script type="module" src="/BOTM_2.0/social.js"></script>
 </body>
 </html>
