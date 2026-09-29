@@ -277,6 +277,9 @@ button,a{font:inherit}.page{max-width:1450px;margin:auto;padding:20px}.top{displ
 .deck-count{font-weight:900;font-size:1.05rem}
 .deck-count.ok{color:#7ef0c5}
 .deck-count.bad{color:#ff9cad}
+.deck-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 0 14px}
+.deck-tools label{font-weight:800}
+.deck-tools select{background:#0b1330;color:#fff;border:1px solid #53608d;border-radius:12px;padding:10px 12px;font:inherit}
 .deck-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:18px 0}
 .deck-card{position:relative;border:2px solid transparent;border-radius:16px;background:#091027;padding:8px;cursor:pointer;color:inherit;text-align:left}
 .deck-card img{width:100%;aspect-ratio:5/7;object-fit:cover;border-radius:11px;display:block}
@@ -353,6 +356,13 @@ button,a{font:inherit}.page{max-width:1450px;margin:auto;padding:20px}.top{displ
         <p>Sélectionne exactement 15 cartes de cet univers. Les cartes proposées pendant les étapes et les Boss seront tirées uniquement dans ce deck.</p>
       </div>
       <div class="deck-count bad" id="deckCount">0 / 15</div>
+    </div>
+    <div class="deck-tools">
+      <label for="deckRaritySort">Trier par rareté</label>
+      <select id="deckRaritySort">
+        <option value="desc">Plus rare → plus commune</option>
+        <option value="asc">Plus commune → plus rare</option>
+      </select>
     </div>
     <div class="deck-grid" id="deckGrid"></div>
     <div class="deck-actions">
@@ -463,7 +473,13 @@ async function openCampaignDeck(){
 }
 
 function renderCampaignDeck(){
-  const cards=campaignDeckData?.cards||[];
+  const rarityRank={ultra_rare:5,tres_rare:4,super_rare:3,rare:2,commune:1};
+  const direction=$("#deckRaritySort")?.value||"desc";
+  const cards=[...(campaignDeckData?.cards||[])].sort((a,b)=>{
+    const diff=(rarityRank[a.rarity]||0)-(rarityRank[b.rarity]||0);
+    if(diff!==0)return direction==="asc"?diff:-diff;
+    return cardName(a).localeCompare(cardName(b),"fr",{sensitivity:"base"});
+  });
   const n=campaignDeckSelection.size;
   $("#deckCount").textContent=`${n} / 15`;
   $("#deckCount").classList.toggle("ok",n===15);
@@ -490,6 +506,7 @@ function renderCampaignDeck(){
 }
 
 $("#openCampaignDeck").onclick=openCampaignDeck;
+$("#deckRaritySort").onchange=renderCampaignDeck;
 $("#closeCampaignDeck").onclick=()=>$("#deckModal").classList.add("hidden");
 $("#saveCampaignDeck").onclick=async()=>{
   if(campaignDeckSelection.size!==15)return;
