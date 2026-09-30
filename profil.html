@@ -5,6 +5,23 @@
 <title>Profil - BOTM</title>
 <link rel="stylesheet" href="/BOTM_2.0/styles.css">
 <link rel="stylesheet" href="/BOTM_2.0/social.css">
+<style>
+@media(max-width:700px){
+#profile{min-width:0;overflow:hidden}
+#profile .profile-banner{display:grid!important;grid-template-columns:88px minmax(0,1fr)!important;gap:14px!important;align-items:start!important}
+#profile .profile-avatar-large{width:88px!important;height:88px!important;min-width:88px!important}
+#profile .profile-banner>div:nth-child(2){min-width:0!important;width:100%!important}
+#profile .profile-name{min-width:0!important;max-width:100%!important;font-size:clamp(1.65rem,8vw,2.35rem)!important;line-height:1.05!important;overflow-wrap:anywhere!important;word-break:break-word!important}
+#profile .profile-bio,#profile .profile-status{max-width:100%!important;overflow-wrap:anywhere!important}
+#profile .profile-actions{grid-column:1/-1!important;width:100%!important;min-width:0!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+#profile .profile-actions .sbtn{min-width:0!important;width:100%!important;box-sizing:border-box!important;white-space:normal!important;text-align:center!important}
+}
+@media(max-width:430px){
+#profile .profile-banner{grid-template-columns:76px minmax(0,1fr)!important;gap:12px!important}
+#profile .profile-avatar-large{width:76px!important;height:76px!important;min-width:76px!important}
+#profile .profile-actions{grid-template-columns:1fr!important}
+}
+</style>
 </head>
 <body class="social-page">
 <div class="social-wrap">
