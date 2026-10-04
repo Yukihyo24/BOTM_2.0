@@ -177,15 +177,29 @@ function render(){
   const filtered=activeCategory==="all"?rows:rows.filter(x=>x.category===activeCategory);
   const root=document.getElementById("achievements");
   if(!filtered.length){root.innerHTML=`<div class="empty">Aucun succès dans cette catégorie.</div>`;return}
-  const groups=categoryOrder.filter(cat=>filtered.some(x=>x.category===cat));
-  root.innerHTML=groups.map(cat=>{
-    const list=filtered.filter(x=>x.category===cat);
+
+  // Priorité absolue aux succès dont la récompense est récupérable.
+  const claimable=filtered.filter(x=>x.unlocked && !x.claimed && !x.reward_pending);
+  const claimableCodes=new Set(claimable.map(x=>x.code));
+  const remaining=filtered.filter(x=>!claimableCodes.has(x.code));
+
+  const claimableHtml=claimable.length
+    ? `<section class="category"><div class="category-head"><h2>🎁 Récompenses à récupérer</h2><span>${claimable.length} en attente</span></div><div class="ach-grid">${claimable.map(card).join("")}</div></section>`
+    : "";
+
+  const groups=categoryOrder.filter(cat=>remaining.some(x=>x.category===cat));
+  const groupsHtml=groups.map(cat=>{
+    const list=remaining.filter(x=>x.category===cat);
+    const originalCategoryRows=filtered.filter(x=>x.category===cat);
     const [label,icon]=categoryMeta[cat]||[cat,"🏆"];
-    const done=list.filter(x=>x.unlocked).length;
-    return `<section class="category"><div class="category-head"><h2>${icon} ${esc(label)}</h2><span>${done} / ${list.length} débloqués</span></div><div class="ach-grid">${list.map(card).join("")}</div></section>`;
+    const done=originalCategoryRows.filter(x=>x.unlocked).length;
+    return `<section class="category"><div class="category-head"><h2>${icon} ${esc(label)}</h2><span>${done} / ${originalCategoryRows.length} débloqués</span></div><div class="ach-grid">${list.map(card).join("")}</div></section>`;
   }).join("");
+
+  root.innerHTML=claimableHtml+groupsHtml;
   document.querySelectorAll("[data-claim]").forEach(btn=>btn.onclick=()=>claim(btn.dataset.claim));
 }
+
 function updateSummary(){
   document.getElementById("sumUnlocked").textContent=rows.filter(x=>x.unlocked).length;
   document.getElementById("sumClaimed").textContent=rows.filter(x=>x.claimed).length;
