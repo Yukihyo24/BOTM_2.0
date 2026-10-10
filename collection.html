@@ -6,6 +6,13 @@
   <title>Collection - BOTM</title>
   <link rel="stylesheet" href="/BOTM_2.0/styles.css">
   <style>
+    .bulk-panel{margin:14px 0 20px;padding:16px;border:1px solid rgba(159,122,255,.32);border-radius:14px;background:rgba(124,95,255,.07)}
+    .bulk-actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:12px}
+    .bulk-summary{margin-top:12px;font-weight:700;color:#dce3ff}
+    .bulk-status{margin-top:8px;color:#aebbe2;font-size:.88rem}
+    .bulk-choice{display:flex;gap:8px;align-items:center;margin:8px 0;color:#e9eaff;font-size:.83rem}
+    .bulk-choice input{width:18px;height:18px;accent-color:#9f7aff}
+    .bulk-qty{color:#b5c2e4;font-size:.75rem;margin-top:4px}
     .sell-info{margin:0 0 16px;line-height:1.7}
     .sell-value{font-weight:700;color:var(--gold)}
     .card-actions{display:flex;gap:8px;flex-wrap:wrap}
@@ -133,6 +140,18 @@
       </select>
     </div>
 
+    <div class="bulk-panel">
+      <b>💠 Vente en masse des doublons</b>
+      <p class="muted">Sélectionne les doublons à vendre. Un exemplaire de chaque carte est conservé et les exemplaires réservés aux échanges sont exclus.</p>
+      <div class="bulk-actions">
+        <button class="btn gold" id="bulk-all" type="button">Sélectionner tous les doublons</button>
+        <button class="btn" id="bulk-clear" type="button">Tout désélectionner</button>
+        <button class="btn" id="bulk-refresh" type="button">↻ Actualiser</button>
+      </div>
+      <div class="bulk-summary" id="bulk-summary">Chargement des doublons…</div>
+      <div class="bulk-status" id="bulk-status" role="status"></div>
+      <div class="bulk-actions"><button class="btn gold" id="bulk-sell" type="button" disabled>Vendre la sélection</button></div>
+    </div>
     <div id="msg" class="notice" style="display:none"></div>
     <div id="cards" class="cards"></div>
   </div>
@@ -166,6 +185,29 @@ const sellValues = {
   tres_rare: 2000,
   ultra_rare: 10000
 };
+
+let ownedRows = [];
+let reservedById = new Map();
+let selectedIds = new Set();
+let busy = false;
+let bulkReady = false;
+const bulkSummary = document.getElementById("bulk-summary");
+const bulkStatus = document.getElementById("bulk-status");
+const bulkSell = document.getElementById("bulk-sell");
+function available(row){
+  return Math.max(0, Number(row.quantity || 0) - Number(reservedById.get(Number(row.cards?.id)) || 0) - 1);
+}
+function sellableRows(){return bulkReady ? ownedRows.filter(r=>r.cards && available(r)>0 && sellValues[r.cards.rarity]>0) : [];}
+function selectedRows(){return sellableRows().filter(r=>selectedIds.has(Number(r.cards.id)));}
+function updateBulk(){
+  const rows = selectedRows();
+  const quantity = rows.reduce((n,r)=>n+available(r),0);
+  const points = rows.reduce((n,r)=>n+available(r)*sellValues[r.cards.rarity],0);
+  bulkSummary.textContent = `${rows.length} type(s) sélectionné(s) • ${quantity} exemplaire(s) • ${points.toLocaleString("fr-FR")} points`;
+  bulkSell.disabled = busy || !bulkReady || !quantity;
+  for(const id of ["bulk-all","bulk-clear","bulk-refresh"]) document.getElementById(id).disabled = busy || !bulkReady && id !== "bulk-refresh";
+}
+function setBulkStatus(message,isError=false){bulkStatus.textContent=message;bulkStatus.style.color=isError?"#ff92a7":"#aebbe2";}
 
 const u = document.getElementById("universe");
 
@@ -237,7 +279,7 @@ async function sell(card){
   const result = data?.[0];
   showMsg(`Carte vendue : +${Number(result?.points_awarded || value).toLocaleString("fr-FR")} points.`);
   await BOTM.refreshHeader();
-  await render();
+  await loadCollection();
 }
 
 async function render(){
@@ -246,28 +288,7 @@ async function render(){
   const wrap = document.getElementById("cards");
   wrap.innerHTML = "";
 
-  const { data: rows, error } = await supabase
-    .from("user_cards")
-    .select(`
-      quantity,
-      cards(
-        id,
-        universe,
-        rarity,
-        file_name,
-        image_path,
-        physique,
-        pouvoirs,
-        vitesse,
-        valeur
-      )
-    `)
-    .order("card_id");
-
-  if(error){
-    showMsg(error.message, true);
-    return;
-  }
+   const rows = ownedRows;
 
   const filtered = (rows || []).filter(r =>
     r.cards &&
@@ -291,6 +312,23 @@ async function render(){
     `;
 
     d.querySelector(".card-img").onclick = () => openPreview(c);
+    const free = available(r);
+    const reserved = Number(reservedById.get(Number(c.id)) || 0);
+    const label = document.createElement("label");
+    label.className = "bulk-choice";
+    const check = document.createElement("input");
+    check.type = "checkbox";
+    check.disabled = !bulkReady || busy || free === 0 || !sellValues[c.rarity];
+    check.checked = free > 0 && selectedIds.has(Number(c.id));
+    check.onchange = () => {
+      if(check.checked) selectedIds.add(Number(c.id)); else selectedIds.delete(Number(c.id));
+      updateBulk();
+    };
+    label.append(check,document.createTextNode(free>0 ? `Vendre ${free} doublon(s)` : "Aucun doublon vendable"));
+    const details = document.createElement("div");
+    details.className = "bulk-qty";
+    details.textContent = `Possédées : ${Number(r.quantity)} • Réservées : ${reserved} • Conservée : 1`;
+    d.append(label,details);
 
     const actions = document.createElement("div");
     actions.className = "card-actions";
@@ -310,10 +348,56 @@ async function render(){
   }
 }
 
+async function loadCollection(){
+  bulkReady = false;
+  updateBulk();
+  const {data: rows,error} = await supabase.from("user_cards")
+    .select(`quantity,cards(id,universe,rarity,file_name,image_path,physique,pouvoirs,vitesse,valeur)`)
+    .order("card_id");
+  if(error){setBulkStatus("Collection inaccessible : "+error.message,true);ownedRows=[];await render();return;}
+  ownedRows = (rows || []).filter(r=>r.cards && Number(r.quantity)>0);
+  const {data:locks,error:lockError} = await supabase.rpc("get_bulk_sell_availability");
+  if(lockError){
+    reservedById = new Map();
+    setBulkStatus("Vente groupée indisponible : "+lockError.message,true);
+  } else {
+    reservedById = new Map((locks||[]).map(x=>[Number(x.card_id),Number(x.reserved_quantity)]));
+    bulkReady = true;
+    setBulkStatus("Les cartes réservées aux échanges sont protégées.");
+  }
+  selectedIds = new Set([...selectedIds].filter(id=>sellableRows().some(r=>Number(r.cards.id)===id)));
+  await render();
+  updateBulk();
+}
+
+document.getElementById("bulk-all").onclick = () => {
+  selectedIds = new Set(sellableRows().map(r=>Number(r.cards.id)));
+  render();updateBulk();
+};
+document.getElementById("bulk-clear").onclick = () => {selectedIds.clear();render();updateBulk();};
+document.getElementById("bulk-refresh").onclick = loadCollection;
+bulkSell.onclick = async () => {
+  if(busy || !bulkReady) return;
+  const rows = selectedRows();
+  if(!rows.length) return;
+  const quantity = rows.reduce((n,r)=>n+available(r),0);
+  const total = rows.reduce((n,r)=>n+available(r)*sellValues[r.cards.rarity],0);
+  if(!confirm(`Vendre ${quantity} doublon(s) pour ${total.toLocaleString("fr-FR")} points ? Cette opération est définitive.`)) return;
+  busy = true; updateBulk();setBulkStatus("Vente en cours…");
+  const payload = rows.map(r=>({card_id:Number(r.cards.id),quantity:available(r)}));
+  const {data,error} = await supabase.rpc("sell_duplicate_cards_bulk",{p_items:payload});
+  if(error){busy=false;setBulkStatus("Vente refusée : "+error.message,true);updateBulk();return;}
+  const result = Array.isArray(data)?data[0]:data;
+  selectedIds.clear();busy=false;
+  await BOTM.refreshHeader();
+  await loadCollection();
+  showMsg(`Vente réussie : ${Number(result?.sold_quantity ?? quantity)} cartes, +${Number(result?.points_awarded ?? total).toLocaleString("fr-FR")} points.`);
+};
+
 u.onchange = render;
 document.getElementById("rarity").onchange = render;
 await BOTM.refreshHeader();
-await render();
+await loadCollection();
 </script>
 <script type="module" src="/BOTM_2.0/social.js"></script>
 </body>
