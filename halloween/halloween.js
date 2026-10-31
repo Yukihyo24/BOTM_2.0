@@ -2,6 +2,8 @@
    BOTM — HALLOWEEN EVENT 🎃🍬
    ========================================================= */
 
+import { supabase, BOTM } from "/BOTM_2.0/app.js";
+
 const HALLOWEEN = {
   supabase: null,
   BOTM: null,
@@ -14,20 +16,8 @@ const HALLOWEEN = {
   async init() {
     if (this.initialized) return;
 
-    // app.js est un module : selon la page, il peut finir de charger
-    // après halloween.js. On attend donc réellement qu'il soit prêt.
-    for (let attempt = 0; attempt < 100; attempt++) {
-      this.supabase = window.supabaseClient;
-      this.BOTM = window.BOTM;
-
-      if (this.supabase && this.BOTM) break;
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-
-    if (!this.supabase || !this.BOTM) {
-      console.error("Halloween : app.js n'a pas pu être initialisé.");
-      return;
-    }
+    this.supabase = supabase;
+    this.BOTM = BOTM;
 
     const session = await this.BOTM.session();
     if (!session) {
@@ -68,13 +58,12 @@ const HALLOWEEN = {
     const end = this.windowEnd.getTime();
     const availableTime = Math.max(1000, end - now - 5000);
 
-    // TEST / confort : le premier bonbon apparaît entre 1 et 3 secondes.
-    // Les suivants restent répartis aléatoirement dans la tranche.
+    // Le premier apparaît rapidement afin que le joueur voie que l'événement est actif.
+    // Les suivants restent répartis aléatoirement dans la tranche de 15 minutes.
     for (let i = 0; i < this.remaining; i++) {
       const delay = i === 0
-        ? 1000 + Math.random() * 2000
+        ? Math.min(1000 + Math.random() * 2000, availableTime)
         : Math.random() * availableTime;
-
       const timer = setTimeout(() => this.spawnCandy(), delay);
       this.timers.push(timer);
     }
@@ -105,16 +94,16 @@ const HALLOWEEN = {
 
     candy.addEventListener("click", () => this.claimCandy(candy), { once: true });
 
-    // 60 secondes pour le repérer. S'il disparaît, il n'est pas consommé côté serveur.
+    // Un bonbon non récupéré reste disponible jusqu'à la fin de sa tranche.
+    const lifetime = Math.max(1000, this.windowEnd.getTime() - Date.now());
     candy._disappearTimer = setTimeout(() => {
       if (!this.activeCandies.has(candy)) return;
-
       candy.classList.add("halloween-candy-disappear");
       setTimeout(() => {
         candy.remove();
         this.activeCandies.delete(candy);
       }, 500);
-    }, 60000);
+    }, lifetime);
   },
 
   async claimCandy(candy) {
@@ -209,7 +198,6 @@ const HALLOWEEN = {
 
 window.HALLOWEEN = HALLOWEEN;
 
-// Démarrage robuste sur toutes les pages.
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => HALLOWEEN.init(), { once: true });
 } else {
