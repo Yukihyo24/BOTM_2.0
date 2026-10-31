@@ -45,7 +45,7 @@ const HALLOWEEN = {
 
     const status = data[0];
     this.remaining = Number(status.remaining_candies || 0);
-    this.windowEnd = new Date(status.window_end);
+    this.windowEnd = new Date(status.out_window_end);
 
     console.log(`🍬 ${this.remaining} bonbon(s) disponible(s)`);
 
