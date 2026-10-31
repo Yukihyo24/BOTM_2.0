@@ -54,20 +54,24 @@ const HALLOWEEN = {
   },
 
   scheduleCandies() {
-    const now = Date.now();
-    const end = this.windowEnd.getTime();
-    const availableTime = Math.max(1000, end - now - 5000);
+  const now = Date.now();
+  const end = this.windowEnd.getTime();
 
-    // Le premier apparaît rapidement afin que le joueur voie que l'événement est actif.
-    // Les suivants restent répartis aléatoirement dans la tranche de 15 minutes.
-    for (let i = 0; i < this.remaining; i++) {
-      const delay = i === 0
-        ? Math.min(1000 + Math.random() * 2000, availableTime)
-        : Math.random() * availableTime;
-      const timer = setTimeout(() => this.spawnCandy(), delay);
-      this.timers.push(timer);
-    }
-  },
+  // On garde une petite marge avant la fin de la tranche.
+  const availableTime = Math.max(1000, end - now - 5000);
+
+  // Les bonbons encore disponibles sont répartis aléatoirement
+  // sur le temps restant de la tranche de 15 minutes.
+  for (let i = 0; i < this.remaining; i++) {
+    const delay = Math.random() * availableTime;
+
+    const timer = setTimeout(() => {
+      this.spawnCandy();
+    }, delay);
+
+    this.timers.push(timer);
+  }
+},
 
   spawnCandy() {
     if (!this.windowEnd || Date.now() >= this.windowEnd.getTime()) return;
