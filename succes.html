@@ -68,6 +68,7 @@
       .ach-summary{grid-template-columns:repeat(3,1fr)}.sum{padding:11px}.sum b{font-size:1.15rem}
     }
   </style>
+  <link rel="stylesheet" href="/BOTM_2.0/halloween/halloween.css">
 </head>
 <body>
 <button class="mobile-toggle" id="menuToggle" type="button">☰ Menu</button>
@@ -233,5 +234,8 @@ backdrop.onclick=()=>{sidebar.classList.remove("open");backdrop.classList.remove
 sidebar.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>{sidebar.classList.remove("open");backdrop.classList.remove("show")}));
 </script>
 <script type="module" src="/BOTM_2.0/social.js"></script>
+
+  <!-- Événement Halloween -->
+  <script src="/BOTM_2.0/halloween/halloween.js" defer></script>
 </body>
 </html>
