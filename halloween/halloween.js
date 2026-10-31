@@ -14,16 +14,26 @@ const HALLOWEEN = {
   async init() {
     if (this.initialized) return;
 
-    this.supabase = window.supabaseClient;
-    this.BOTM = window.BOTM;
+    // app.js est un module : selon la page, il peut finir de charger
+    // après halloween.js. On attend donc réellement qu'il soit prêt.
+    for (let attempt = 0; attempt < 100; attempt++) {
+      this.supabase = window.supabaseClient;
+      this.BOTM = window.BOTM;
+
+      if (this.supabase && this.BOTM) break;
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
 
     if (!this.supabase || !this.BOTM) {
-      console.warn("Halloween : BOTM/Supabase non disponible.");
+      console.error("Halloween : app.js n'a pas pu être initialisé.");
       return;
     }
 
     const session = await this.BOTM.session();
-    if (!session) return;
+    if (!session) {
+      console.log("Halloween : aucun joueur connecté.");
+      return;
+    }
 
     this.initialized = true;
     console.log("🎃 Événement Halloween activé");
@@ -58,9 +68,13 @@ const HALLOWEEN = {
     const end = this.windowEnd.getTime();
     const availableTime = Math.max(1000, end - now - 5000);
 
-    // Chaque bonbon restant reçoit son propre instant d'apparition.
+    // TEST / confort : le premier bonbon apparaît entre 1 et 3 secondes.
+    // Les suivants restent répartis aléatoirement dans la tranche.
     for (let i = 0; i < this.remaining; i++) {
-      const delay = Math.random() * availableTime;
+      const delay = i === 0
+        ? 1000 + Math.random() * 2000
+        : Math.random() * availableTime;
+
       const timer = setTimeout(() => this.spawnCandy(), delay);
       this.timers.push(timer);
     }
@@ -195,7 +209,9 @@ const HALLOWEEN = {
 
 window.HALLOWEEN = HALLOWEEN;
 
-// app.js expose window.BOTM et window.supabaseClient au chargement.
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(() => HALLOWEEN.init(), 150);
-});
+// Démarrage robuste sur toutes les pages.
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => HALLOWEEN.init(), { once: true });
+} else {
+  HALLOWEEN.init();
+}
