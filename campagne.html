@@ -292,6 +292,10 @@ button,a{font:inherit}.page{max-width:1450px;margin:auto;padding:20px}.top{displ
 @media(max-width:850px){.deck-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:520px){.deck-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.deck-head{align-items:flex-start;flex-direction:column}}
 
+#seriesNav{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}
+.series-tab{border:1px solid var(--line);border-radius:14px;padding:12px 16px;background:#141d34;color:var(--txt);cursor:pointer;text-align:left}
+.series-tab[aria-current="page"]{border-color:var(--violet);background:#302352}
+.series-tab small{display:block;margin-top:4px;color:#bdc7df}
 </style>
 <link rel="stylesheet" href="/BOTM_2.0/social.css">
 </head>
@@ -310,6 +314,7 @@ button,a{font:inherit}.page{max-width:1450px;margin:auto;padding:20px}.top{displ
   <section id="routeView" class="hidden">
     <div class="campaign-head">
       <div><h2 id="campaignTitle"></h2><p id="campaignInfo"></p><button class="secondary deck-btn" id="openCampaignDeck">Deck de campagne — 0/15</button></div>
+      <nav id="seriesNav" class="hidden" aria-label="Séries de campagne"></nav>
       <button class="change" id="changeUniverse">Changer d'univers</button>
     </div>
     <div class="panel route-shell"><div class="route" id="route"></div></div>
@@ -377,6 +382,7 @@ button,a{font:inherit}.page{max-width:1450px;margin:auto;padding:20px}.top{displ
 import { BOTM, supabase } from "/BOTM_2.0/app.js";
 
 const $=s=>document.querySelector(s);
+let currentSeries=null;
 let campaigns=[], currentUniverse=null, progress=null, stageState=null, bossState=null, bossSelection=new Set(), campaignDeckSelection=new Set(), campaignDeckData=null;
 
 const rarityLabel={commune:"Commune",rare:"Rare",super_rare:"Super Rare",tres_rare:"Très Rare",ultra_rare:"Ultra Rare"};
@@ -412,21 +418,60 @@ function renderUniverses(){
 window.closeSoon=()=>$("#soonModal").classList.add("hidden");
 
 async function openCampaign(universe){
+  if(currentUniverse!==universe) currentSeries=null;
   currentUniverse=universe;
   const {data,error}=await supabase.rpc("get_campaign_progress",{p_universe:universe});
   if(error){toast(error.message);return;}
   progress=data;
   $("#campaignTitle").textContent=`${progress.title} — Campagne`;
   $("#campaignInfo").textContent=`Boss ${progress.boss_order} • ${progress.stages_completed}/10 étapes`;
-  renderRoute(); show("routeView");
+  renderSeries(); renderRoute(); show("routeView");
   await refreshCampaignDeckStatus();
   await checkReward();
 }
+function seriesNumber(order){
+  const boss=(progress.bosses||[]).find(b=>Number(b.order)===Number(order));
+  return Number(boss?.series_number||1);
+}
+function seriesBossNumber(order){
+  const bosses=(progress.bosses||[]).filter(b=>seriesNumber(b.order)===seriesNumber(order)).sort((a,b)=>Number(a.order)-Number(b.order));
+  return bosses.findIndex(b=>Number(b.order)===Number(order))+1;
+}
+function campaignSeries(){
+  const groups=new Map();
+  for(const boss of progress.bosses||[]){
+    const n=seriesNumber(boss.order);
+    if(!groups.has(n))groups.set(n,[]);
+    groups.get(n).push(boss);
+  }
+  return [...groups].sort((a,b)=>a[0]-b[0]);
+}
+function renderSeries(){
+  const groups=campaignSeries();
+  const available=groups.map(([n])=>n);
+  if(!available.includes(currentSeries))currentSeries=seriesNumber(progress.boss_order);
+  if(!available.includes(currentSeries))currentSeries=available[0]??1;
+  $("#campaignTitle").textContent=`${progress.title} — Série ${currentSeries}`;
+  const current=seriesNumber(progress.boss_order);
+  $("#campaignInfo").textContent=currentSeries<current?"Série terminée."
+    :currentSeries>current?"Termine les séries précédentes pour débloquer ces combats."
+    :progress.boss_defeated?"Série terminée !"
+    :`Palier ${seriesBossNumber(progress.boss_order)} • ${progress.stages_completed}/10 étapes`;
+  $("#seriesNav").classList.toggle("hidden",groups.length===0);
+  $("#seriesNav").innerHTML=groups.map(([n,bosses])=>{
+    const done=bosses.every(b=>Number(b.order)<Number(progress.boss_order)||(Number(b.order)===Number(progress.boss_order)&&progress.boss_defeated));
+    const label=done?"Terminée":n>current?"Verrouillée":"En cours";
+    return `<button class="series-tab" data-series="${n}" ${n===currentSeries?'aria-current="page"':""}>Série ${n}<small>${bosses.length} boss • ${label}</small></button>`;
+  }).join("");
+  document.querySelectorAll("[data-series]").forEach(el=>el.onclick=()=>{
+    currentSeries=Number(el.dataset.series);renderSeries();renderRoute();
+  });
+}
 function renderRoute(){
-  const bosses=[...(progress.bosses||[])];
+  const bosses=[...(progress.bosses||[])].filter(b=>seriesNumber(b.order)===currentSeries);
   $("#route").innerHTML=bosses.map(b=>{
-    const past=b.order<progress.boss_order;
-    const current=b.order===progress.boss_order;
+    const past=b.order<progress.boss_order || (b.order===progress.boss_order && progress.boss_defeated);
+    const current=b.order===progress.boss_order && !progress.boss_defeated;
     const future=b.order>progress.boss_order;
     const stages=current?Number(progress.stages_completed||0):(past?10:0);
     const bossReady=current&&stages>=Number(b.stage_count||10);
@@ -441,7 +486,7 @@ function renderRoute(){
       <line class="to-boss" x1="80" y1="92" x2="50" y2="103"/>
     </svg>`;
     return `<article class="chapter ${cls}">
-      <div><div class="chapter-title"><h3>Palier ${b.order} — ${esc(b.name)}</h3><span class="status">${status}</span></div><div class="steps">${dottedPath}${nodes}</div></div>
+      <div><div class="chapter-title"><h3>Palier ${seriesBossNumber(b.order)} — ${esc(b.name)}</h3><span class="status">${status}</span></div><div class="steps">${dottedPath}${nodes}</div></div>
       <div class="boss ${past?"defeated":bossReady?"ready":""}" ${bossReady?`data-boss="${b.order}"`:""}>
         <img src="${bossPath(b.image_path)}" alt="${esc(b.name)}"><span class="boss-name">${esc(b.name)} • ${fmt(b.max_hp)} PV</span>
       </div>
@@ -629,10 +674,11 @@ $("#claimReward").onclick=async()=>{
   if(error){toast(error.message);$("#claimReward").disabled=false;return;}
   $("#rewardModal").classList.add("hidden"); $("#claimReward").disabled=false;
   toast(data.campaign_finished?"Campagne disponible terminée !":`${data.next_boss_name} est maintenant débloqué.`);
+  currentSeries=null;
   await openCampaign(currentUniverse);
 };
 
-$("#changeUniverse").onclick=()=>{currentUniverse=null;show("selectView");};
+$("#changeUniverse").onclick=()=>{currentUniverse=null;currentSeries=null;show("selectView");};
 $("#leaveStage").onclick=()=>openCampaign(currentUniverse);
 $("#leaveBoss").onclick=()=>openCampaign(currentUniverse);
 
