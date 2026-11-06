@@ -8,6 +8,10 @@
 
 <style>
   /* Boutique — objets permanents compacts */
+  .shop-quantity{display:flex;align-items:center;justify-content:center;gap:10px;margin:12px 0 8px;flex-wrap:wrap}
+  .shop-quantity label{font-size:.9rem}
+  .shop-quantity select{padding:8px 12px;border-radius:8px;background:#171c2d;color:#fff;border:1px solid #65718d;cursor:pointer}
+  .shop-quantity-total{font-size:.9rem;margin-bottom:10px;text-align:center}
   #specials{
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
@@ -105,7 +109,7 @@
   <div class="panel" style="margin-bottom:18px">
     <h2 class="section-title">Objets permanents</h2>
     <p class="muted">
-      Le booster coûte 2 000 points et la Pioche Miracle 1 000 points.
+      Le booster coûte 2 000 points et la Pioche Miracle 1 000 points. Choisissez un lot de 1, 5 ou 10 unités.
     </p>
     <div id="specials" class="shop-grid"></div>
   </div>
@@ -167,23 +171,55 @@ function itemCard(item) {
   }
 
   const soldOut = item.item_type === "card" && Number(item.stock || 0) <= 0;
-  const tooPoor = Number(profile.points || 0) < Number(item.price || 0);
+  const isPack = item.item_type === "booster" || item.item_type === "miracle";
+  const unitPrice = Number(item.price || 0);
 
   d.innerHTML = `
     ${visual}
     <div class="shop-body">
       <h3>${title}</h3>
       <div class="muted small">${subtitle}</div>
-      <div class="shop-price">💠 ${fmt(item.price)} points</div>
+      <div class="shop-price">💠 ${fmt(unitPrice)} points ${isPack ? "/ unité" : ""}</div>
       <div class="shop-stock">${soldOut ? "Épuisé" : stockText}</div>
     </div>`;
 
+  let quantitySelect = null;
+  let totalText = null;
+  if (isPack) {
+    const quantityRow = document.createElement("div");
+    quantityRow.className = "shop-quantity";
+    const label = document.createElement("label");
+    label.textContent = "Quantité :";
+    quantitySelect = document.createElement("select");
+    quantitySelect.setAttribute("aria-label", `Quantité de ${title}`);
+    for (const n of [1, 5, 10]) {
+      const option = document.createElement("option");
+      option.value = String(n);
+      option.textContent = `× ${n}`;
+      quantitySelect.appendChild(option);
+    }
+    label.appendChild(quantitySelect);
+    quantityRow.appendChild(label);
+    d.appendChild(quantityRow);
+    totalText = document.createElement("div");
+    totalText.className = "shop-quantity-total muted";
+    d.appendChild(totalText);
+  }
+
   const b = document.createElement("button");
   b.className = "btn gold";
-  b.textContent = soldOut ? "Épuisé" : (tooPoor ? "Points insuffisants" : "Acheter");
-  b.disabled = busy || soldOut || tooPoor;
-  b.onclick = () => buy(item);
+  const refreshPurchaseOption = () => {
+    const quantity = quantitySelect ? Number(quantitySelect.value) : 1;
+    const total = unitPrice * quantity;
+    const tooPoor = Number(profile.points || 0) < total;
+    if (totalText) totalText.textContent = `Total : 💠 ${fmt(total)} points`;
+    b.textContent = soldOut ? "Épuisé" : (tooPoor ? "Points insuffisants" : `Acheter${isPack ? ` × ${quantity}` : ""}`);
+    b.disabled = busy || soldOut || tooPoor;
+  };
+  if (quantitySelect) quantitySelect.addEventListener("change", refreshPurchaseOption);
+  b.onclick = () => buy(item, quantitySelect ? Number(quantitySelect.value) : 1);
   d.appendChild(b);
+  refreshPurchaseOption();
 
   return d;
 }
@@ -238,38 +274,63 @@ async function loadShop() {
   await BOTM.refreshHeader();
 }
 
-async function buy(item) {
+async function buy(item, quantity = 1) {
   if (busy) return;
+  const isPack = item.item_type === "booster" || item.item_type === "miracle";
+  if (!isPack) quantity = 1;
+  if (![1, 5, 10].includes(quantity)) return;
 
   const name =
-    item.item_type === "booster" ? "un booster" :
-    item.item_type === "miracle" ? "une Pioche Miracle" :
+    item.item_type === "booster" ? `${quantity} booster${quantity > 1 ? "s" : ""}` :
+    item.item_type === "miracle" ? `${quantity} Pioche${quantity > 1 ? "s" : ""} Miracle${quantity > 1 ? "s" : ""}` :
     `la carte ${item.cards?.file_name?.replace(/\.[^.]+$/, "") || ""}`;
-
-  if (!confirm(`Acheter ${name} pour ${fmt(item.price)} points ?`)) return;
-
-  busy = true;
-  document.querySelectorAll(".shop-item button").forEach(b => b.disabled = true);
-
-  const { data, error } = await supabase.rpc("purchase_shop_item", {
-    p_item_id: item.id
-  });
-
-  if (error) {
-    showMsg(error.message, false);
-    busy = false;
-    await loadShop();
+  const totalPrice = Number(item.price || 0) * quantity;
+  if (Number(profile.points || 0) < totalPrice) {
+    showMsg("Tu n'as pas assez de points pour cet achat.", false);
     return;
   }
+  if (!confirm(`Acheter ${name} pour ${fmt(totalPrice)} points ?`)) return;
 
-  const result = data?.[0];
-  showMsg(
-    `Achat effectué ! Il te reste ${fmt(result?.points_remaining ?? 0)} points.`,
-    true
-  );
+  busy = true;
+  document.querySelectorAll(".shop-item button, .shop-quantity select").forEach(el => el.disabled = true);
+
+  // La RPC existante achète une unité par appel : on la réutilise sans modifier le SQL.
+  // En cas d'échec, les achats précédents restent acquis et sont annoncés clairement.
+  let purchased = 0;
+  let pointsRemaining = null;
+  let purchaseError = null;
+  for (let i = 0; i < quantity; i++) {
+    const { data, error } = await supabase.rpc("purchase_shop_item", {
+      p_item_id: item.id
+    });
+    if (error) {
+      purchaseError = error;
+      break;
+    }
+    purchased++;
+    const result = Array.isArray(data) ? data[0] : data;
+    if (result?.points_remaining != null) pointsRemaining = result.points_remaining;
+  }
 
   busy = false;
-  await loadShop();
+  try {
+    await loadShop();
+  } catch (error) {
+    console.error("Boutique : actualisation impossible", error);
+  }
+  if (purchaseError) {
+    showMsg(
+      purchased > 0
+        ? `${purchased} achat(s) sur ${quantity} effectué(s). Les autres n'ont pas été débités. Erreur : ${purchaseError.message}`
+        : `Achat impossible : ${purchaseError.message}`,
+      false
+    );
+  } else {
+    showMsg(
+      `Achat effectué : ${name} !${pointsRemaining != null ? ` Il te reste ${fmt(pointsRemaining)} points.` : ""}`,
+      true
+    );
+  }
 }
 
 await loadShop();
